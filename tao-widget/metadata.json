@@ -1,0 +1,23 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "",
+                "Name": "Your Name"
+            }
+        ],
+        "Category": "Graphics",
+        "Description": "Mystical Tao symbol animation with particles",
+        "Description[it]": "Animazione mistica del simbolo Tao con particelle",
+        "EnabledByDefault": true,
+        "Icon": "preferences-desktop-theme",
+        "Id": "tao-widget",
+        "License": "GPL-2.0+",
+        "Name": "Mystical Tao",
+        "Name[it]": "Tao Mistico",
+        "Version": "1.0",
+        "Website": ""
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
