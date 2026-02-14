@@ -11,27 +11,27 @@ Kirigami.FormLayout {
     property alias cfg_clockwise: clockwiseRadio.checked
     property alias cfg_showClock: showClockCheckBox.checked
 
-    // --- Sezione Generale ---
+    // --- General Section ---
     Kirigami.Separator {
         Kirigami.FormData.isSection: true
-        Kirigami.FormData.label: i18n("Generale")
+        Kirigami.FormData.label: i18n("General")
     }
 
     QQC2.CheckBox {
         id: showClockCheckBox
 
-        Kirigami.FormData.label: i18n("Orologio:")
-        text: i18n("Mostra orologio")
+        Kirigami.FormData.label: i18n("Clock:")
+        text: i18n("Show clock")
     }
 
-    // --- Sezione Particelle ---
+    // --- Particle Section ---
     Kirigami.Separator {
         Kirigami.FormData.isSection: true
-        Kirigami.FormData.label: i18n("Effetti Particelle")
+        Kirigami.FormData.label: i18n("Particle Effects")
     }
 
     RowLayout {
-        Kirigami.FormData.label: i18n("Quantità:")
+        Kirigami.FormData.label: i18n("Amount:")
         spacing: Kirigami.Units.smallSpacing
 
         QQC2.Slider {
@@ -53,14 +53,14 @@ Kirigami.FormLayout {
 
     }
 
-    // --- Sezione Movimento ---
+    // --- Movement Section ---
     Kirigami.Separator {
         Kirigami.FormData.isSection: true
-        Kirigami.FormData.label: i18n("Configurazione Movimento")
+        Kirigami.FormData.label: i18n("Movement Configuration")
     }
 
     RowLayout {
-        Kirigami.FormData.label: i18n("Velocità:")
+        Kirigami.FormData.label: i18n("Speed:")
         spacing: Kirigami.Units.smallSpacing
 
         QQC2.Slider {
@@ -82,35 +82,34 @@ Kirigami.FormLayout {
 
     }
 
-    // Spazio tra i sezionatori
     Item {
         Kirigami.FormData.isSection: true
     }
 
     ColumnLayout {
-        Kirigami.FormData.label: i18n("Senso di rotazione:")
+        Kirigami.FormData.label: i18n("Rotation direction:")
         spacing: Kirigami.Units.smallSpacing
 
         QQC2.RadioButton {
             id: clockwiseRadio
 
-            text: i18n("Orario")
+            text: i18n("Clockwise")
             checked: true
         }
 
         QQC2.RadioButton {
             id: counterClockwiseRadio
 
-            text: i18n("Antiorario")
+            text: i18n("Counter-clockwise")
             checked: !clockwiseRadio.checked
         }
 
     }
 
-    // Nota informativa a fondo pagina
+    // Footer info
     QQC2.Label {
         Layout.fillWidth: true
-        text: i18n("Le modifiche verranno applicate istantaneamente all'animazione.")
+        text: i18n("Changes will be applied instantly to the animation.")
         font.pixelSize: Kirigami.Units.fontMetrics.font.pixelSize * 0.9
         opacity: 0.6
         wrapMode: Text.WordWrap
