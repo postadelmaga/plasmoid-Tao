@@ -19,7 +19,7 @@ PlasmoidItem {
     
     // Proprietà configurabili
     property int particleCount: plasmoid.configuration.particleCount
-    property real rotationSpeed: plasmoid.configuration.rotationSpeed
+    property int rotationSpeed: plasmoid.configuration.rotationSpeed
     property bool clockwise: plasmoid.configuration.clockwise
     
     fullRepresentation: Item { 
@@ -34,7 +34,7 @@ PlasmoidItem {
             width: Math.min(parent.width, parent.height)
             height: width
             
-            // Contenitore circolare con bordo
+            // Contenitore circolare trasparente senza bordo
             Rectangle {
                 id: clipCircle
                 anchors.fill: parent
@@ -53,7 +53,7 @@ PlasmoidItem {
                     
                     function updateHtml() {
                         const particles = root.particleCount
-                        const speed = root.rotationSpeed
+                        const speed = root.rotationSpeed / 1000.0
                         const direction = root.clockwise ? 1 : -1
                         
                         loadHtml(generateHtml(particles, speed, direction), "file:///")

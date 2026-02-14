@@ -9,8 +9,8 @@
     <entry name="particleCount" type="Int">
       <default>80</default>
     </entry>
-    <entry name="rotationSpeed" type="Double">
-      <default>0.005</default>
+    <entry name="rotationSpeed" type="Int">
+      <default>5</default>
     </entry>
     <entry name="clockwise" type="Bool">
       <default>true</default>

@@ -4,81 +4,67 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 Kirigami.FormLayout {
-    id: configGeneral
+    id: configRoot
     
+    property alias cfg_particleCount: particleCountSlider.value
+    property alias cfg_rotationSpeed: rotationSpeedSlider.value
+    property alias cfg_clockwise: clockwiseRadio.checked
+
     // Numero di particelle
-    QQC2.SpinBox {
-        id: particleCountSpinBox
-        Kirigami.FormData.label: "Numero di particelle:"
-        from: 0
-        to: 200
-        value: plasmoid.configuration.particleCount
-        stepSize: 10
+    RowLayout {
+        Kirigami.FormData.label: i18n("Numero di particelle:")
         
-        onValueChanged: {
-            plasmoid.configuration.particleCount = value
+        QQC2.Slider {
+            id: particleCountSlider
+            Layout.fillWidth: true
+            from: 0
+            to: 216
+            stepSize: 1
+            snapMode: QQC2.Slider.SnapAlways
+        }
+        
+        QQC2.Label {
+            text: Math.round(particleCountSlider.value)
+            Layout.minimumWidth: Kirigami.Units.gridUnit * 2
         }
     }
     
     // Velocità di rotazione
     RowLayout {
-        Kirigami.FormData.label: "Velocità di rotazione:"
+        Kirigami.FormData.label: i18n("Velocità di rotazione:")
         
         QQC2.Slider {
             id: rotationSpeedSlider
             Layout.fillWidth: true
-            from: 0.0
-            to: 0.02
-            value: plasmoid.configuration.rotationSpeed
-            stepSize: 0.001
-            
-            onValueChanged: {
-                plasmoid.configuration.rotationSpeed = value
-            }
+            from: 1
+            to: 10
+            stepSize: 1
+            snapMode: QQC2.Slider.SnapAlways
         }
         
         QQC2.Label {
-            text: rotationSpeedSlider.value.toFixed(3)
-            Layout.minimumWidth: Kirigami.Units.gridUnit * 3
+            text: Math.round(rotationSpeedSlider.value)
+            Layout.minimumWidth: Kirigami.Units.gridUnit * 2
         }
     }
     
     // Direzione di rotazione
     QQC2.RadioButton {
         id: clockwiseRadio
-        Kirigami.FormData.label: "Direzione di rotazione:"
-        text: "Senso orario"
-        checked: plasmoid.configuration.clockwise
-        onCheckedChanged: {
-            if (checked) {
-                plasmoid.configuration.clockwise = true
-            }
-        }
+        Kirigami.FormData.label: i18n("Direzione di rotazione:")
+        text: i18n("Senso orario")
     }
     
     QQC2.RadioButton {
         id: counterClockwiseRadio
-        text: "Senso antiorario"
-        checked: !plasmoid.configuration.clockwise
-        onCheckedChanged: {
+        text: i18n("Senso antiorario")
+        checked: !clockwiseRadio.checked
+        onToggled: {
             if (checked) {
-                plasmoid.configuration.clockwise = false
+                clockwiseRadio.checked = false
             }
         }
     }
-    
-    // Bottone per ripristinare i valori predefiniti
-    Item {
-        Kirigami.FormData.isSection: true
-    }
-    
-    QQC2.Button {
-        text: "Ripristina valori predefiniti"
-        icon.name: "edit-reset"
-        onClicked: {
-            plasmoid.configuration.particleCount = 80
-            plasmoid.configuration.rotationSpeed = 0.005
-            plasmoid.configuration.clockwise = true
-        }
-    }
 }
+
+
