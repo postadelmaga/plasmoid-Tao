@@ -9,6 +9,20 @@ Kirigami.FormLayout {
     property alias cfg_particleCount: particleCountSlider.value
     property alias cfg_rotationSpeed: rotationSpeedSlider.value
     property alias cfg_clockwise: clockwiseRadio.checked
+    property alias cfg_showClock: showClockCheckBox.checked
+
+    // --- Sezione Generale ---
+    Kirigami.Separator {
+        Kirigami.FormData.isSection: true
+        Kirigami.FormData.label: i18n("Generale")
+    }
+
+    QQC2.CheckBox {
+        id: showClockCheckBox
+
+        Kirigami.FormData.label: i18n("Orologio:")
+        text: i18n("Mostra orologio")
+    }
 
     // --- Sezione Particelle ---
     Kirigami.Separator {

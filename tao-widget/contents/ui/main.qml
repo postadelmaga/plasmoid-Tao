@@ -15,6 +15,7 @@ PlasmoidItem {
     property int particleCount: plasmoid.configuration.particleCount
     property int rotationSpeed: plasmoid.configuration.rotationSpeed
     property bool clockwise: plasmoid.configuration.clockwise
+    property bool showClock: plasmoid.configuration.showClock
 
     width: Kirigami.Units.gridUnit * 20
     height: Kirigami.Units.gridUnit * 20
@@ -40,7 +41,8 @@ PlasmoidItem {
                 const particles = root.particleCount;
                 const speed = root.rotationSpeed / 1000;
                 const direction = root.clockwise ? 1 : -1;
-                runJavaScript("if (window.updateSettings) window.updateSettings(" + particles + ", " + speed + ", " + direction + ");");
+                const clock = root.showClock;
+                runJavaScript("if (window.updateSettings) window.updateSettings(" + particles + ", " + speed + ", " + direction + ", " + clock + ");");
             }
 
             anchors.fill: parent
@@ -62,6 +64,10 @@ PlasmoidItem {
                 }
 
                 function onClockwiseChanged() {
+                    webView.updateHtml();
+                }
+
+                function onShowClockChanged() {
                     webView.updateHtml();
                 }
 

@@ -35,17 +35,18 @@
         let PARTICLE_COUNT = 100;
         let ROTATION_SPEED = 0.01;
         let ROTATION_DIRECTION = 1;
+        let SHOW_CLOCK = false;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+            radius = Math.min(canvas.width, canvas.height) / 4;
         }
 
+        let centerX, centerY, radius;
         resizeCanvas();
-
-        let centerX = canvas.width / 2;
-        let centerY = canvas.height / 2;
-        let radius = Math.min(canvas.width, canvas.height) / 4;
 
         let rotation = 0;
         let time = 0;
@@ -92,13 +93,27 @@
 
         let particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
 
+        function drawClockHand(angle, length, width, color, glow) {
+            ctx.save();
+            ctx.rotate(angle - Math.PI / 2);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(length, 0);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = "round";
+            if (glow) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
         function drawTao() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Sfondo leggermente scuro per dare profondità se necessario, 
-            // ma manteniamo la trasparenza richiesta
-            // Rimosso il fillRect rettangolare che creava una cornice quadrata.
-            // Se vogliamo un leggero sfondo, lo disegniamo circolare.
+            // Sfondo circolare
             ctx.save();
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius + 40, 0, Math.PI * 2);
@@ -113,6 +128,9 @@
 
             ctx.save();
             ctx.translate(centerX, centerY);
+
+            // Simbolo Tao (Rotante)
+            ctx.save();
             ctx.rotate(rotation);
 
             const pulse = Math.sin(time * 0.05) * 0.2 + 0.8;
@@ -206,6 +224,25 @@
             ctx.stroke();
             ctx.restore();
 
+            ctx.restore(); // Fine rotazione Tao
+
+            // Disegna orologio sopra il Tao se attivo
+            if (SHOW_CLOCK) {
+                const now = new Date();
+                const sec = now.getSeconds() + now.getMilliseconds() / 1000;
+                const min = now.getMinutes() + sec / 60;
+                const hour = (now.getHours() % 12) + min / 60;
+
+                // Lancette
+                drawClockHand((hour / 12) * Math.PI * 2, radius * 0.5, 6, "rgba(255, 255, 255, 0.8)", true);
+                drawClockHand((min / 60) * Math.PI * 2, radius * 0.8, 4, "rgba(136, 204, 255, 0.8)", true);
+                drawClockHand((sec / 60) * Math.PI * 2, radius * 0.9, 1.5, "rgba(255, 170, 136, 0.8)", false);
+
+                // Pivot centrale
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+            }
+
             // Satelliti orbitanti
             ctx.save();
             ctx.globalAlpha = 0.4;
@@ -223,7 +260,7 @@
             }
             ctx.restore();
 
-            ctx.restore();
+            ctx.restore(); // Fine translate(centerX, centerY)
         }
 
         function animate() {
@@ -235,20 +272,18 @@
 
         window.addEventListener("resize", () => {
             resizeCanvas();
-            centerX = canvas.width / 2;
-            centerY = canvas.height / 2;
-            radius = Math.min(canvas.width, canvas.height) / 4;
             particles.forEach(p => p.reset());
         });
 
         // Funzione per aggiornare i parametri dal QML
-        window.updateSettings = function (count, speed, direction) {
+        window.updateSettings = function (count, speed, direction, showClock) {
             if (PARTICLE_COUNT !== count) {
                 PARTICLE_COUNT = count;
                 particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
             }
             ROTATION_SPEED = speed;
             ROTATION_DIRECTION = direction;
+            SHOW_CLOCK = showClock;
         };
 
         animate();
