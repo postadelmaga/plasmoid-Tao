@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls as QQC2
+import QtQuick.Effects // Importante per il blur nativo in Qt 6
 import QtQuick.Layouts
 import QtWebEngine
 import org.kde.kirigami as Kirigami
@@ -17,17 +18,20 @@ PlasmoidItem {
 
     width: Kirigami.Units.gridUnit * 20
     height: Kirigami.Units.gridUnit * 20
-    preferredRepresentation: fullRepresentation
+    // Per Plasma 6, usiamo l'enumerazione corretta di PlasmaCore.
+    // NoBackground permette a noi di gestire interamente lo sfondo (trasparenza e blur) tramite QML.
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
-    // Contenitore circolare trasparente senza bordo
+    // Contenitore circolare principale
     Rectangle {
-        id: clipCircle
+        id: mainContainer
 
         anchors.fill: parent
         radius: width / 2
-        color: "transparent"
+        color: Qt.rgba(0, 0, 0, 0) // Fondo scuro semitrasparente
         clip: true
+        // layer.enabled è necessario per forzare il clipping tondo sul WebEngineView
+        layer.enabled: true
 
         WebEngineView {
             id: webView
@@ -39,9 +43,9 @@ PlasmoidItem {
                 runJavaScript("if (window.updateSettings) window.updateSettings(" + particles + ", " + speed + ", " + direction + ");");
             }
 
-            url: Qt.resolvedUrl("tao.html")
             anchors.fill: parent
             backgroundColor: "transparent"
+            url: Qt.resolvedUrl("tao.html")
             onLoadingChanged: (loadingInfo) => {
                 if (loadingInfo.status === WebEngineView.LoadSucceededStatus)
                     updateHtml();

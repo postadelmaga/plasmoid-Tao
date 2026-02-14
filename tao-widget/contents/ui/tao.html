@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,8 @@
             min-height: 100vh;
             background: transparent;
             overflow: hidden;
+            /* Aggiunge sfocatura allo sfondo dietro al contenuto HTML */
+            backdrop-filter: blur(15px) brightness(0.9);
         }
 
         canvas {
@@ -21,6 +24,7 @@
         }
     </style>
 </head>
+
 <body>
     <canvas id="taoCanvas"></canvas>
 
@@ -93,8 +97,14 @@
 
             // Sfondo leggermente scuro per dare profondità se necessario, 
             // ma manteniamo la trasparenza richiesta
+            // Rimosso il fillRect rettangolare che creava una cornice quadrata.
+            // Se vogliamo un leggero sfondo, lo disegniamo circolare.
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + 40, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fill();
+            ctx.restore();
 
             particles.forEach(particle => {
                 particle.update();
@@ -232,7 +242,7 @@
         });
 
         // Funzione per aggiornare i parametri dal QML
-        window.updateSettings = function(count, speed, direction) {
+        window.updateSettings = function (count, speed, direction) {
             if (PARTICLE_COUNT !== count) {
                 PARTICLE_COUNT = count;
                 particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
@@ -244,4 +254,5 @@
         animate();
     </script>
 </body>
+
 </html>
