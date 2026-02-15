@@ -10,6 +10,7 @@ Kirigami.FormLayout {
     property alias cfg_rotationSpeed: rotationSpeedSlider.value
     property alias cfg_clockwise: clockwiseRadio.checked
     property alias cfg_showClock: showClockCheckBox.checked
+    property alias cfg_lowCpuMode: lowCpuCheckBox.checked
 
     // --- General Section ---
     Kirigami.Separator {
@@ -22,6 +23,13 @@ Kirigami.FormLayout {
 
         Kirigami.FormData.label: i18n("Clock:")
         text: i18n("Show clock")
+    }
+
+    QQC2.CheckBox {
+        id: lowCpuCheckBox
+
+        Kirigami.FormData.label: i18n("Performance:")
+        text: i18n("Low CPU Mode (disables shadows/glows)")
     }
 
     // --- Particle Section ---
@@ -67,7 +75,7 @@ Kirigami.FormLayout {
             id: rotationSpeedSlider
 
             Layout.fillWidth: true
-            from: 1
+            from: 0
             to: 10
             stepSize: 1
             snapMode: QQC2.Slider.SnapAlways

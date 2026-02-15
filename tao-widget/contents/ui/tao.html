@@ -6,287 +6,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mystical Tao</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        }
+
+        body {
             background: transparent;
             overflow: hidden;
-            /* Aggiunge sfocatura allo sfondo dietro al contenuto HTML */
-            backdrop-filter: blur(15px) brightness(0.9);
         }
 
         canvas {
-            filter: contrast(1.1);
+            display: block;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="taoCanvas"></canvas>
-
+    <canvas id="c"></canvas>
     <script>
-        const canvas = document.getElementById("taoCanvas");
-        const ctx = canvas.getContext("2d", { alpha: true });
+        var canvas = document.getElementById("c");
+        var ctx = canvas.getContext("2d");
 
-        let PARTICLE_COUNT = 100;
-        let ROTATION_SPEED = 0.01;
-        let ROTATION_DIRECTION = 1;
-        let SHOW_CLOCK = false;
+        var PARTICLES = 80, SPEED = 0.01, DIR = 1, CLOCK = false, LOWCPU = false;
+        var cx, cy, r, rot = 0, t = 0;
+        var pts = [];
+        var running = false, rafId = null;
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            centerX = canvas.width / 2;
-            centerY = canvas.height / 2;
-            radius = Math.min(canvas.width, canvas.height) / 4;
+        function resize() {
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
+            cx = canvas.width / 2;
+            cy = canvas.height / 2;
+            r = Math.min(canvas.width, canvas.height) / 4;
+        }
+        resize();
+
+        function mkPart() {
+            var a = Math.random() * 6.283;
+            var d = r + Math.random() * 80;
+            return {
+                x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d,
+                vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+                life: 1, decay: 0.002 + Math.random() * 0.003,
+                sz: Math.random() * 1.5 + 0.5
+            };
         }
 
-        let centerX, centerY, radius;
-        resizeCanvas();
+        function initParts() {
+            pts = [];
+            for (var i = 0; i < PARTICLES; i++) pts.push(mkPart());
+        }
+        initParts();
 
-        let rotation = 0;
-        let time = 0;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        class Particle {
-            constructor() {
-                this.reset();
+            // Particles - simple dots, no shadows
+            var n = LOWCPU ? (pts.length >> 1) : pts.length;
+            for (var i = 0; i < n; i++) {
+                var p = pts[i];
+                p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+                if (p.life <= 0) { var np = mkPart(); p.x = np.x; p.y = np.y; p.vx = np.vx; p.vy = np.vy; p.life = np.life; p.decay = np.decay; p.sz = np.sz; }
+                ctx.globalAlpha = p.life * 0.5;
+                ctx.fillStyle = "#88ccff";
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.sz, 0, 6.283);
+                ctx.fill();
             }
 
-            reset() {
-                const angle = Math.random() * Math.PI * 2;
-                const distance = radius + Math.random() * 100;
-                this.x = centerX + Math.cos(angle) * distance;
-                this.y = centerY + Math.sin(angle) * distance;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.life = 1;
-                this.decay = 0.002 + Math.random() * 0.003;
-                this.size = Math.random() * 2 + 0.5;
+            ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // Tao rotation
+            ctx.save();
+            ctx.rotate(rot);
+
+            var pulse = LOWCPU ? 1 : (Math.sin(t * 0.05) * 0.15 + 0.85);
+
+            // Outer glow - simulated with thick semi-transparent stroke
+            if (!LOWCPU) {
+                ctx.globalAlpha = 0.08 * pulse;
+                ctx.strokeStyle = "#88ccff";
+                ctx.lineWidth = 8;
+                ctx.beginPath(); ctx.arc(0, 0, r + 40, 0, 6.283); ctx.stroke();
+            }
+            ctx.globalAlpha = 0.25 * pulse;
+            ctx.strokeStyle = "#88ccff";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(0, 0, r + 40, 0, 6.283); ctx.stroke();
+
+            // White part
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = "#f0f0f0";
+            ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.fill();
+
+            // Black part
+            ctx.fillStyle = "#0a0a0a";
+            ctx.beginPath();
+            ctx.arc(0, 0, r, -1.5708, 1.5708, false);
+            ctx.arc(0, r / 2, r / 2, 1.5708, -1.5708, true);
+            ctx.arc(0, -r / 2, r / 2, 1.5708, -1.5708, false);
+            ctx.closePath(); ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, 6.283); ctx.fill();
+            ctx.fillStyle = "#000000";
+            ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, 6.283); ctx.fill();
+
+            // S-line
+            if (!LOWCPU) {
+                ctx.globalAlpha = 0.2 * pulse;
+                ctx.strokeStyle = "#88ccff";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, -1.5708, 1.5708, false);
+                ctx.arc(0, r / 2, r / 2, 1.5708, -1.5708, true);
+                ctx.arc(0, -r / 2, r / 2, 1.5708, -1.5708, false);
+                ctx.stroke();
             }
 
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life -= this.decay;
+            // Border
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.stroke();
 
-                if (this.life <= 0) {
-                    this.reset();
+            ctx.restore(); // end tao rotation
+
+            // Clock
+            if (CLOCK) {
+                var now = new Date();
+                var sec = now.getSeconds() + now.getMilliseconds() / 1000;
+                var min = now.getMinutes() + sec / 60;
+                var hr = (now.getHours() % 12) + min / 60;
+
+                ctx.lineCap = "round";
+                ctx.globalAlpha = 0.85;
+
+                // Hour
+                ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.moveTo(0, 0);
+                var ha = (hr / 12) * 6.283 - 1.5708;
+                ctx.lineTo(Math.cos(ha) * r * 0.5, Math.sin(ha) * r * 0.5);
+                ctx.stroke();
+
+                // Minute
+                ctx.strokeStyle = "rgba(136,204,255,0.8)"; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(0, 0);
+                var ma = (min / 60) * 6.283 - 1.5708;
+                ctx.lineTo(Math.cos(ma) * r * 0.8, Math.sin(ma) * r * 0.8);
+                ctx.stroke();
+
+                // Second
+                ctx.strokeStyle = "rgba(255,170,136,0.8)"; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(0, 0);
+                var sa = (sec / 60) * 6.283 - 1.5708;
+                ctx.lineTo(Math.cos(sa) * r * 0.9, Math.sin(sa) * r * 0.9);
+                ctx.stroke();
+
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.arc(0, 0, 3, 0, 6.283); ctx.fill();
+            }
+
+            // Satellites
+            if (!LOWCPU) {
+                ctx.globalAlpha = 0.45;
+                for (var j = 0; j < 4; j++) {
+                    var sa2 = t * 0.02 + j * 1.5708;
+                    ctx.fillStyle = j % 2 === 0 ? "#88ccff" : "#ffaa88";
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(sa2) * (r + 25), Math.sin(sa2) * (r + 25), 2.5, 0, 6.283);
+                    ctx.fill();
                 }
             }
 
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.life * 0.6;
-                ctx.fillStyle = "#ffffff";
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = "#88ccff";
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
+            ctx.restore(); // end translate
         }
 
-        let particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
-
-        function drawClockHand(angle, length, width, color, glow) {
-            ctx.save();
-            ctx.rotate(angle - Math.PI / 2);
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(length, 0);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = width;
-            ctx.lineCap = "round";
-            if (glow) {
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = color;
-            }
-            ctx.stroke();
-            ctx.restore();
+        var lastT = 0;
+        function loop(ts) {
+            if (!running) return;
+            if (LOWCPU && ts - lastT < 33) { rafId = requestAnimationFrame(loop); return; }
+            lastT = ts;
+            rot += SPEED * DIR;
+            t++;
+            draw();
+            rafId = requestAnimationFrame(loop);
         }
 
-        function drawTao() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        addEventListener("resize", function () { resize(); if (!running) draw(); });
 
-            // Sfondo circolare
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius + 40, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fill();
-            ctx.restore();
+        window.updateSettings = function (count, speed, dir, clock, lowcpu) {
+            PARTICLES = count;
+            SPEED = speed;
+            DIR = dir;
+            CLOCK = clock;
+            LOWCPU = lowcpu;
+            initParts();
 
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
-            });
-
-            ctx.save();
-            ctx.translate(centerX, centerY);
-
-            // Simbolo Tao (Rotante)
-            ctx.save();
-            ctx.rotate(rotation);
-
-            const pulse = Math.sin(time * 0.05) * 0.2 + 0.8;
-
-            // Glow esterno
-            ctx.save();
-            ctx.globalAlpha = 0.3 * pulse;
-            ctx.strokeStyle = "#88ccff";
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = "#88ccff";
-            ctx.beginPath();
-            ctx.arc(0, 0, radius + 40, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-
-            // Aura interna
-            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            glowGradient.addColorStop(0, "rgba(136, 204, 255, 0.2)");
-            glowGradient.addColorStop(1, "transparent");
-            ctx.fillStyle = glowGradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, radius + 20, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Parte bianca (Yin/Yang base)
-            const whiteGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            whiteGradient.addColorStop(0, "#ffffff");
-            whiteGradient.addColorStop(1, "#e0e0e0");
-
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = whiteGradient;
-            ctx.fill();
-
-            // Parte nera (Yin/Yang base)
-            const blackGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            blackGradient.addColorStop(0, "#1a1a1a");
-            blackGradient.addColorStop(1, "#000000");
-
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, -Math.PI / 2, Math.PI / 2, false);
-            ctx.arc(0, radius / 2, radius / 2, Math.PI / 2, -Math.PI / 2, true);
-            ctx.arc(0, -radius / 2, radius / 2, Math.PI / 2, -Math.PI / 2, false);
-            ctx.closePath();
-            ctx.fillStyle = blackGradient;
-            ctx.fill();
-
-            // Occhio bianco in campo nero
-            ctx.save();
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = "#ffffff";
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(0, -radius / 2, radius / 7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            // Occhio nero in campo bianco
-            ctx.save();
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = "#000000";
-            ctx.fillStyle = "#000000";
-            ctx.beginPath();
-            ctx.arc(0, radius / 2, radius / 7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            // Linea S centrale luminosa
-            ctx.save();
-            ctx.globalAlpha = 0.3 * pulse;
-            ctx.strokeStyle = "#88ccff";
-            ctx.lineWidth = 1;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = "#88ccff";
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, -Math.PI / 2, Math.PI / 2, false);
-            ctx.arc(0, radius / 2, radius / 2, Math.PI / 2, -Math.PI / 2, true);
-            ctx.arc(0, -radius / 2, radius / 2, Math.PI / 2, -Math.PI / 2, false);
-            ctx.stroke();
-            ctx.restore();
-
-            // Bordo esterno
-            ctx.save();
-            ctx.strokeStyle = "#444";
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = "#88ccff";
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-
-            ctx.restore(); // Fine rotazione Tao
-
-            // Disegna orologio sopra il Tao se attivo
-            if (SHOW_CLOCK) {
-                const now = new Date();
-                const sec = now.getSeconds() + now.getMilliseconds() / 1000;
-                const min = now.getMinutes() + sec / 60;
-                const hour = (now.getHours() % 12) + min / 60;
-
-                // Lancette
-                drawClockHand((hour / 12) * Math.PI * 2, radius * 0.5, 6, "rgba(255, 255, 255, 0.8)", true);
-                drawClockHand((min / 60) * Math.PI * 2, radius * 0.8, 4, "rgba(136, 204, 255, 0.8)", true);
-                drawClockHand((sec / 60) * Math.PI * 2, radius * 0.9, 1.5, "rgba(255, 170, 136, 0.8)", false);
-
-                // Pivot centrale
-                ctx.fillStyle = "#ffffff";
-                ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
-            }
-
-            // Satelliti orbitanti
-            ctx.save();
-            ctx.globalAlpha = 0.4;
-            for (let i = 0; i < 4; i++) {
-                const angle = (time * 0.02) + (i * Math.PI / 2);
-                const x = Math.cos(angle) * (radius + 25);
-                const y = Math.sin(angle) * (radius + 25);
-
-                ctx.fillStyle = i % 2 === 0 ? "#88ccff" : "#ffaa88";
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = ctx.fillStyle;
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-
-            ctx.restore(); // Fine translate(centerX, centerY)
-        }
-
-        function animate() {
-            rotation += ROTATION_SPEED * ROTATION_DIRECTION;
-            time++;
-            drawTao();
-            requestAnimationFrame(animate);
-        }
-
-        window.addEventListener("resize", () => {
-            resizeCanvas();
-            particles.forEach(p => p.reset());
-        });
-
-        // Funzione per aggiornare i parametri dal QML
-        window.updateSettings = function (count, speed, direction, showClock) {
-            if (PARTICLE_COUNT !== count) {
-                PARTICLE_COUNT = count;
-                particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
-            }
-            ROTATION_SPEED = speed;
-            ROTATION_DIRECTION = direction;
-            SHOW_CLOCK = showClock;
+            var need = (SPEED !== 0) || (PARTICLES > 0) || CLOCK;
+            if (need && !running) { running = true; requestAnimationFrame(loop); }
+            else if (!need && running) { running = false; if (rafId) cancelAnimationFrame(rafId); draw(); }
+            else draw();
         };
 
-        animate();
+        initParts();
+        resize();
+        running = true;
+        requestAnimationFrame(loop);
     </script>
 </body>
 
