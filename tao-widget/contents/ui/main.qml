@@ -19,7 +19,7 @@ PlasmoidItem {
     readonly property bool isActuallyVisible: (plasmoid.visible !== false) && (plasmoid.expanded !== false)
 
     // Settings for transparency and zero-padding
-    backgroundHints: root.transparentBackground ? "NoBackground" : "StandardBackground"
+    Plasmoid.backgroundHints: root.transparentBackground ? PlasmaCore.Types.NoBackground : PlasmaCore.Types.DefaultBackground
     preferredRepresentation: fullRepresentation
 
     fullRepresentation: Item {
@@ -33,6 +33,7 @@ PlasmoidItem {
 
             anchors.fill: parent
             color: "transparent"
+            clip: true
 
             // 2. Native C++ Renderer (Zen Engine)
             Loader {
@@ -42,6 +43,42 @@ PlasmoidItem {
                 active: root.renderEngine === 1 && root.isActuallyVisible
                 visible: active && status === Loader.Ready
                 source: "NativeRenderer.qml"
+
+                Binding {
+                    target: nativeLoader.item
+                    property: "particleCount"
+                    value: root.particleCount
+                    when: nativeLoader.status === Loader.Ready
+                }
+
+                Binding {
+                    target: nativeLoader.item
+                    property: "rotationSpeed"
+                    value: root.rotationSpeed
+                    when: nativeLoader.status === Loader.Ready
+                }
+
+                Binding {
+                    target: nativeLoader.item
+                    property: "clockwise"
+                    value: root.clockwise
+                    when: nativeLoader.status === Loader.Ready
+                }
+
+                Binding {
+                    target: nativeLoader.item
+                    property: "showClock"
+                    value: root.showClock
+                    when: nativeLoader.status === Loader.Ready
+                }
+
+                Binding {
+                    target: nativeLoader.item
+                    property: "lowCpuMode"
+                    value: root.lowCpuMode
+                    when: nativeLoader.status === Loader.Ready
+                }
+
             }
 
             // 1. Web Renderer (Web Engine / WebGL)

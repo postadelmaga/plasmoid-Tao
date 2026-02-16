@@ -9,12 +9,14 @@
 #include <QSGNode>
 #include <QSGGeometry>
 
+// Struttura ottimizzata per la simulazione
 struct ParticleData {
     float x, y;
     float vx, vy;
     float life;
     float decay;
     float size;
+    quint32 packedColor; // Colore pre-calcolato (ARGB/ABGR)
 };
 
 class TaoQGraphHybrid : public QQuickItem
@@ -68,7 +70,7 @@ private:
     void setupGeometryIndices(QSGGeometry *geo, int count);
 
     // Configuration
-    int m_particleCount = 2000;
+    int m_particleCount = 80;
     float m_rotationSpeed = 5.0f;
     bool m_clockwise = true;
     bool m_showClock = false;
@@ -76,16 +78,18 @@ private:
     QPointF m_mousePos;
 
     // Simulation State
-    std::vector<ParticleData> m_particles; // Single buffer is often enough for visual FX, but let's stick to simple logic
+    std::vector<ParticleData> m_particles;       // Back buffer (thread simulazione)
+    std::vector<ParticleData> m_particlesRender; // Front buffer (thread render)
     float m_rotation = 0.0f;
     QElapsedTimer m_timeTracker;
+    qint64 m_lastTime = 0;
     float m_lastDt = 0.016f;
+    int m_renderCount = 0;
 
     // Async handling
     QFutureWatcher<void> m_watcher;
     bool m_simulationPending = false;
     
-    // Limits
     const int MAX_PARTICLES = 20000;
 };
 

@@ -13,8 +13,12 @@ Kirigami.FormLayout {
     property alias cfg_lowCpuMode: lowCpuCheckBox.checked
     property alias cfg_renderEngine: engineCombo.currentIndex
     property alias cfg_transparentBackground: transparentBgCheckBox.checked
+
     // Detection logic for the native plugin
+    // We use a simple Loader that tries to load the NativeRenderer
+    // If it fails or is not found, status will not be Ready.
     property bool nativeBackendAvailable: nativeLoader.status === Loader.Ready
+
     // Silence Plasma warnings for missing properties
     property string title: ""
     property int cfg_particleCountDefault: 80
@@ -26,6 +30,7 @@ Kirigami.FormLayout {
     property bool cfg_transparentBackgroundDefault: true
 
     // Non-visual loader to check for native plugin availability
+    // Placing it outside the visual tree of the FormLayout items
     Loader {
         id: nativeLoader
 
