@@ -1,3 +1,0 @@
-module org.kde.private.tao
-plugin taoplugin
-classname TaoPlugin

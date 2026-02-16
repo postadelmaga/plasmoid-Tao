@@ -1,6 +1,7 @@
 #include "TaoQuickItem.h"
 #include <QPainterPath>
 #include <QDateTime>
+#include <QGuiApplication>
 
 TaoQuickItem::TaoQuickItem(QQuickItem *parent)
     : QQuickPaintedItem(parent)
@@ -114,8 +115,8 @@ void TaoQuickItem::bakeTextures() {
     drawCircle(c, c + r/2, r/2, 0, M_PI * 2, QColor(235, 235, 235)); // Bottom white
     
     // Eyes
-    drawCircle(c, c - r/2, r/6, 0, M_PI * 2, QColor(255, 255, 255)); // Top eye white
-    drawCircle(c, c + r/2, r/6, 0, M_PI * 2, QColor(0, 0, 0)); // Bottom eye black
+    drawCircle(c, c - r/2, r/7, 0, M_PI * 2, QColor(255, 255, 255)); // Top eye white
+    drawCircle(c, c + r/2, r/7, 0, M_PI * 2, QColor(0, 0, 0)); // Bottom eye black
 }
 
 
@@ -126,14 +127,13 @@ void TaoQuickItem::updateAnimation() {
     
     // Rotation logic
     float dir = m_clockwise ? 1.0f : -1.0f;
-    // Map existing speed 0-10 roughly to 0-2.0 multiplier
-    float speedMult = m_rotationSpeed * 0.2f; 
-    m_rotation += 0.2f * speedMult * dir; // match SDL speed roughly
+    // Harmonized with JS version: rotationSpeed / 1000 Radians per frame
+    m_rotation += (m_rotationSpeed / 1000.0f) * dir;
 
     // Particle Logic
     float cx = width() / 2.0f;
     float cy = height() / 2.0f;
-    float r = qMin(width(), height()) / 4.5f;
+    float r = qMin(width(), height()) / 4.0f;
 
     // Random generator
     auto gen = QRandomGenerator::global();
@@ -157,14 +157,11 @@ void TaoQuickItem::updateAnimation() {
             p.x = cx + std::cos(angle) * dist;
             p.y = cy + std::sin(angle) * dist;
             
-            // Velocity
-            float r1 = gen->generateDouble() * 2.0f - 1.0f; // -1 to 1
-            float r2 = gen->generateDouble() * 2.0f - 1.0f;
+            // Velocity (harmonized with JS range [-0.2, 0.2])
+            p.vx = (gen->generateDouble() - 0.5f) * 0.4f;
+            p.vy = (gen->generateDouble() - 0.5f) * 0.4f;
             
-            p.vx = (std::cos(angle) * 0.5f + r1 * 0.5f) * 0.5f;
-            p.vy = (std::sin(angle) * 0.5f + r2 * 0.5f) * 0.5f;
-            
-            p.decay = 0.002f + gen->generateDouble() * 0.005f;
+            p.decay = 0.002f + gen->generateDouble() * 0.003f;
             p.size = 0.5f + gen->generateDouble() * 1.5f;
         }
     }
@@ -228,13 +225,34 @@ void TaoQuickItem::paint(QPainter *painter) {
     }
 
     // 3. TAO (Center)
-    // Draw rotated image
     painter->save();
     painter->translate(cx, cy);
+    
+    // Tao Symbol
+    painter->save();
     painter->rotate(m_rotation * 180.0 / M_PI); // Rad to Deg
-    // We draw the pre-baked tao texture centered
-    // Render target size is r*2
     painter->drawImage(QRectF(-r, -r, r*2, r*2), m_texTao);
+    painter->restore();
+
+    // Extra decoration (Satellites & Aura)
+    if (!m_lowCpuMode) {
+        float pulse = std::sin(m_time * 3.0f) * 0.15f + 0.85f;
+
+        // Aura ring
+        painter->setOpacity(0.25f * pulse);
+        painter->setPen(QPen(QColor(136, 204, 255), 1.5, Qt::SolidLine, Qt::RoundCap));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawEllipse(QPointF(0, 0), r + 40, r + 40);
+
+        // Satellites
+        painter->setOpacity(0.45f);
+        for (int j = 0; j < 4; ++j) {
+            float sa2 = (m_time * 1.25f) + (j * M_PI / 2.0f);
+            painter->setBrush(j % 2 == 0 ? QColor(136, 204, 255) : QColor(255, 170, 136));
+            painter->setPen(Qt::NoPen);
+            painter->drawEllipse(QPointF(std::cos(sa2) * (r + 25), std::sin(sa2) * (r + 25)), 2.5, 2.5);
+        }
+    }
     painter->restore();
 
     // 4. CLOCK (Overlay)
@@ -247,8 +265,7 @@ void TaoQuickItem::paint(QPainter *painter) {
         float s = t.second() + t.msec() / 1000.0f;
 
         painter->setPen(QPen(QColor(255, 255, 255, 200), 5, Qt::SolidLine, Qt::RoundCap));
-        painter->drawLine(QGuiApplication::primaryScreen() ? // Robustness check
-            QLineF(cx, cy, cx + std::cos((h/12.0*M_PI*2)-M_PI_2)*r*0.5, cy + std::sin((h/12.0*M_PI*2)-M_PI_2)*r*0.5) : QLineF());
+        painter->drawLine(QPointF(cx, cy), QPointF(cx + std::cos((h/12.0*M_PI*2)-M_PI/2.0)*r*0.5, cy + std::sin((h/12.0*M_PI*2)-M_PI/2.0)*r*0.5));
             
         // Simplified lines for minutes/seconds...
         // Minutes

@@ -11,11 +11,36 @@ Kirigami.FormLayout {
     property alias cfg_clockwise: clockwiseRadio.checked
     property alias cfg_showClock: showClockCheckBox.checked
     property alias cfg_lowCpuMode: lowCpuCheckBox.checked
+    property alias cfg_useNativeRenderer: nativeRendererCheckBox.checked
+    // Detection logic for the native plugin
+    property bool nativeBackendAvailable: nativeChecker.status === Loader.Ready
+
+    Loader {
+        id: nativeChecker
+
+        source: "NativeRenderer.qml"
+        active: true
+        visible: false
+    }
 
     // --- General Section ---
     Kirigami.Separator {
         Kirigami.FormData.isSection: true
         Kirigami.FormData.label: i18n("General")
+    }
+
+    QQC2.CheckBox {
+        id: nativeRendererCheckBox
+
+        text: i18n("Use Native C++ Backend (Requires Compilation)")
+        Kirigami.FormData.label: i18n("Backend:")
+        enabled: configRoot.nativeBackendAvailable
+    }
+
+    QQC2.Label {
+        text: configRoot.nativeBackendAvailable ? i18n("✓ Plugin detected") : i18n("✗ Plugin not found (using Web fallback)")
+        font.pixelSize: Kirigami.Units.fontMetrics.font.pixelSize * 0.8
+        color: configRoot.nativeBackendAvailable ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
     }
 
     QQC2.CheckBox {
@@ -30,14 +55,6 @@ Kirigami.FormLayout {
 
         Kirigami.FormData.label: i18n("Performance:")
         text: i18n("Low CPU Mode (disables shadows/glows)")
-    }
-
-    QQC2.CheckBox {
-        id: nativeRendererCheckBox
-
-        text: i18n("Use Native C++ Backend (Requires Compilation)")
-        checked: plasmoid.configuration.useNativeRenderer
-        onCheckedChanged: plasmoid.configuration.useNativeRenderer = checked
     }
 
     // --- Particle Section ---

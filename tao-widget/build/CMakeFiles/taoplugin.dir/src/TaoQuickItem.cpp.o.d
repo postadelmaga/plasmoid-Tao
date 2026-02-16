@@ -400,4 +400,6 @@ CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o: \
  /usr/include/c++/15.2.1/bits/random.tcc \
  /usr/include/qt6/QtGui/QPainterPath \
  /usr/include/qt6/QtGui/qpainterpath.h /usr/include/qt6/QtCore/QDateTime \
- /usr/include/qt6/QtCore/qdatetime.h
+ /usr/include/qt6/QtCore/qdatetime.h \
+ /usr/include/qt6/QtGui/QGuiApplication \
+ /usr/include/qt6/QtGui/qguiapplication.h

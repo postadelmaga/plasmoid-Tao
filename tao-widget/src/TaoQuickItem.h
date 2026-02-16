@@ -62,11 +62,10 @@ private:
     void initParticles();
     void bakeTextures();
     QImage makeGlow(int s);
-    void drawTao(QPainter* painter, float cx, float cy, float r, float rot);
 
     // Properties
-    int m_particleCount = 1200;
-    float m_rotationSpeed = 1.0f;
+    int m_particleCount = 80;
+    float m_rotationSpeed = 5.0f;
     bool m_clockwise = true;
     bool m_showClock = false;
     bool m_lowCpuMode = false;

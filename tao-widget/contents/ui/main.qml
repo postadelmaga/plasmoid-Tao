@@ -5,9 +5,8 @@ import QtWebEngine
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
-// Native Import - ensure you build the plugin!
-import org.kde.private.tao 1.0 as TaoNative
 
+// Native Import - ensure you build the plugin!
 PlasmoidItem {
     id: root
 
@@ -17,6 +16,7 @@ PlasmoidItem {
     property bool showClock: plasmoid.configuration.showClock
     property bool lowCpuMode: plasmoid.configuration.lowCpuMode
     property bool useNativeRenderer: plasmoid.configuration.useNativeRenderer
+    property bool nativeBackendAvailable: nativeLoader.status === Loader.Ready
 
     width: Kirigami.Units.gridUnit * 20
     height: Kirigami.Units.gridUnit * 20
@@ -32,17 +32,13 @@ PlasmoidItem {
         clip: true
         layer.enabled: true
 
-        // 2. Native C++ Renderer (Efficient)
-        TaoNative.TaoAnimation {
-            id: nativeView
+        // 2. Native C++ Renderer (Loaded dynamically)
+        Loader {
+            id: nativeLoader
 
             anchors.fill: parent
-            visible: root.useNativeRenderer
-            particleCount: root.particleCount
-            rotationSpeed: root.rotationSpeed
-            clockwise: root.clockwise
-            showClock: root.showClock
-            lowCpuMode: root.lowCpuMode
+            visible: root.useNativeRenderer && status === Loader.Ready
+            source: "NativeRenderer.qml"
         }
 
         // 1. Web Renderer (Default or Fallback)
@@ -61,7 +57,8 @@ PlasmoidItem {
                 runJavaScript("if(window.updateSettings)window.updateSettings(" + p + "," + s + "," + d + "," + c + "," + l + ");");
             }
 
-            visible: !root.useNativeRenderer
+            // Visible solo se NON usiamo il nativo O se il nativo ha fallito il caricamento
+            visible: !root.useNativeRenderer || nativeLoader.status === Loader.Error
             enabled: visible
             anchors.fill: parent
             backgroundColor: "transparent"

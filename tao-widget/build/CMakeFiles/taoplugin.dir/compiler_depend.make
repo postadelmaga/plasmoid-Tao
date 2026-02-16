@@ -2417,6 +2417,7 @@ CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o: /home/fra/Dev/plasmoid-tao/tao-
   /usr/include/qt6/QtCore/qversiontagging.h \
   /usr/include/qt6/QtCore/qxptype_traits.h \
   /usr/include/qt6/QtCore/qyieldcpu.h \
+  /usr/include/qt6/QtGui/QGuiApplication \
   /usr/include/qt6/QtGui/QImage \
   /usr/include/qt6/QtGui/QPainter \
   /usr/include/qt6/QtGui/QPainterPath \
@@ -3059,6 +3060,8 @@ taoplugin_autogen/mocs_compilation.cpp:
 /usr/include/qt6/QtGui/qpainterpath.h:
 
 /usr/include/qt6/QtGui/QPainterPath:
+
+/usr/include/qt6/QtGui/QGuiApplication:
 
 /usr/include/qt6/QtCore/QDateTime:
 
