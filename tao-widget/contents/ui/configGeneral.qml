@@ -12,6 +12,7 @@ Kirigami.FormLayout {
     property alias cfg_showClock: showClockCheckBox.checked
     property alias cfg_lowCpuMode: lowCpuCheckBox.checked
     property alias cfg_useNativeRenderer: nativeRendererCheckBox.checked
+    property alias cfg_nativeBackendType: backendCombo.currentIndex
     // Detection logic for the native plugin
     property bool nativeBackendAvailable: nativeChecker.status === Loader.Ready
 
@@ -32,9 +33,17 @@ Kirigami.FormLayout {
     QQC2.CheckBox {
         id: nativeRendererCheckBox
 
-        text: i18n("Use Native C++ Backend (Requires Compilation)")
-        Kirigami.FormData.label: i18n("Backend:")
+        text: i18n("Use Native C++ Backend (Faster)")
+        Kirigami.FormData.label: i18n("Rendering:")
         enabled: configRoot.nativeBackendAvailable
+    }
+
+    QQC2.ComboBox {
+        id: backendCombo
+
+        Kirigami.FormData.label: i18n("Algorithm:")
+        enabled: nativeRendererCheckBox.checked && configRoot.nativeBackendAvailable
+        model: [i18n("Standard (Painted)"), i18n("Gemini (GPU/SceneGraph)"), i18n("Claude (Multi-threaded)")]
     }
 
     QQC2.Label {

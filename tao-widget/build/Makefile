@@ -260,6 +260,78 @@ src/TaoPlugin.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoPlugin.cpp.s
 .PHONY : src/TaoPlugin.cpp.s
 
+src/TaoQGraphClaude.o: src/TaoQGraphClaude.cpp.o
+.PHONY : src/TaoQGraphClaude.o
+
+# target to build an object file
+src/TaoQGraphClaude.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o
+.PHONY : src/TaoQGraphClaude.cpp.o
+
+src/TaoQGraphClaude.i: src/TaoQGraphClaude.cpp.i
+.PHONY : src/TaoQGraphClaude.i
+
+# target to preprocess a source file
+src/TaoQGraphClaude.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.i
+.PHONY : src/TaoQGraphClaude.cpp.i
+
+src/TaoQGraphClaude.s: src/TaoQGraphClaude.cpp.s
+.PHONY : src/TaoQGraphClaude.s
+
+# target to generate assembly for a file
+src/TaoQGraphClaude.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.s
+.PHONY : src/TaoQGraphClaude.cpp.s
+
+src/TaoQGraphGemini.o: src/TaoQGraphGemini.cpp.o
+.PHONY : src/TaoQGraphGemini.o
+
+# target to build an object file
+src/TaoQGraphGemini.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o
+.PHONY : src/TaoQGraphGemini.cpp.o
+
+src/TaoQGraphGemini.i: src/TaoQGraphGemini.cpp.i
+.PHONY : src/TaoQGraphGemini.i
+
+# target to preprocess a source file
+src/TaoQGraphGemini.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.i
+.PHONY : src/TaoQGraphGemini.cpp.i
+
+src/TaoQGraphGemini.s: src/TaoQGraphGemini.cpp.s
+.PHONY : src/TaoQGraphGemini.s
+
+# target to generate assembly for a file
+src/TaoQGraphGemini.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.s
+.PHONY : src/TaoQGraphGemini.cpp.s
+
+src/TaoQGraphHybrid.o: src/TaoQGraphHybrid.cpp.o
+.PHONY : src/TaoQGraphHybrid.o
+
+# target to build an object file
+src/TaoQGraphHybrid.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o
+.PHONY : src/TaoQGraphHybrid.cpp.o
+
+src/TaoQGraphHybrid.i: src/TaoQGraphHybrid.cpp.i
+.PHONY : src/TaoQGraphHybrid.i
+
+# target to preprocess a source file
+src/TaoQGraphHybrid.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.i
+.PHONY : src/TaoQGraphHybrid.cpp.i
+
+src/TaoQGraphHybrid.s: src/TaoQGraphHybrid.cpp.s
+.PHONY : src/TaoQGraphHybrid.s
+
+# target to generate assembly for a file
+src/TaoQGraphHybrid.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.s
+.PHONY : src/TaoQGraphHybrid.cpp.s
+
 src/TaoQuickItem.o: src/TaoQuickItem.cpp.o
 .PHONY : src/TaoQuickItem.o
 
@@ -329,6 +401,15 @@ help:
 	@echo "... src/TaoPlugin.o"
 	@echo "... src/TaoPlugin.i"
 	@echo "... src/TaoPlugin.s"
+	@echo "... src/TaoQGraphClaude.o"
+	@echo "... src/TaoQGraphClaude.i"
+	@echo "... src/TaoQGraphClaude.s"
+	@echo "... src/TaoQGraphGemini.o"
+	@echo "... src/TaoQGraphGemini.i"
+	@echo "... src/TaoQGraphGemini.s"
+	@echo "... src/TaoQGraphHybrid.o"
+	@echo "... src/TaoQGraphHybrid.i"
+	@echo "... src/TaoQGraphHybrid.s"
 	@echo "... src/TaoQuickItem.o"
 	@echo "... src/TaoQuickItem.i"
 	@echo "... src/TaoQuickItem.s"

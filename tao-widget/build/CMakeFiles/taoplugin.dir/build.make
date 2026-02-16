@@ -72,7 +72,7 @@ include CMakeFiles/taoplugin.dir/flags.make
 taoplugin_autogen/timestamp: /usr/lib/qt6/moc
 taoplugin_autogen/timestamp: CMakeFiles/taoplugin.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC for target taoplugin"
-	/usr/bin/cmake -E cmake_autogen /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin_autogen.dir/AutogenInfo.json ""
+	/usr/bin/cmake -E cmake_autogen /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin_autogen.dir/AutogenInfo.json Release
 	/usr/bin/cmake -E touch /home/fra/Dev/plasmoid-tao/tao-widget/build/taoplugin_autogen/timestamp
 
 CMakeFiles/taoplugin.dir/codegen:
@@ -120,11 +120,56 @@ CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQuickItem.cpp -o CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.s
 
+CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o: CMakeFiles/taoplugin.dir/flags.make
+CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o: /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp
+CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o: CMakeFiles/taoplugin.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o -MF CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o.d -o CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp > CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.i
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp -o CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.s
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o: CMakeFiles/taoplugin.dir/flags.make
+CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o: /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp
+CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o: CMakeFiles/taoplugin.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o -MF CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o.d -o CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp > CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.i
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp -o CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.s
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: CMakeFiles/taoplugin.dir/flags.make
+CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp
+CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: CMakeFiles/taoplugin.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o -MF CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o.d -o CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp > CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.i
+
+CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp -o CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.s
+
 # Object files for target taoplugin
 taoplugin_OBJECTS = \
 "CMakeFiles/taoplugin.dir/taoplugin_autogen/mocs_compilation.cpp.o" \
 "CMakeFiles/taoplugin.dir/src/TaoPlugin.cpp.o" \
-"CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o"
+"CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o" \
+"CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o" \
+"CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o" \
+"CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o"
 
 # External object files for target taoplugin
 taoplugin_EXTERNAL_OBJECTS =
@@ -132,12 +177,15 @@ taoplugin_EXTERNAL_OBJECTS =
 bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/taoplugin_autogen/mocs_compilation.cpp.o
 bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/src/TaoPlugin.cpp.o
 bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o
+bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o
+bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o
+bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o
 bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/build.make
 bin/libtaoplugin.so: /usr/lib/libX11.so
 bin/libtaoplugin.so: /usr/lib/libGLX.so
 bin/libtaoplugin.so: /usr/lib/libOpenGL.so
 bin/libtaoplugin.so: CMakeFiles/taoplugin.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX shared library bin/libtaoplugin.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX shared library bin/libtaoplugin.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/taoplugin.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

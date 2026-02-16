@@ -1,0 +1,4 @@
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/edit_cache.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/rebuild_cache.dir

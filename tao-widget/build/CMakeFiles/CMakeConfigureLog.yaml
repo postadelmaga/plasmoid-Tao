@@ -22373,3 +22373,688 @@ events:
         - "/usr/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules"
         - "/usr/lib/cmake/Qt6/3rdparty/kwin"
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:28 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:28 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:39 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:39 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:39 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:39 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:40 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:40 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/FindVulkan.cmake:392 (find_path)"
+      - "/usr/lib/cmake/Qt6/FindWrapVulkanHeaders.cmake:13 (find_package)"
+      - "/usr/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:34 (find_package)"
+      - "/usr/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake:37 (_qt_internal_find_third_party_dependencies)"
+      - "/usr/lib/cmake/Qt6Gui/Qt6GuiConfig.cmake:50 (include)"
+      - "/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake:93 (find_package)"
+      - "/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake:125 (__find_dependency_common)"
+      - "/usr/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:142 (find_dependency)"
+      - "/usr/lib/cmake/Qt6Quick/Qt6QuickDependencies.cmake:50 (_qt_internal_find_qt_dependencies)"
+      - "/usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake:50 (include)"
+      - "/usr/lib/cmake/Qt6/Qt6Config.cmake:251 (find_package)"
+      - "CMakeLists.txt:17 (find_package)"
+    mode: "path"
+    variable: "Vulkan_INCLUDE_DIR"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "vulkan/vulkan.h"
+    candidate_directories:
+      - "/include/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/fra/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/local/include/"
+      - "/usr/local/"
+      - "/usr/include/"
+      - "/usr/"
+      - "/include/"
+      - "/usr/X11R6/include/"
+      - "/usr/X11R6/"
+      - "/usr/pkg/include/"
+      - "/usr/pkg/"
+      - "/opt/include/"
+      - "/opt/"
+      - "/usr/include/X11/"
+    searched_directories:
+      - "/include/vulkan/vulkan.h"
+      - "/usr/local/sbin/vulkan/vulkan.h"
+      - "/usr/local/bin/vulkan/vulkan.h"
+      - "/usr/bin/vulkan/vulkan.h"
+      - "/home/fra/.local/share/flatpak/exports/bin/vulkan/vulkan.h"
+      - "/var/lib/flatpak/exports/bin/vulkan/vulkan.h"
+      - "/usr/bin/site_perl/vulkan/vulkan.h"
+      - "/usr/bin/vendor_perl/vulkan/vulkan.h"
+      - "/usr/bin/core_perl/vulkan/vulkan.h"
+      - "/usr/local/include/vulkan/vulkan.h"
+      - "/usr/local/vulkan/vulkan.h"
+    found: "/usr/include/"
+    search_context:
+      ENV{PATH}:
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/fra/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+      CMAKE_INSTALL_PREFIX: "/usr"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+      CMAKE_SYSTEM_INCLUDE_PATH:
+        - "/usr/include/X11"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:40 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+        [ 50%] Linking CXX static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [ 75%] Building CXX object CMakeFiles/boo.dir/main.cpp.o
+        /usr/bin/c++   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.cpp.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/src/main.cpp
+        [100%] Linking CXX executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/c++ -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.cpp.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles 0
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:197 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckIPOSupported.cmake:320 (_ipo_run_language_check)"
+      - "CMakeLists.txt:40 (check_ipo_supported)"
+    directories:
+      source: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src"
+      binary: "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin"
+    buildResult:
+      variable: "_IPO_LANGUAGE_CHECK_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: '/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile
+        /usr/bin/cmake -S/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src -B/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin --check-build-system CMakeFiles/Makefile.cmake 0
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin//CMakeFiles/progress.marks
+        /usr/bin/make  -f CMakeFiles/Makefile2 all
+        make[1]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake foo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/foo.dir/depend.internal".
+        Scanning dependencies of target foo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 25%] Building C object CMakeFiles/foo.dir/foo.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/foo.dir/foo.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/foo.c
+        [ 50%] Linking C static library libfoo.a
+        /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+        "/usr/bin/gcc-ar" qc libfoo.a CMakeFiles/foo.dir/foo.c.o
+        "/usr/bin/gcc-ranlib" libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 50%] Built target foo
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/depend
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        cd /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake boo
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/DependInfo.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Dependee "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles/boo.dir/depend.internal".
+        Scanning dependencies of target boo
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/make  -f CMakeFiles/boo.dir/build.make CMakeFiles/boo.dir/build
+        make[2]: ingresso nella directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [ 75%] Building C object CMakeFiles/boo.dir/main.c.o
+        /usr/bin/cc   -flto=auto -fno-fat-lto-objects -o CMakeFiles/boo.dir/main.c.o -c /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/src/main.c
+        [100%] Linking C executable boo
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/boo.dir/link.txt --verbose=1
+        /usr/bin/cc -flto=auto -fno-fat-lto-objects CMakeFiles/boo.dir/main.c.o -o boo  libfoo.a
+        make[2]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        [100%] Built target boo
+        make[1]: uscita dalla directory «/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin»
+        /usr/bin/cmake -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/_CMakeLTOTest-C/bin/CMakeFiles 0
+        
+      exitCode: 0
+...

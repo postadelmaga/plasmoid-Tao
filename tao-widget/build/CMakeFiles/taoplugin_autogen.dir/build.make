@@ -71,7 +71,7 @@ CMakeFiles/taoplugin_autogen: taoplugin_autogen/timestamp
 taoplugin_autogen/timestamp: /usr/lib/qt6/moc
 taoplugin_autogen/timestamp: CMakeFiles/taoplugin_autogen.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC for target taoplugin"
-	/usr/bin/cmake -E cmake_autogen /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin_autogen.dir/AutogenInfo.json ""
+	/usr/bin/cmake -E cmake_autogen /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin_autogen.dir/AutogenInfo.json Release
 	/usr/bin/cmake -E touch /home/fra/Dev/plasmoid-tao/tao-widget/build/taoplugin_autogen/timestamp
 
 CMakeFiles/taoplugin_autogen.dir/codegen:

@@ -23,6 +23,7 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 cmake ..
+make clean
 make -j$(nproc)
 
 echo ""

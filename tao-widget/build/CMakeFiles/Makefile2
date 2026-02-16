@@ -154,12 +154,12 @@ CMakeFiles/taoplugin.dir/all: CMakeFiles/taoplugin_autogen_timestamp_deps.dir/al
 CMakeFiles/taoplugin.dir/all: CMakeFiles/taoplugin_autogen.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=3,4,5,6,7 "Built target taoplugin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10 "Built target taoplugin"
 .PHONY : CMakeFiles/taoplugin.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/taoplugin.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/taoplugin.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles 0
 .PHONY : CMakeFiles/taoplugin.dir/rule
@@ -171,7 +171,7 @@ taoplugin: CMakeFiles/taoplugin.dir/rule
 # codegen rule for target.
 CMakeFiles/taoplugin.dir/codegen: CMakeFiles/taoplugin_autogen_timestamp_deps.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin.dir/build.make CMakeFiles/taoplugin.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=3,4,5,6,7 "Finished codegen for target taoplugin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10 "Finished codegen for target taoplugin"
 .PHONY : CMakeFiles/taoplugin.dir/codegen
 
 # clean rule for target.
@@ -218,7 +218,7 @@ CMakeFiles/taoplugin_autogen_timestamp_deps.dir/clean:
 CMakeFiles/taoplugin_autogen.dir/all: CMakeFiles/taoplugin_autogen_timestamp_deps.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin_autogen.dir/build.make CMakeFiles/taoplugin_autogen.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin_autogen.dir/build.make CMakeFiles/taoplugin_autogen.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=8 "Built target taoplugin_autogen"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=11 "Built target taoplugin_autogen"
 .PHONY : CMakeFiles/taoplugin_autogen.dir/all
 
 # Build rule for subdir invocation for target.
@@ -235,7 +235,7 @@ taoplugin_autogen: CMakeFiles/taoplugin_autogen.dir/rule
 # codegen rule for target.
 CMakeFiles/taoplugin_autogen.dir/codegen: CMakeFiles/taoplugin_autogen_timestamp_deps.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/taoplugin_autogen.dir/build.make CMakeFiles/taoplugin_autogen.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=8 "Finished codegen for target taoplugin_autogen"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles --progress-num=11 "Finished codegen for target taoplugin_autogen"
 .PHONY : CMakeFiles/taoplugin_autogen.dir/codegen
 
 # clean rule for target.

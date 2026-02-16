@@ -1218,11 +1218,6 @@
 		"/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
 		"/usr/lib/cmake/Qt6OpenGL/Qt6OpenGLDependencies.cmake",
 		"/usr/lib/cmake/Qt6/FindWrapVulkanHeaders.cmake",
-		"/usr/share/cmake/Modules/FindVulkan.cmake",
-		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
-		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
 		"/usr/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets.cmake",
 		"/usr/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets-relwithdebinfo.cmake",
 		"/usr/lib/cmake/Qt6OpenGL/Qt6OpenGLAdditionalTargetInfo.cmake",
@@ -1347,11 +1342,6 @@
 		"/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
 		"/usr/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake",
 		"/usr/lib/cmake/Qt6/FindWrapVulkanHeaders.cmake",
-		"/usr/share/cmake/Modules/FindVulkan.cmake",
-		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
-		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
 		"/usr/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersion.cmake",
 		"/usr/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersionImpl.cmake",
 		"/usr/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfig.cmake",
@@ -1394,11 +1384,6 @@
 		"/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
 		"/usr/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake",
 		"/usr/lib/cmake/Qt6/FindWrapVulkanHeaders.cmake",
-		"/usr/share/cmake/Modules/FindVulkan.cmake",
-		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
-		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
 		"/usr/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersion.cmake",
 		"/usr/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersionImpl.cmake",
 		"/usr/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfig.cmake",
@@ -1471,7 +1456,14 @@
 		"/usr/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
 		"/usr/lib/cmake/Plasma/PlasmaMacros.cmake",
 		"/usr/lib/cmake/PlasmaQuick/PlasmaQuickTargets.cmake",
-		"/usr/lib/cmake/PlasmaQuick/PlasmaQuickTargets-noconfig.cmake"
+		"/usr/lib/cmake/PlasmaQuick/PlasmaQuickTargets-noconfig.cmake",
+		"/usr/share/cmake/Modules/CheckIPOSupported.cmake",
+		"/usr/share/cmake/Modules/CheckIPOSupported/CMakeLists-CXX.txt.in",
+		"/usr/share/cmake/Modules/CheckIPOSupported/foo.cpp",
+		"/usr/share/cmake/Modules/CheckIPOSupported/main.cpp",
+		"/usr/share/cmake/Modules/CheckIPOSupported/CMakeLists-C.txt.in",
+		"/usr/share/cmake/Modules/CheckIPOSupported/foo.c",
+		"/usr/share/cmake/Modules/CheckIPOSupported/main.c"
 	],
 	"CMAKE_SOURCE_DIR" : "/home/fra/Dev/plasmoid-tao/tao-widget",
 	"CROSS_CONFIG" : false,
@@ -1483,6 +1475,24 @@
 			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoPlugin.h",
 			"Mu",
 			"UVLADIE3JM/moc_TaoPlugin.cpp",
+			null
+		],
+		[
+			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.h",
+			"Mu",
+			"UVLADIE3JM/moc_TaoQGraphClaude.cpp",
+			null
+		],
+		[
+			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.h",
+			"Mu",
+			"UVLADIE3JM/moc_TaoQGraphGemini.cpp",
+			null
+		],
+		[
+			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.h",
+			"Mu",
+			"UVLADIE3JM/moc_TaoQGraphHybrid.cpp",
 			null
 		],
 		[
@@ -1498,6 +1508,7 @@
 	"MOC_DEFINITIONS" : 
 	[
 		"KCOREADDONS_LIB",
+		"QT_CONCURRENT_LIB",
 		"QT_CORE_LIB",
 		"QT_GUI_LIB",
 		"QT_NETWORK_LIB",
@@ -1539,6 +1550,7 @@
 		"/usr/include/qt6/QtQmlIntegration",
 		"/usr/include/qt6/QtNetwork",
 		"/usr/include/qt6/QtOpenGL",
+		"/usr/include/qt6/QtConcurrent",
 		"/usr/include/KF6/KConfig",
 		"/usr/include/KF6/KConfigCore",
 		"/usr/include/Plasma",
@@ -1571,7 +1583,7 @@
 	"MOC_PREDEFS_CMD" : 
 	[
 		"/usr/bin/c++",
-		"-std=c++17",
+		"-std=gnu++17",
 		"-w",
 		"-dM",
 		"-E",
@@ -1591,6 +1603,21 @@
 	"SOURCES" : 
 	[
 		[ "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoPlugin.cpp", "Mu", null ],
+		[
+			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp",
+			"Mu",
+			null
+		],
+		[
+			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp",
+			"Mu",
+			null
+		],
+		[
+			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp",
+			"Mu",
+			null
+		],
 		[
 			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQuickItem.cpp",
 			"Mu",

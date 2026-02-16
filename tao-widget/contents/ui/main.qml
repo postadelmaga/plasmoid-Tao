@@ -16,6 +16,7 @@ PlasmoidItem {
     property bool showClock: plasmoid.configuration.showClock
     property bool lowCpuMode: plasmoid.configuration.lowCpuMode
     property bool useNativeRenderer: plasmoid.configuration.useNativeRenderer
+    property int nativeBackendType: plasmoid.configuration.nativeBackendType
     property bool nativeBackendAvailable: nativeLoader.status === Loader.Ready
 
     width: Kirigami.Units.gridUnit * 20

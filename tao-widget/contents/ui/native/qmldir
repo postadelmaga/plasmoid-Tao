@@ -1,4 +1,3 @@
 module native
 plugin taoplugin
 classname TaoPlugin
-typeinfo taoplugin.qmltypes
