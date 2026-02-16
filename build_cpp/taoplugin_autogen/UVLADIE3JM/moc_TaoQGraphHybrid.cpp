@@ -47,14 +47,14 @@ template <> constexpr inline auto TaoQGraphHybrid::qt_create_metaobjectdata<qt_m
         "clockwiseChanged",
         "showClockChanged",
         "lowCpuModeChanged",
-        "threadCountChanged",
-        "checkSimulation",
+        "mousePosChanged",
         "particleCount",
         "rotationSpeed",
         "clockwise",
         "showClock",
         "lowCpuMode",
-        "threadCount"
+        "mousePos",
+        "QPointF"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -68,24 +68,22 @@ template <> constexpr inline auto TaoQGraphHybrid::qt_create_metaobjectdata<qt_m
         QtMocHelpers::SignalData<void()>(7, 4, QMC::AccessPublic, QMetaType::Void),
         // Signal 'lowCpuModeChanged'
         QtMocHelpers::SignalData<void()>(8, 4, QMC::AccessPublic, QMetaType::Void),
-        // Signal 'threadCountChanged'
+        // Signal 'mousePosChanged'
         QtMocHelpers::SignalData<void()>(9, 4, QMC::AccessPublic, QMetaType::Void),
-        // Slot 'checkSimulation'
-        QtMocHelpers::SlotData<void()>(10, 4, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
         // property 'particleCount'
-        QtMocHelpers::PropertyData<int>(11, QMetaType::Int, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 0),
+        QtMocHelpers::PropertyData<int>(10, QMetaType::Int, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 0),
         // property 'rotationSpeed'
-        QtMocHelpers::PropertyData<float>(12, QMetaType::Float, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 1),
+        QtMocHelpers::PropertyData<float>(11, QMetaType::Float, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 1),
         // property 'clockwise'
-        QtMocHelpers::PropertyData<bool>(13, QMetaType::Bool, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 2),
+        QtMocHelpers::PropertyData<bool>(12, QMetaType::Bool, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 2),
         // property 'showClock'
-        QtMocHelpers::PropertyData<bool>(14, QMetaType::Bool, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 3),
+        QtMocHelpers::PropertyData<bool>(13, QMetaType::Bool, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 3),
         // property 'lowCpuMode'
-        QtMocHelpers::PropertyData<bool>(15, QMetaType::Bool, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 4),
-        // property 'threadCount'
-        QtMocHelpers::PropertyData<int>(16, QMetaType::Int, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 5),
+        QtMocHelpers::PropertyData<bool>(14, QMetaType::Bool, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet, 4),
+        // property 'mousePos'
+        QtMocHelpers::PropertyData<QPointF>(15, 0x80000000 | 16, QMC::DefaultPropertyFlags | QMC::Writable | QMC::EnumOrFlag | QMC::StdCppSet, 5),
     };
     QtMocHelpers::UintData qt_enums {
     };
@@ -116,8 +114,7 @@ void TaoQGraphHybrid::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         case 2: _t->clockwiseChanged(); break;
         case 3: _t->showClockChanged(); break;
         case 4: _t->lowCpuModeChanged(); break;
-        case 5: _t->threadCountChanged(); break;
-        case 6: _t->checkSimulation(); break;
+        case 5: _t->mousePosChanged(); break;
         default: ;
         }
     }
@@ -132,7 +129,7 @@ void TaoQGraphHybrid::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
             return;
         if (QtMocHelpers::indexOfMethod<void (TaoQGraphHybrid::*)()>(_a, &TaoQGraphHybrid::lowCpuModeChanged, 4))
             return;
-        if (QtMocHelpers::indexOfMethod<void (TaoQGraphHybrid::*)()>(_a, &TaoQGraphHybrid::threadCountChanged, 5))
+        if (QtMocHelpers::indexOfMethod<void (TaoQGraphHybrid::*)()>(_a, &TaoQGraphHybrid::mousePosChanged, 5))
             return;
     }
     if (_c == QMetaObject::ReadProperty) {
@@ -143,7 +140,7 @@ void TaoQGraphHybrid::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         case 2: *reinterpret_cast<bool*>(_v) = _t->clockwise(); break;
         case 3: *reinterpret_cast<bool*>(_v) = _t->showClock(); break;
         case 4: *reinterpret_cast<bool*>(_v) = _t->lowCpuMode(); break;
-        case 5: *reinterpret_cast<int*>(_v) = _t->threadCount(); break;
+        case 5: *reinterpret_cast<QPointF*>(_v) = _t->mousePos(); break;
         default: break;
         }
     }
@@ -155,7 +152,7 @@ void TaoQGraphHybrid::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         case 2: _t->setClockwise(*reinterpret_cast<bool*>(_v)); break;
         case 3: _t->setShowClock(*reinterpret_cast<bool*>(_v)); break;
         case 4: _t->setLowCpuMode(*reinterpret_cast<bool*>(_v)); break;
-        case 5: _t->setThreadCount(*reinterpret_cast<int*>(_v)); break;
+        case 5: _t->setMousePos(*reinterpret_cast<QPointF*>(_v)); break;
         default: break;
         }
     }
@@ -180,14 +177,14 @@ int TaoQGraphHybrid::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 6)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 6;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 6)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 7;
+        _id -= 6;
     }
     if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
             || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty
@@ -229,7 +226,7 @@ void TaoQGraphHybrid::lowCpuModeChanged()
 }
 
 // SIGNAL 5
-void TaoQGraphHybrid::threadCountChanged()
+void TaoQGraphHybrid::mousePosChanged()
 {
     QMetaObject::activate(this, &staticMetaObject, 5, nullptr);
 }

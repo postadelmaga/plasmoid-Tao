@@ -3,221 +3,215 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mystical Tao</title>
     <style>
         * {
             margin: 0;
             padding: 0;
+            overflow: hidden;
         }
 
         body {
             background: transparent;
-            overflow: hidden;
         }
 
         canvas {
             display: block;
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="c"></canvas>
-    <script>
-        var canvas = document.getElementById("c");
-        var ctx = canvas.getContext("2d");
+    <canvas id="glCanvas"></canvas>
 
-        var PARTICLES = 80, SPEED = 0.01, DIR = 1, CLOCK = false, LOWCPU = false;
-        var cx, cy, r, rot = 0, t = 0;
-        var pts = [];
-        var running = false, rafId = null;
+    <!-- Shader per le Particelle -->
+    <script id="vs-pts" type="x-shader/x-vertex">
+        attribute vec2 a_pos;
+        attribute float a_life;
+        attribute float a_size;
+        varying float v_life;
+        void main() {
+            v_life = a_life;
+            gl_Position = vec4(a_pos, 0.0, 1.0);
+            gl_PointSize = a_size * (30.0 * a_life);
+        }
+    </script>
+    <script id="fs-pts" type="x-shader/x-fragment">
+        precision mediump float;
+        varying float v_life;
+        void main() {
+            float d = distance(gl_PointCoord, vec2(0.5));
+            if (d > 0.5) discard;
+            float g = (0.5 - d) * 2.0;
+            // Cyan Glow: r=0.5, g=0.8, b=1.0
+            gl_FragColor = vec4(0.5, 0.8, 1.0, g * v_life * 0.7);
+        }
+    </script>
+
+    <script>
+        const canvas = document.getElementById("glCanvas");
+        const gl = canvas.getContext("webgl", { alpha: true, antialias: true });
+
+        let PARTICLES = 120, SPEED = 0.01, DIR = 1, CLOCK = false, LOWCPU = false;
+        let width, height, aspect, rot = 0, time = 0;
+        let ptsData = [];
+
+        // --- Setup Shaders ---
+        function createProg(vsId, fsId) {
+            const vs = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vs, document.getElementById(vsId).text);
+            gl.compileShader(vs);
+            const fs = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fs, document.getElementById(fsId).text);
+            gl.compileShader(fs);
+            const p = gl.createProgram();
+            gl.attachShader(p, vs); gl.attachShader(p, fs);
+            gl.linkProgram(p);
+            return p;
+        }
+
+        const ptProg = createProg("vs-pts", "fs-pts");
+        const posBuf = gl.createBuffer();
+        const lifeBuf = gl.createBuffer();
+        const sizeBuf = gl.createBuffer();
+
+        // --- Logic ---
+        function initPts() {
+            ptsData = [];
+            for (let i = 0; i < 3000; i++) { // Pre-allochiamo per performance
+                ptsData.push({
+                    x: 0, y: 0, vx: 0, vy: 0,
+                    life: 0, decay: 0.002 + Math.random() * 0.004,
+                    sz: Math.random() * 1.5 + 0.5
+                });
+            }
+        }
+
+        function respawn(p) {
+            let angle = Math.random() * 6.28;
+            let dist = 0.4 + Math.random() * 0.3;
+            p.x = Math.cos(angle) * dist;
+            p.y = Math.sin(angle) * dist;
+            p.vx = (Math.random() - 0.5) * 0.005;
+            p.vy = (Math.random() - 0.5) * 0.005;
+            p.life = 1.0;
+        }
+
+        function update() {
+            rot += SPEED * DIR;
+            time++;
+            let active = Math.min(PARTICLES, 3000);
+            for (let i = 0; i < active; i++) {
+                let p = ptsData[i];
+                if (p.life <= 0) respawn(p);
+                p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+            }
+        }
+
+        // Usiamo un canvas 2D overlay solo per l'orologio e il Tao (per semplicità di disegno)
+        // Ma le PARTICELLE (il carico pesante) sono in WebGL.
+        const ctx2d = document.createElement("canvas").getContext("2d");
+        document.body.appendChild(ctx2d.canvas);
+        ctx2d.canvas.style.position = "absolute";
+        ctx2d.canvas.style.top = "0"; ctx2d.canvas.style.left = "0";
+        ctx2d.canvas.style.pointerEvents = "none";
 
         function resize() {
-            canvas.width = innerWidth;
-            canvas.height = innerHeight;
-            cx = canvas.width / 2;
-            cy = canvas.height / 2;
-            r = Math.min(canvas.width, canvas.height) / 4;
+            width = canvas.width = ctx2d.canvas.width = window.innerWidth;
+            height = canvas.height = ctx2d.canvas.height = window.innerHeight;
+            aspect = width / height;
+            gl.viewport(0, 0, width, height);
         }
+        window.onresize = resize;
         resize();
+        initPts();
 
-        function mkPart() {
-            var a = Math.random() * 6.283;
-            var d = r + Math.random() * 80;
-            return {
-                x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d,
-                vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
-                life: 1, decay: 0.002 + Math.random() * 0.003,
-                sz: Math.random() * 1.5 + 0.5
-            };
-        }
+        function drawTao() {
+            const ctx = ctx2d;
+            ctx.clearRect(0, 0, width, height);
+            let r = Math.min(width, height) / 4.5;
+            let cx = width / 2, cy = height / 2;
 
-        function initParts() {
-            pts = [];
-            for (var i = 0; i < PARTICLES; i++) pts.push(mkPart());
-        }
-        initParts();
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Particles - simple dots, no shadows
-            var n = LOWCPU ? (pts.length >> 1) : pts.length;
-            for (var i = 0; i < n; i++) {
-                var p = pts[i];
-                p.x += p.vx; p.y += p.vy; p.life -= p.decay;
-                if (p.life <= 0) { var np = mkPart(); p.x = np.x; p.y = np.y; p.vx = np.vx; p.vy = np.vy; p.life = np.life; p.decay = np.decay; p.sz = np.sz; }
-                ctx.globalAlpha = p.life * 0.5;
-                ctx.fillStyle = "#88ccff";
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.sz, 0, 6.283);
-                ctx.fill();
-            }
-
-            ctx.globalAlpha = 1;
             ctx.save();
             ctx.translate(cx, cy);
-
-            // Tao rotation
-            ctx.save();
             ctx.rotate(rot);
 
-            var pulse = LOWCPU ? 1 : (Math.sin(t * 0.05) * 0.15 + 0.85);
-
-            // Outer glow - simulated with thick semi-transparent stroke
-            if (!LOWCPU) {
-                ctx.globalAlpha = 0.08 * pulse;
-                ctx.strokeStyle = "#88ccff";
-                ctx.lineWidth = 8;
-                ctx.beginPath(); ctx.arc(0, 0, r + 40, 0, 6.283); ctx.stroke();
-            }
-            ctx.globalAlpha = 0.25 * pulse;
-            ctx.strokeStyle = "#88ccff";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.arc(0, 0, r + 40, 0, 6.283); ctx.stroke();
-
-            // White part
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = "#f0f0f0";
-            ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.fill();
-
-            // Black part
-            ctx.fillStyle = "#0a0a0a";
-            ctx.beginPath();
-            ctx.arc(0, 0, r, -1.5708, 1.5708, false);
-            ctx.arc(0, r / 2, r / 2, 1.5708, -1.5708, true);
-            ctx.arc(0, -r / 2, r / 2, 1.5708, -1.5708, false);
-            ctx.closePath(); ctx.fill();
-
+            // Tao Disk
+            ctx.fillStyle = "#f5f5f5";
+            ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.28); ctx.fill();
+            ctx.fillStyle = "#111";
+            ctx.beginPath(); ctx.arc(0, 0, r, -1.57, 1.57);
+            ctx.arc(0, r / 2, r / 2, 1.57, -1.57, true);
+            ctx.arc(0, -r / 2, r / 2, 1.57, -1.57, false);
+            ctx.fill();
             // Eyes
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, 6.283); ctx.fill();
-            ctx.fillStyle = "#000000";
-            ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, 6.283); ctx.fill();
+            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, 6.28); ctx.fill();
+            ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, 6.28); ctx.fill();
 
-            // S-line
-            if (!LOWCPU) {
-                ctx.globalAlpha = 0.2 * pulse;
-                ctx.strokeStyle = "#88ccff";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(0, 0, r, -1.5708, 1.5708, false);
-                ctx.arc(0, r / 2, r / 2, 1.5708, -1.5708, true);
-                ctx.arc(0, -r / 2, r / 2, 1.5708, -1.5708, false);
-                ctx.stroke();
-            }
+            ctx.restore();
 
-            // Border
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = "#444";
-            ctx.lineWidth = 2.5;
-            ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.283); ctx.stroke();
-
-            ctx.restore(); // end tao rotation
-
-            // Clock
             if (CLOCK) {
-                var now = new Date();
-                var sec = now.getSeconds() + now.getMilliseconds() / 1000;
-                var min = now.getMinutes() + sec / 60;
-                var hr = (now.getHours() % 12) + min / 60;
-
-                ctx.lineCap = "round";
-                ctx.globalAlpha = 0.85;
-
-                // Hour
-                ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 5;
-                ctx.beginPath(); ctx.moveTo(0, 0);
-                var ha = (hr / 12) * 6.283 - 1.5708;
-                ctx.lineTo(Math.cos(ha) * r * 0.5, Math.sin(ha) * r * 0.5);
-                ctx.stroke();
-
-                // Minute
-                ctx.strokeStyle = "rgba(136,204,255,0.8)"; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.moveTo(0, 0);
-                var ma = (min / 60) * 6.283 - 1.5708;
-                ctx.lineTo(Math.cos(ma) * r * 0.8, Math.sin(ma) * r * 0.8);
-                ctx.stroke();
-
-                // Second
-                ctx.strokeStyle = "rgba(255,170,136,0.8)"; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(0, 0);
-                var sa = (sec / 60) * 6.283 - 1.5708;
-                ctx.lineTo(Math.cos(sa) * r * 0.9, Math.sin(sa) * r * 0.9);
-                ctx.stroke();
-
-                ctx.globalAlpha = 1;
-                ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(0, 0, 3, 0, 6.283); ctx.fill();
+                let now = new Date();
+                let s = now.getSeconds() + now.getMilliseconds() / 1000;
+                let m = now.getMinutes() + s / 60;
+                let h = (now.getHours() % 12) + m / 60;
+                ctx.save(); ctx.translate(cx, cy); ctx.lineCap = "round";
+                const drawHand = (a, len, w, col) => {
+                    ctx.strokeStyle = col; ctx.lineWidth = w;
+                    ctx.beginPath(); ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(a - 1.57) * len, Math.sin(a - 1.57) * len); ctx.stroke();
+                };
+                drawHand((h / 12) * 6.28, r * 0.5, 5, "rgba(255,255,255,0.8)");
+                drawHand((m / 60) * 6.28, r * 0.8, 3, "rgba(136,204,255,0.8)");
+                drawHand((s / 60) * 6.28, r * 0.9, 1.5, "rgba(255,170,136,0.8)");
+                ctx.restore();
             }
-
-            // Satellites
-            if (!LOWCPU) {
-                ctx.globalAlpha = 0.45;
-                for (var j = 0; j < 4; j++) {
-                    var sa2 = t * 0.02 + j * 1.5708;
-                    ctx.fillStyle = j % 2 === 0 ? "#88ccff" : "#ffaa88";
-                    ctx.beginPath();
-                    ctx.arc(Math.cos(sa2) * (r + 25), Math.sin(sa2) * (r + 25), 2.5, 0, 6.283);
-                    ctx.fill();
-                }
-            }
-
-            ctx.restore(); // end translate
         }
 
-        var lastT = 0;
-        function loop(ts) {
-            if (!running) return;
-            if (LOWCPU && ts - lastT < 33) { rafId = requestAnimationFrame(loop); return; }
-            lastT = ts;
-            rot += SPEED * DIR;
-            t++;
-            draw();
-            rafId = requestAnimationFrame(loop);
+        function render() {
+            update();
+
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+            gl.useProgram(ptProg);
+            let active = Math.min(PARTICLES, 3000);
+            const pos = new Float32Array(active * 2);
+            const life = new Float32Array(active);
+            const size = new Float32Array(active);
+
+            for (let i = 0; i < active; i++) {
+                pos[i * 2] = ptsData[i].x; pos[i * 2 + 1] = ptsData[i].y * aspect;
+                life[i] = ptsData[i].life;
+                size[i] = ptsData[i].sz;
+            }
+
+            const setAttr = (locName, data, size, buf) => {
+                const loc = gl.getAttribLocation(ptProg, locName);
+                gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+                gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(loc);
+                gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+            };
+
+            setAttr("a_pos", pos, 2, posBuf);
+            setAttr("a_life", life, 1, lifeBuf);
+            setAttr("a_size", size, 1, sizeBuf);
+
+            gl.drawArrays(gl.POINTS, 0, active);
+
+            drawTao();
+            requestAnimationFrame(render);
         }
 
-        addEventListener("resize", function () { resize(); if (!running) draw(); });
-
-        window.updateSettings = function (count, speed, dir, clock, lowcpu) {
-            PARTICLES = count;
-            SPEED = speed;
-            DIR = dir;
-            CLOCK = clock;
-            LOWCPU = lowcpu;
-            initParts();
-
-            var need = (SPEED !== 0) || (PARTICLES > 0) || CLOCK;
-            if (need && !running) { running = true; requestAnimationFrame(loop); }
-            else if (!need && running) { running = false; if (rafId) cancelAnimationFrame(rafId); draw(); }
-            else draw();
+        window.updateSettings = (count, speed, dir, clock, lowcpu) => {
+            PARTICLES = count; SPEED = speed; DIR = dir; CLOCK = clock; LOWCPU = lowcpu;
         };
 
-        initParts();
-        resize();
-        running = true;
-        requestAnimationFrame(loop);
+        render();
     </script>
 </body>
 

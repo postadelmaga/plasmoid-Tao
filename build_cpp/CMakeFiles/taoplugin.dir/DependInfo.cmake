@@ -10,10 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "" "taoplugin_autogen/timestamp" "custom" "taoplugin_autogen/deps"
   "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoPlugin.cpp" "CMakeFiles/taoplugin.dir/src/TaoPlugin.cpp.o" "gcc" "CMakeFiles/taoplugin.dir/src/TaoPlugin.cpp.o.d"
-  "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp" "CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o" "gcc" "CMakeFiles/taoplugin.dir/src/TaoQGraphClaude.cpp.o.d"
-  "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp" "CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o" "gcc" "CMakeFiles/taoplugin.dir/src/TaoQGraphGemini.cpp.o.d"
   "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp" "CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o" "gcc" "CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o.d"
-  "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQuickItem.cpp" "CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o" "gcc" "CMakeFiles/taoplugin.dir/src/TaoQuickItem.cpp.o.d"
   "/home/fra/Dev/plasmoid-tao/build_cpp/taoplugin_autogen/mocs_compilation.cpp" "CMakeFiles/taoplugin.dir/taoplugin_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/taoplugin.dir/taoplugin_autogen/mocs_compilation.cpp.o.d"
   )
 

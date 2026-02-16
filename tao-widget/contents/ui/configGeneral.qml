@@ -12,9 +12,16 @@ Kirigami.FormLayout {
     property alias cfg_showClock: showClockCheckBox.checked
     property alias cfg_lowCpuMode: lowCpuCheckBox.checked
     property alias cfg_useNativeRenderer: nativeRendererCheckBox.checked
-    property alias cfg_nativeBackendType: backendCombo.currentIndex
     // Detection logic for the native plugin
     property bool nativeBackendAvailable: nativeChecker.status === Loader.Ready
+    // Silence Plasma warnings for missing properties
+    property string title: ""
+    property int cfg_particleCountDefault: 80
+    property int cfg_rotationSpeedDefault: 5
+    property bool cfg_clockwiseDefault: true
+    property bool cfg_showClockDefault: false
+    property bool cfg_lowCpuModeDefault: false
+    property bool cfg_useNativeRendererDefault: true
 
     Loader {
         id: nativeChecker
@@ -38,17 +45,9 @@ Kirigami.FormLayout {
         enabled: configRoot.nativeBackendAvailable
     }
 
-    QQC2.ComboBox {
-        id: backendCombo
-
-        Kirigami.FormData.label: i18n("Algorithm:")
-        enabled: nativeRendererCheckBox.checked && configRoot.nativeBackendAvailable
-        model: [i18n("Standard (Painted)"), i18n("Gemini (GPU/SceneGraph)"), i18n("Claude (Multi-threaded)"), i18n("Hybrid (Parallel/SceneGraph)")]
-    }
-
     QQC2.Label {
-        text: configRoot.nativeBackendAvailable ? i18n("✓ Plugin detected") : i18n("✗ Plugin not found (using Web fallback)")
-        font.pixelSize: Kirigami.Units.fontMetrics.font.pixelSize * 0.8
+        text: configRoot.nativeBackendAvailable ? i18n("✓ Hybrid backend (Parallel/SceneGraph) available") : i18n("✗ Plugin not found (using Web fallback)")
+        font.pixelSize: (Kirigami.Units.fontMetrics ? Kirigami.Units.fontMetrics.font.pixelSize : 12) * 0.8
         color: configRoot.nativeBackendAvailable ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
     }
 
@@ -152,7 +151,7 @@ Kirigami.FormLayout {
     QQC2.Label {
         Layout.fillWidth: true
         text: i18n("Changes will be applied instantly to the animation.")
-        font.pixelSize: Kirigami.Units.fontMetrics.font.pixelSize * 0.9
+        font.pixelSize: (Kirigami.Units.fontMetrics ? Kirigami.Units.fontMetrics.font.pixelSize : 12) * 0.9
         opacity: 0.6
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignLeft

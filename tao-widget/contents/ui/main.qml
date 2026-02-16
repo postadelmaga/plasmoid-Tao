@@ -16,12 +16,17 @@ PlasmoidItem {
     property bool showClock: plasmoid.configuration.showClock
     property bool lowCpuMode: plasmoid.configuration.lowCpuMode
     property bool useNativeRenderer: plasmoid.configuration.useNativeRenderer
-    property int nativeBackendType: plasmoid.configuration.nativeBackendType
     property bool nativeBackendAvailable: nativeLoader.status === Loader.Ready
+    // Silence Plasma warnings
+    property bool cfg_clockwiseDefault: true
+    property bool cfg_lowCpuModeDefault: false
+    property int cfg_particleCountDefault: 80
+    property int cfg_rotationSpeedDefault: 5
+    property bool cfg_showClockDefault: false
+    property bool cfg_useNativeRendererDefault: true
 
-    width: Kirigami.Units.gridUnit * 20
-    height: Kirigami.Units.gridUnit * 20
-    Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
+    width: Math.max(100, (Kirigami.Units.gridUnit || 18) * 20)
+    height: width
 
     // Circular container
     Rectangle {
@@ -31,7 +36,7 @@ PlasmoidItem {
         radius: width / 2
         color: "transparent"
         clip: true
-        layer.enabled: true
+        layer.enabled: width > 0 && height > 0
 
         // 2. Native C++ Renderer (Loaded dynamically)
         Loader {
@@ -42,7 +47,7 @@ PlasmoidItem {
             source: "NativeRenderer.qml"
         }
 
-        // 1. Web Renderer (Default or Fallback)
+        // 1. Web Renderer (Default, Fallback or WebGL Backend)
         WebEngineView {
             id: webView
 
@@ -58,7 +63,7 @@ PlasmoidItem {
                 runJavaScript("if(window.updateSettings)window.updateSettings(" + p + "," + s + "," + d + "," + c + "," + l + ");");
             }
 
-            // Visible solo se NON usiamo il nativo O se il nativo ha fallito il caricamento
+            // Visible if NOT using native OR if native has failed
             visible: !root.useNativeRenderer || nativeLoader.status === Loader.Error
             enabled: visible
             anchors.fill: parent
@@ -95,6 +100,17 @@ PlasmoidItem {
                 enabled: webView.visible
             }
 
+        }
+
+        // Interattività Mouse
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onPositionChanged: {
+                if (nativeLoader.item && nativeLoader.item.setMousePos)
+                    nativeLoader.item.setMousePos(Qt.point(mouseX, mouseY));
+
+            }
         }
 
     }

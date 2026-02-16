@@ -1471,27 +1471,9 @@
 			null
 		],
 		[
-			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.h",
-			"Mu",
-			"UVLADIE3JM/moc_TaoQGraphClaude.cpp",
-			null
-		],
-		[
-			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.h",
-			"Mu",
-			"UVLADIE3JM/moc_TaoQGraphGemini.cpp",
-			null
-		],
-		[
 			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.h",
 			"Mu",
 			"UVLADIE3JM/moc_TaoQGraphHybrid.cpp",
-			null
-		],
-		[
-			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQuickItem.h",
-			"Mu",
-			"UVLADIE3JM/moc_TaoQuickItem.cpp",
 			null
 		]
 	],
@@ -1597,22 +1579,7 @@
 	[
 		[ "/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoPlugin.cpp", "Mu", null ],
 		[
-			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphClaude.cpp",
-			"Mu",
-			null
-		],
-		[
-			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphGemini.cpp",
-			"Mu",
-			null
-		],
-		[
 			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQGraphHybrid.cpp",
-			"Mu",
-			null
-		],
-		[
-			"/home/fra/Dev/plasmoid-tao/tao-widget/src/TaoQuickItem.cpp",
 			"Mu",
 			null
 		]

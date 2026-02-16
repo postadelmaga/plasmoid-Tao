@@ -2,14 +2,14 @@
 #define TAOQGRAPHYBRID_H
 
 #include <QQuickItem>
-#include <QTimer>
-#include <QVector>
 #include <QFuture>
 #include <QFutureWatcher>
-#include <QtConcurrent>
-#include <QSGTexture>
+#include <QElapsedTimer>
+#include <vector>
+#include <QSGNode>
+#include <QSGGeometry>
 
-struct ParticleHybrid {
+struct ParticleData {
     float x, y;
     float vx, vy;
     float life;
@@ -25,7 +25,7 @@ class TaoQGraphHybrid : public QQuickItem
     Q_PROPERTY(bool clockwise READ clockwise WRITE setClockwise NOTIFY clockwiseChanged)
     Q_PROPERTY(bool showClock READ showClock WRITE setShowClock NOTIFY showClockChanged)
     Q_PROPERTY(bool lowCpuMode READ lowCpuMode WRITE setLowCpuMode NOTIFY lowCpuModeChanged)
-    Q_PROPERTY(int threadCount READ threadCount WRITE setThreadCount NOTIFY threadCountChanged)
+    Q_PROPERTY(QPointF mousePos READ mousePos WRITE setMousePos NOTIFY mousePosChanged)
     QML_ELEMENT
 
 public:
@@ -33,19 +33,25 @@ public:
     ~TaoQGraphHybrid() override;
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     int particleCount() const { return m_particleCount; }
     void setParticleCount(int count);
+
     float rotationSpeed() const { return m_rotationSpeed; }
     void setRotationSpeed(float speed);
+
     bool clockwise() const { return m_clockwise; }
     void setClockwise(bool clockwise);
+
     bool showClock() const { return m_showClock; }
     void setShowClock(bool show);
+
     bool lowCpuMode() const { return m_lowCpuMode; }
     void setLowCpuMode(bool lowCpu);
-    int threadCount() const { return m_threadCount; }
-    void setThreadCount(int count);
+
+    QPointF mousePos() const { return m_mousePos; }
+    void setMousePos(const QPointF &pos);
 
 Q_SIGNALS:
     void particleCountChanged();
@@ -53,36 +59,34 @@ Q_SIGNALS:
     void clockwiseChanged();
     void showClockChanged();
     void lowCpuModeChanged();
-    void threadCountChanged();
-
-private Q_SLOTS:
-    void checkSimulation();
+    void mousePosChanged();
 
 private:
-    void initParticles();
+    void updateSimulation();
     QImage generateGlowTexture(int s);
     QImage generateTaoTexture(int s);
+    void setupGeometryIndices(QSGGeometry *geo, int count);
 
-    // Config
+    // Configuration
     int m_particleCount = 2000;
     float m_rotationSpeed = 5.0f;
     bool m_clockwise = true;
     bool m_showClock = false;
     bool m_lowCpuMode = false;
-    int m_threadCount = 4;
+    QPointF m_mousePos;
 
-    // Buffers
-    QVector<ParticleHybrid> m_particlesA;
-    QVector<ParticleHybrid> m_particlesB;
-    QVector<ParticleHybrid>* m_readBuffer;
-    QVector<ParticleHybrid>* m_writeBuffer;
-    
-    // Sync
-    bool m_simulationRunning = false;
+    // Simulation State
+    std::vector<ParticleData> m_particles; // Single buffer is often enough for visual FX, but let's stick to simple logic
     float m_rotation = 0.0f;
+    QElapsedTimer m_timeTracker;
+    float m_lastDt = 0.016f;
+
+    // Async handling
     QFutureWatcher<void> m_watcher;
+    bool m_simulationPending = false;
     
-    const int MAX_PARTICLES = 10000; // Increased for hybrid testing
+    // Limits
+    const int MAX_PARTICLES = 20000;
 };
 
 #endif

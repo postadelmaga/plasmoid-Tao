@@ -22,15 +22,12 @@ find_package(PlasmaQuick ${KF_MIN_VERSION} REQUIRED)
 
 # Optimization and Performance
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -march=native)
+    add_compile_options(-O3 -march=native -ffast-math)
 endif()
 
 # Component Plugin
 add_library(taoplugin SHARED
     src/TaoPlugin.cpp
-    src/TaoQuickItem.cpp
-    src/TaoQGraphGemini.cpp
-    src/TaoQGraphClaude.cpp
     src/TaoQGraphHybrid.cpp
 )
 

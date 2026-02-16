@@ -380,10 +380,8 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qendian.h /usr/include/qt6/QtGui/qaccessible.h \
  /usr/include/qt6/QtGui/qcolor.h /usr/include/qt6/QtGui/qrgb.h \
  /usr/include/qt6/QtGui/qrgba64.h \
- /usr/include/qt6/QtGui/qaccessible_base.h /usr/include/qt6/QtCore/QTimer \
- /usr/include/qt6/QtCore/qtimer.h /usr/include/qt6/QtCore/QVector \
- /usr/include/qt6/QtCore/qvector.h /usr/include/qt6/QtCore/QFuture \
- /usr/include/qt6/QtCore/qfuture.h \
+ /usr/include/qt6/QtGui/qaccessible_base.h \
+ /usr/include/qt6/QtCore/QFuture /usr/include/qt6/QtCore/qfuture.h \
  /usr/include/qt6/QtCore/qfutureinterface.h \
  /usr/include/qt6/QtCore/qmutex.h /usr/include/qt6/QtCore/qtsan_impl.h \
  /usr/include/qt6/QtCore/qresultstore.h \
@@ -399,7 +397,74 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qpromise.h \
  /usr/include/qt6/QtCore/QFutureWatcher \
  /usr/include/qt6/QtCore/qfuturewatcher.h \
- /usr/include/qt6/QtCore/qfuture.h \
+ /usr/include/qt6/QtCore/qfuture.h /usr/include/qt6/QtCore/QElapsedTimer \
+ /usr/include/qt6/QtCore/qelapsedtimer.h /usr/include/qt6/QtQuick/QSGNode \
+ /usr/include/qt6/QtQuick/qsgnode.h \
+ /usr/include/qt6/QtQuick/qsggeometry.h /usr/include/qt6/QtCore/QRectF \
+ /usr/include/qt6/QtGui/QMatrix4x4 /usr/include/qt6/QtGui/qmatrix4x4.h \
+ /usr/include/qt6/QtGui/qvector3d.h /usr/include/qt6/QtGui/qvector4d.h \
+ /usr/include/qt6/QtGui/qgenericmatrix.h \
+ /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/float.h \
+ /usr/include/qt6/QtQuick/QSGGeometry \
+ /usr/include/qt6/QtQuick/qsggeometry.h \
+ /usr/include/qt6/QtQuick/QSGGeometryNode \
+ /usr/include/qt6/QtQuick/QSGSimpleTextureNode \
+ /usr/include/qt6/QtQuick/qsgsimpletexturenode.h \
+ /usr/include/qt6/QtQuick/qsgnode.h \
+ /usr/include/qt6/QtQuick/qsgtexturematerial.h \
+ /usr/include/qt6/QtQuick/qsgmaterial.h \
+ /usr/include/qt6/QtQuick/qsgmaterialshader.h \
+ /usr/include/qt6/QtGui/QColor /usr/include/qt6/QtGui/qcolor.h \
+ /usr/include/qt6/QtQuick/qsgmaterialtype.h \
+ /usr/include/qt6/QtQuick/qsgrendererinterface.h \
+ /usr/include/qt6/QtQuick/qsgtexture.h /usr/include/qt6/QtGui/qimage.h \
+ /usr/include/qt6/QtGui/qpaintdevice.h \
+ /usr/include/qt6/QtGui/qpixelformat.h \
+ /usr/include/qt6/QtGui/qtransform.h \
+ /usr/include/qt6/QtQuick/qsgtexture_platform.h \
+ /usr/include/qt6/QtQuick/qquickwindow.h /usr/include/qt6/QtGui/qwindow.h \
+ /usr/include/qt6/QtCore/QEvent /usr/include/qt6/QtCore/qcoreevent.h \
+ /usr/include/qt6/QtCore/QMargins /usr/include/qt6/QtCore/qmargins.h \
+ /usr/include/qt6/QtGui/qsurface.h \
+ /usr/include/qt6/QtGui/qsurfaceformat.h /usr/include/qt6/QtGui/qicon.h \
+ /usr/include/qt6/QtGui/qpixmap.h /usr/include/qt6/QtGui/qcursor.h \
+ /usr/include/qt6/QtGui/qbitmap.h /usr/include/qt6/QtQml/qqmldebug.h \
+ /usr/include/qt6/QtQml/qqmlinfo.h /usr/include/qt6/QtGui/qopengl.h \
+ /usr/include/GL/gl.h /usr/include/qt6/QtGui/qopenglext.h \
+ /usr/include/inttypes.h /usr/include/qt6/QtGui/qvulkaninstance.h \
+ /usr/include/vulkan/vulkan.h /usr/include/vulkan/vk_platform.h \
+ /usr/include/vulkan/vulkan_core.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std.h \
+ /usr/include/vk_video/vulkan_video_codecs_common.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std_encode.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std_encode.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std.h \
+ /usr/include/vk_video/vulkan_video_codec_h264std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_h265std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std.h \
+ /usr/include/vk_video/vulkan_video_codec_av1std_encode.h \
+ /usr/include/vk_video/vulkan_video_codec_vp9std.h \
+ /usr/include/vk_video/vulkan_video_codec_vp9std_decode.h \
+ /usr/include/vk_video/vulkan_video_codec_vp9std.h \
+ /usr/include/qt6/QtQuick/QSGTextureMaterial \
+ /usr/include/qt6/QtQuick/qsgtexturematerial.h \
+ /usr/include/qt6/QtQuick/QSGTransformNode \
+ /usr/include/qt6/QtGui/QPainter /usr/include/qt6/QtGui/qpainter.h \
+ /usr/include/qt6/QtGui/qtextoption.h /usr/include/qt6/QtGui/qpen.h \
+ /usr/include/qt6/QtGui/qbrush.h /usr/include/qt6/QtGui/qfontinfo.h \
+ /usr/include/qt6/QtGui/qfontvariableaxis.h \
+ /usr/include/qt6/QtGui/qfontmetrics.h /usr/include/qt6/QtCore/QtMath \
+ /usr/include/qt6/QtCore/qmath.h /usr/include/qt6/QtCore/QRandomGenerator \
+ /usr/include/qt6/QtCore/qrandom.h /usr/include/c++/15.2.1/random \
+ /usr/include/c++/15.2.1/bits/random.h \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
+ /usr/include/c++/15.2.1/bits/random.tcc \
+ /usr/include/qt6/QtQuick/QQuickWindow \
+ /usr/include/qt6/QtQuick/qquickwindow.h \
  /usr/include/qt6/QtConcurrent/QtConcurrent \
  /usr/include/qt6/QtConcurrent/QtConcurrentDepends \
  /usr/include/qt6/QtCore/QtCore /usr/include/qt6/QtCore/QtCoreDepends \
@@ -468,7 +533,6 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qcontainerinfo.h \
  /usr/include/qt6/QtCore/qcontiguouscache.h \
  /usr/include/qt6/QtCore/qcoreapplication.h \
- /usr/include/qt6/QtCore/qcoreevent.h \
  /usr/include/qt6/QtCore/qcryptographichash.h \
  /usr/include/qt6/QtCore/qdarwinhelpers.h \
  /usr/include/qt6/QtCore/qdatastream.h \
@@ -505,9 +569,8 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qfileinfo.h /usr/include/qt6/QtCore/qtimezone.h \
  /usr/include/qt6/QtCore/qdiriterator.h /usr/include/qt6/QtCore/qdir.h \
  /usr/include/qt6/QtCore/qdirlisting.h \
- /usr/include/qt6/QtCore/qeasingcurve.h \
- /usr/include/qt6/QtCore/qelapsedtimer.h \
- /usr/include/qt6/QtCore/qendian.h /usr/include/qt6/QtCore/qeventloop.h \
+ /usr/include/qt6/QtCore/qeasingcurve.h /usr/include/qt6/QtCore/qendian.h \
+ /usr/include/qt6/QtCore/qeventloop.h \
  /usr/include/qt6/QtCore/qexception.h \
  /usr/include/qt6/QtCore/qexceptionhandling.h \
  /usr/include/qt6/QtCore/qfactoryinterface.h \
@@ -545,7 +608,6 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qlocale.h /usr/include/qt6/QtCore/qlockfile.h \
  /usr/include/qt6/QtCore/qloggingcategory.h \
  /usr/include/qt6/QtCore/qmalloc.h /usr/include/qt6/QtCore/qmap.h \
- /usr/include/qt6/QtCore/qmargins.h /usr/include/qt6/QtCore/qmath.h \
  /usr/include/qt6/QtCore/qmessageauthenticationcode.h \
  /usr/include/qt6/QtCore/qcryptographichash.h \
  /usr/include/qt6/QtCore/qmetacontainer.h \
@@ -575,11 +637,7 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qvariantanimation.h \
  /usr/include/qt6/QtCore/qeasingcurve.h \
  /usr/include/qt6/QtCore/qpropertyprivate.h \
- /usr/include/qt6/QtCore/qqueue.h /usr/include/qt6/QtCore/qrandom.h \
- /usr/include/c++/15.2.1/random /usr/include/c++/15.2.1/bits/random.h \
- /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
- /usr/include/c++/15.2.1/bits/random.tcc \
- /usr/include/qt6/QtCore/qrangemodel.h \
+ /usr/include/qt6/QtCore/qqueue.h /usr/include/qt6/QtCore/qrangemodel.h \
  /usr/include/qt6/QtCore/qrangemodel_impl.h \
  /usr/include/qt6/QtCore/qreadwritelock.h \
  /usr/include/qt6/QtCore/qrefcount.h \
@@ -745,7 +803,8 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qtextstream.h /usr/include/qt6/QtCore/qthread.h \
  /usr/include/qt6/QtCore/qthreadpool.h \
  /usr/include/qt6/QtCore/qthreadstorage.h \
- /usr/include/qt6/QtCore/qtimeline.h /usr/include/qt6/QtCore/qtimezone.h \
+ /usr/include/qt6/QtCore/qtimeline.h /usr/include/qt6/QtCore/qtimer.h \
+ /usr/include/qt6/QtCore/qtimezone.h \
  /usr/include/qt6/QtCore/qtipccommon.h \
  /usr/include/qt6/QtCore/qtmetamacros.h \
  /usr/include/qt6/QtCore/qtmocconstants.h \
@@ -770,6 +829,7 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtCore/qvariantlist.h \
  /usr/include/qt6/QtCore/qvariantmap.h /usr/include/qt6/QtCore/QMap \
  /usr/include/qt6/QtCore/qvarlengtharray.h \
+ /usr/include/qt6/QtCore/qvector.h \
  /usr/include/qt6/QtCore/qversionnumber.h \
  /usr/include/qt6/QtCore/qwaitcondition.h \
  /usr/include/qt6/QtCore/QDeadlineTimer \
@@ -808,65 +868,4 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtConcurrent/qtconcurrenttask.h \
  /usr/include/qt6/QtConcurrent/qtaskbuilder.h \
  /usr/include/qt6/QtConcurrent/qtconcurrentthreadengine.h \
- /usr/include/qt6/QtConcurrent/qtconcurrentversion.h \
- /usr/include/qt6/QtQuick/QSGTexture \
- /usr/include/qt6/QtQuick/qsgtexture.h /usr/include/qt6/QtGui/qimage.h \
- /usr/include/qt6/QtGui/qpaintdevice.h \
- /usr/include/qt6/QtGui/qpixelformat.h \
- /usr/include/qt6/QtGui/qtransform.h \
- /usr/include/qt6/QtQuick/qsgtexture_platform.h \
- /usr/include/qt6/QtQuick/qquickwindow.h \
- /usr/include/qt6/QtQuick/qsgrendererinterface.h \
- /usr/include/qt6/QtQuick/qsgnode.h \
- /usr/include/qt6/QtQuick/qsggeometry.h /usr/include/qt6/QtCore/QRectF \
- /usr/include/qt6/QtGui/QMatrix4x4 /usr/include/qt6/QtGui/qmatrix4x4.h \
- /usr/include/qt6/QtGui/qvector3d.h /usr/include/qt6/QtGui/qvector4d.h \
- /usr/include/qt6/QtGui/qgenericmatrix.h \
- /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/float.h \
- /usr/include/qt6/QtGui/qwindow.h /usr/include/qt6/QtCore/QEvent \
- /usr/include/qt6/QtCore/QMargins /usr/include/qt6/QtGui/qsurface.h \
- /usr/include/qt6/QtGui/qsurfaceformat.h /usr/include/qt6/QtGui/qicon.h \
- /usr/include/qt6/QtGui/qpixmap.h /usr/include/qt6/QtGui/qcursor.h \
- /usr/include/qt6/QtGui/qbitmap.h /usr/include/qt6/QtQml/qqmldebug.h \
- /usr/include/qt6/QtQml/qqmlinfo.h /usr/include/qt6/QtGui/qopengl.h \
- /usr/include/GL/gl.h /usr/include/qt6/QtGui/qopenglext.h \
- /usr/include/inttypes.h /usr/include/qt6/QtGui/qvulkaninstance.h \
- /usr/include/vulkan/vulkan.h /usr/include/vulkan/vk_platform.h \
- /usr/include/vulkan/vulkan_core.h \
- /usr/include/vk_video/vulkan_video_codec_h264std.h \
- /usr/include/vk_video/vulkan_video_codecs_common.h \
- /usr/include/vk_video/vulkan_video_codec_h264std_encode.h \
- /usr/include/vk_video/vulkan_video_codec_h264std.h \
- /usr/include/vk_video/vulkan_video_codec_h265std.h \
- /usr/include/vk_video/vulkan_video_codec_h265std_encode.h \
- /usr/include/vk_video/vulkan_video_codec_h265std.h \
- /usr/include/vk_video/vulkan_video_codec_h264std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_h265std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_av1std.h \
- /usr/include/vk_video/vulkan_video_codec_av1std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_av1std.h \
- /usr/include/vk_video/vulkan_video_codec_av1std_encode.h \
- /usr/include/vk_video/vulkan_video_codec_vp9std.h \
- /usr/include/vk_video/vulkan_video_codec_vp9std_decode.h \
- /usr/include/vk_video/vulkan_video_codec_vp9std.h \
- /usr/include/qt6/QtQuick/QSGGeometryNode \
- /usr/include/qt6/QtQuick/qsgnode.h \
- /usr/include/qt6/QtQuick/QSGSimpleTextureNode \
- /usr/include/qt6/QtQuick/qsgsimpletexturenode.h \
- /usr/include/qt6/QtQuick/qsgtexturematerial.h \
- /usr/include/qt6/QtQuick/qsgmaterial.h \
- /usr/include/qt6/QtQuick/qsgmaterialshader.h \
- /usr/include/qt6/QtGui/QColor /usr/include/qt6/QtGui/qcolor.h \
- /usr/include/qt6/QtQuick/qsgmaterialtype.h \
- /usr/include/qt6/QtQuick/qsgtexture.h \
- /usr/include/qt6/QtQuick/QSGTextureMaterial \
- /usr/include/qt6/QtQuick/qsgtexturematerial.h \
- /usr/include/qt6/QtQuick/QSGTransformNode \
- /usr/include/qt6/QtGui/QPainter /usr/include/qt6/QtGui/qpainter.h \
- /usr/include/qt6/QtGui/qtextoption.h /usr/include/qt6/QtGui/qpen.h \
- /usr/include/qt6/QtGui/qbrush.h /usr/include/qt6/QtGui/qfontinfo.h \
- /usr/include/qt6/QtGui/qfontvariableaxis.h \
- /usr/include/qt6/QtGui/qfontmetrics.h /usr/include/qt6/QtCore/QtMath \
- /usr/include/qt6/QtCore/QRandomGenerator \
- /usr/include/qt6/QtQuick/QQuickWindow \
- /usr/include/qt6/QtQuick/qquickwindow.h
+ /usr/include/qt6/QtConcurrent/qtconcurrentversion.h
