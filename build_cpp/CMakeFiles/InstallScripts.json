@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/fra/Dev/plasmoid-tao/build_cpp/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

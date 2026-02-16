@@ -58,11 +58,7 @@ set_target_properties(taoplugin PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-# Install location for QML plugin
-# Correct qmldir path is in contents/ui/native
-set(INSTALL_PATH ${KDE_INSTALL_QMLDIR}/org/kde/private/tao)
-install(TARGETS taoplugin DESTINATION ${INSTALL_PATH})
-install(FILES contents/ui/native/qmldir DESTINATION ${INSTALL_PATH})
-
-# Install plasmoid structure
-plasma_install_package(contents org.kde.tao.widget)
+# NOTE: System installation rules (install, plasma_install_package) 
+# have been removed because we are now using a "portable" approach 
+# where the build.sh script packages the .so directly into the 
+# .plasmoid file in contents/ui/native/.

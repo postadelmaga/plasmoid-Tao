@@ -4,8 +4,9 @@
 #include <QQuickItem>
 #include <QTimer>
 #include <QVector>
-#include <QMutex>
-#include <QRunnable>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QtConcurrent>
 #include <QSGTexture>
 
 struct ParticleData {
@@ -14,20 +15,6 @@ struct ParticleData {
     float life;
     float decay;
     float size;
-};
-
-// Worker per calcolo parallelo
-class ParticleWorker : public QRunnable {
-public:
-    void run() override;
-    
-    // Input
-    float width, height, dt, rotation;
-    int count;
-    bool clockwise;
-    
-    // Data Buffers
-    QVector<ParticleData> *particles; // Puntatore al buffer da scrivere
 };
 
 class TaoQGraphGemini : public QQuickItem
@@ -65,28 +52,28 @@ Q_SIGNALS:
     void lowCpuModeChanged();
 
 private Q_SLOTS:
-    void checkSimulation(); // Controlla se il thread ha finito
+    void checkSimulation(); 
 
 private:
     void initParticles();
     QImage generateGlowTexture(int s);
     QImage generateTaoTexture(int s);
 
-    // Configurazione
+    // Config
     int m_particleCount = 1000;
     float m_rotationSpeed = 5.0f;
     bool m_clockwise = true;
     bool m_showClock = false;
     bool m_lowCpuMode = false;
 
-    // Double Buffering per Threading
+    // Buffers
     QVector<ParticleData> m_particlesA;
     QVector<ParticleData> m_particlesB;
-    QVector<ParticleData>* m_readBuffer;  // Letto da updatePaintNode
-    QVector<ParticleData>* m_writeBuffer; // Scritto dal Worker
+    QVector<ParticleData>* m_readBuffer;
+    QVector<ParticleData>* m_writeBuffer;
     
-    // Sincronizzazione
-    ParticleWorker *m_currentWorker = nullptr;
+    // Sync
+    QFutureWatcher<void> m_watcher;
     bool m_simulationRunning = false;
     float m_rotation = 0.0f;
     

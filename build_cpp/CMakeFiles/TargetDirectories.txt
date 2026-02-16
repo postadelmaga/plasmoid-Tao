@@ -1,0 +1,8 @@
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/uninstall.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/fetch-translations.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/taoplugin.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/test.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/edit_cache.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/rebuild_cache.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/taoplugin_autogen_timestamp_deps.dir
+/home/fra/Dev/plasmoid-tao/build_cpp/CMakeFiles/taoplugin_autogen.dir

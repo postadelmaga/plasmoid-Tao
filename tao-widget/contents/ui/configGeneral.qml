@@ -43,7 +43,7 @@ Kirigami.FormLayout {
 
         Kirigami.FormData.label: i18n("Algorithm:")
         enabled: nativeRendererCheckBox.checked && configRoot.nativeBackendAvailable
-        model: [i18n("Standard (Painted)"), i18n("Gemini (GPU/SceneGraph)"), i18n("Claude (Multi-threaded)")]
+        model: [i18n("Standard (Painted)"), i18n("Gemini (GPU/SceneGraph)"), i18n("Claude (Multi-threaded)"), i18n("Hybrid (Parallel/SceneGraph)")]
     }
 
     QQC2.Label {

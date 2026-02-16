@@ -9,20 +9,21 @@ echo "========================================"
 
 # 1. Pulizia e preparazione
 PROJECT_DIR=$(pwd)
-BUILD_DIR="${PROJECT_DIR}/tao-widget/build"
+BUILD_DIR="${PROJECT_DIR}/build_cpp"
 NATIVE_DIR="${PROJECT_DIR}/tao-widget/contents/ui/native"
 
 echo "[1/4] Pulizia vecchi file..."
 rm -f tao-widget.plasmoid
 rm -f "$NATIVE_DIR/libtaoplugin.so"
-# Non rimuoviamo build/ per velocizzare le ricompilazioni successive (make è incrementale)
+# Non rimuoviamo build_cpp/ per velocizzare le ricompilazioni successive (make è incrementale)
 
 # 2. Compilazione del Plugin C++ Nativo
 echo "[2/4] Compilazione del plugin nativo C++..."
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-cmake ..
+# Puntiamo a tao-widget dove si trova il CMakeLists.txt
+cmake "$PROJECT_DIR/tao-widget"
 make clean
 make -j$(nproc)
 
@@ -42,7 +43,6 @@ echo "[4/4] Generazione file tao-widget.plasmoid..."
 # Impacchettiamo (incluso il plugin appena compilato in contents/ui/native)
 zip -r tao-widget.plasmoid tao-widget/ \
     -x "tao-widget/.git/*" \
-    -x "tao-widget/build/*" \
     -x "tao-widget/src/*" \
     -x "tao-widget/CMakeLists.txt" \
     -x "tao-widget/reference/*" \
