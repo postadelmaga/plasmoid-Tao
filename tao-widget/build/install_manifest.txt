@@ -1,0 +1,8 @@
+/usr/lib/qt6/qml/org/kde/private/tao/libtaoplugin.so
+/usr/lib/qt6/qml/org/kde/private/tao/qmldir
+/usr/share/plasma/plasmoids/org.kde.tao.widget/code/tao.cpp
+/usr/share/plasma/plasmoids/org.kde.tao.widget/ui/tao.html
+/usr/share/plasma/plasmoids/org.kde.tao.widget/ui/main.qml
+/usr/share/plasma/plasmoids/org.kde.tao.widget/ui/configGeneral.qml
+/usr/share/plasma/plasmoids/org.kde.tao.widget/config/main.xml
+/usr/share/plasma/plasmoids/org.kde.tao.widget/config/config.qml

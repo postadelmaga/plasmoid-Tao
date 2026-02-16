@@ -32,6 +32,14 @@ Kirigami.FormLayout {
         text: i18n("Low CPU Mode (disables shadows/glows)")
     }
 
+    QQC2.CheckBox {
+        id: nativeRendererCheckBox
+
+        text: i18n("Use Native C++ Backend (Requires Compilation)")
+        checked: plasmoid.configuration.useNativeRenderer
+        onCheckedChanged: plasmoid.configuration.useNativeRenderer = checked
+    }
+
     // --- Particle Section ---
     Kirigami.Separator {
         Kirigami.FormData.isSection: true

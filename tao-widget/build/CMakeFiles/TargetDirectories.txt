@@ -1,0 +1,12 @@
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/uninstall.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/fetch-translations.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/test.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/edit_cache.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/rebuild_cache.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/list_install_components.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/install.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/install/local.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/install/strip.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin_autogen_timestamp_deps.dir
+/home/fra/Dev/plasmoid-tao/tao-widget/build/CMakeFiles/taoplugin_autogen.dir
