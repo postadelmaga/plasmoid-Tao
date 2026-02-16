@@ -6,7 +6,6 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 
-// Native Import - ensure you build the plugin!
 PlasmoidItem {
     id: root
 
@@ -15,102 +14,112 @@ PlasmoidItem {
     property bool clockwise: plasmoid.configuration.clockwise
     property bool showClock: plasmoid.configuration.showClock
     property bool lowCpuMode: plasmoid.configuration.lowCpuMode
-    property bool useNativeRenderer: plasmoid.configuration.useNativeRenderer
-    property bool nativeBackendAvailable: nativeLoader.status === Loader.Ready
-    // Silence Plasma warnings
-    property bool cfg_clockwiseDefault: true
-    property bool cfg_lowCpuModeDefault: false
-    property int cfg_particleCountDefault: 80
-    property int cfg_rotationSpeedDefault: 5
-    property bool cfg_showClockDefault: false
-    property bool cfg_useNativeRendererDefault: true
+    property bool transparentBackground: plasmoid.configuration.transparentBackground
+    property int renderEngine: plasmoid.configuration.renderEngine // 0: WebGL, 1: Native
+    readonly property bool isActuallyVisible: (plasmoid.visible !== false) && (plasmoid.expanded !== false)
 
-    width: Math.max(100, (Kirigami.Units.gridUnit || 18) * 20)
-    height: width
+    // Settings for transparency and zero-padding
+    backgroundHints: root.transparentBackground ? "NoBackground" : "StandardBackground"
+    preferredRepresentation: fullRepresentation
 
-    // Circular container
-    Rectangle {
-        id: mainContainer
+    fullRepresentation: Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.preferredWidth: (Kirigami.Units.gridUnit || 18) * 20
+        Layout.preferredHeight: Layout.preferredWidth
 
-        anchors.fill: parent
-        radius: width / 2
-        color: "transparent"
-        clip: true
-        layer.enabled: width > 0 && height > 0
-
-        // 2. Native C++ Renderer (Loaded dynamically)
-        Loader {
-            id: nativeLoader
+        Rectangle {
+            id: mainContainer
 
             anchors.fill: parent
-            visible: root.useNativeRenderer && status === Loader.Ready
-            source: "NativeRenderer.qml"
-        }
+            color: "transparent"
 
-        // 1. Web Renderer (Default, Fallback or WebGL Backend)
-        WebEngineView {
-            id: webView
+            // 2. Native C++ Renderer (Zen Engine)
+            Loader {
+                id: nativeLoader
 
-            function updateHtml() {
-                if (!visible)
-                    return ;
-
-                var p = root.particleCount;
-                var s = root.rotationSpeed / 1000;
-                var d = root.clockwise ? 1 : -1;
-                var c = root.showClock;
-                var l = root.lowCpuMode;
-                runJavaScript("if(window.updateSettings)window.updateSettings(" + p + "," + s + "," + d + "," + c + "," + l + ");");
+                anchors.fill: parent
+                active: root.renderEngine === 1 && root.isActuallyVisible
+                visible: active && status === Loader.Ready
+                source: "NativeRenderer.qml"
             }
 
-            // Visible if NOT using native OR if native has failed
-            visible: !root.useNativeRenderer || nativeLoader.status === Loader.Error
-            enabled: visible
-            anchors.fill: parent
-            backgroundColor: "transparent"
-            url: Qt.resolvedUrl("tao.html")
-            onLoadingChanged: (loadingInfo) => {
-                if (loadingInfo.status === WebEngineView.LoadSucceededStatus)
-                    updateHtml();
+            // 1. Web Renderer (Web Engine / WebGL)
+            WebEngineView {
+                id: webView
+
+                function updateHtml() {
+                    if (!visible)
+                        return ;
+
+                    var p = root.particleCount;
+                    var s = root.rotationSpeed / 1000;
+                    var d = root.clockwise ? 1 : -1;
+                    var c = root.showClock;
+                    var l = root.lowCpuMode;
+                    var v = root.isActuallyVisible;
+                    runJavaScript(`if(window.updateSettings)window.updateSettings(${p},${s},${d},${c},${l},${v});`);
+                }
+
+                visible: root.renderEngine === 0 || (root.renderEngine === 1 && nativeLoader.status === Loader.Error)
+                enabled: visible && root.isActuallyVisible
+                anchors.fill: parent
+                backgroundColor: "transparent"
+                url: root.isActuallyVisible ? Qt.resolvedUrl("tao.html") : "about:blank"
+                onLoadingChanged: (loadingInfo) => {
+                    if (loadingInfo.status === WebEngineView.LoadSucceededStatus)
+                        updateHtml();
+
+                }
+
+                Connections {
+                    function onParticleCountChanged() {
+                        webView.updateHtml();
+                    }
+
+                    function onRotationSpeedChanged() {
+                        webView.updateHtml();
+                    }
+
+                    function onClockwiseChanged() {
+                        webView.updateHtml();
+                    }
+
+                    function onShowClockChanged() {
+                        webView.updateHtml();
+                    }
+
+                    function onLowCpuModeChanged() {
+                        webView.updateHtml();
+                    }
+
+                    target: root
+                    enabled: webView.visible
+                }
 
             }
 
-            Connections {
-                function onParticleCountChanged() {
-                    webView.updateHtml();
+            // Mouse Area for both engines
+            MouseArea {
+                function updateMouse(x, y, inside) {
+                    if (nativeLoader.item)
+                        nativeLoader.item.mousePos = inside ? Qt.point(x, y) : Qt.point(-1000, -1000);
+
+                    if (webView.visible)
+                        webView.runJavaScript(`if(window.updateMouse)window.updateMouse(${x},${y},${inside});`);
+
                 }
 
-                function onRotationSpeedChanged() {
-                    webView.updateHtml();
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: root.isActuallyVisible
+                onPositionChanged: (mouse) => {
+                    return updateMouse(mouse.x, mouse.y, true);
                 }
-
-                function onClockwiseChanged() {
-                    webView.updateHtml();
-                }
-
-                function onShowClockChanged() {
-                    webView.updateHtml();
-                }
-
-                function onLowCpuModeChanged() {
-                    webView.updateHtml();
-                }
-
-                target: root
-                enabled: webView.visible
+                onEntered: updateMouse(mouseX, mouseY, true)
+                onExited: updateMouse(-1000, -1000, false)
             }
 
-        }
-
-        // Interattività Mouse
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            onPositionChanged: {
-                if (nativeLoader.item && nativeLoader.item.setMousePos)
-                    nativeLoader.item.setMousePos(Qt.point(mouseX, mouseY));
-
-            }
         }
 
     }

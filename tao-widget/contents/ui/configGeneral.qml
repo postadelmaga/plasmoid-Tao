@@ -11,9 +11,10 @@ Kirigami.FormLayout {
     property alias cfg_clockwise: clockwiseRadio.checked
     property alias cfg_showClock: showClockCheckBox.checked
     property alias cfg_lowCpuMode: lowCpuCheckBox.checked
-    property alias cfg_useNativeRenderer: nativeRendererCheckBox.checked
+    property alias cfg_renderEngine: engineCombo.currentIndex
+    property alias cfg_transparentBackground: transparentBgCheckBox.checked
     // Detection logic for the native plugin
-    property bool nativeBackendAvailable: nativeChecker.status === Loader.Ready
+    property bool nativeBackendAvailable: nativeLoader.status === Loader.Ready
     // Silence Plasma warnings for missing properties
     property string title: ""
     property int cfg_particleCountDefault: 80
@@ -21,10 +22,12 @@ Kirigami.FormLayout {
     property bool cfg_clockwiseDefault: true
     property bool cfg_showClockDefault: false
     property bool cfg_lowCpuModeDefault: false
-    property bool cfg_useNativeRendererDefault: true
+    property int cfg_renderEngineDefault: 1
+    property bool cfg_transparentBackgroundDefault: true
 
+    // Non-visual loader to check for native plugin availability
     Loader {
-        id: nativeChecker
+        id: nativeLoader
 
         source: "NativeRenderer.qml"
         active: true
@@ -37,16 +40,28 @@ Kirigami.FormLayout {
         Kirigami.FormData.label: i18n("General")
     }
 
-    QQC2.CheckBox {
-        id: nativeRendererCheckBox
+    RowLayout {
+        Kirigami.FormData.label: i18n("Engine:")
 
-        text: i18n("Use Native C++ Backend (Faster)")
-        Kirigami.FormData.label: i18n("Rendering:")
-        enabled: configRoot.nativeBackendAvailable
+        QQC2.ComboBox {
+            id: engineCombo
+
+            Layout.fillWidth: true
+            model: [i18n("Web Engine (WebGL)"), i18n("Zen Engine (Native C++)")]
+
+            // Disable native option if not available
+            delegate: QQC2.ItemDelegate {
+                width: parent.width
+                text: modelData
+                enabled: index === 0 || configRoot.nativeBackendAvailable
+            }
+
+        }
+
     }
 
     QQC2.Label {
-        text: configRoot.nativeBackendAvailable ? i18n("✓ Hybrid backend (Parallel/SceneGraph) available") : i18n("✗ Plugin not found (using Web fallback)")
+        text: configRoot.nativeBackendAvailable ? i18n("✓ High-performance backend ready") : i18n("✗ Native plugin not found")
         font.pixelSize: (Kirigami.Units.fontMetrics ? Kirigami.Units.fontMetrics.font.pixelSize : 12) * 0.8
         color: configRoot.nativeBackendAvailable ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
     }
@@ -63,6 +78,13 @@ Kirigami.FormLayout {
 
         Kirigami.FormData.label: i18n("Performance:")
         text: i18n("Low CPU Mode (disables shadows/glows)")
+    }
+
+    QQC2.CheckBox {
+        id: transparentBgCheckBox
+
+        Kirigami.FormData.label: i18n("Background:")
+        text: i18n("Transparent background")
     }
 
     // --- Particle Section ---

@@ -2,12 +2,14 @@
 #include <QSGGeometryNode>
 #include <QSGSimpleTextureNode>
 #include <QSGTextureMaterial>
+#include <QSGFlatColorMaterial>
 #include <QSGTransformNode>
 #include <QPainter>
 #include <QtMath>
 #include <QRandomGenerator>
 #include <QQuickWindow>
 #include <QtConcurrent>
+#include <QTime>
 
 // Struttura vertice allineata per la GPU
 struct ParticleVertex {
@@ -30,10 +32,6 @@ static const QSGGeometry::AttributeSet &particleAttributes() {
 TaoQGraphHybrid::TaoQGraphHybrid(QQuickItem *parent)
     : QQuickItem(parent)
 {
-    // Aggiungi il controllo isVisible() e window()->isVisible()
-    if (m_simulationPending || m_lowCpuMode || !isVisible() || (window() && !window()->isVisible())) {
-        return;
-    }
     setFlag(ItemHasContents, true);
     m_particles.resize(MAX_PARTICLES);
     
@@ -100,8 +98,9 @@ void TaoQGraphHybrid::itemChange(ItemChange change, const ItemChangeData &value)
 
 // Logica di simulazione ottimizzata
 void TaoQGraphHybrid::updateSimulation() {
-    // Aggiungi il controllo isVisible() e window()->isVisible()
-    if (m_simulationPending || m_lowCpuMode || !isVisible() || (window() && !window()->isVisible())) {
+    // Stop simulation when hidden, minimized, or in low CPU mode.
+    // window()->isVisible() correctly handles cases where the window is obscured or minimized in many environments.
+    if (m_simulationPending || m_lowCpuMode || !isVisible() || !window() || !window()->isVisible()) {
         return;
     }
     
@@ -120,7 +119,8 @@ void TaoQGraphHybrid::updateSimulation() {
 
         float cx = w * 0.5f;
         float cy = h * 0.5f;
-        float r = qMin(w, h) * 0.25f;
+        float r = qMin(w, h) / 4.5f; 
+        float rSq = r * r;
         
         // Puntatore diretto ai dati per velocità (evita operator[])
         ParticleData* pData = m_particles.data();
@@ -128,36 +128,77 @@ void TaoQGraphHybrid::updateSimulation() {
         // Random generator thread-local (molto più veloce di global() in un loop)
         auto* gen = QRandomGenerator::global(); 
 
+        const float df = m_lastDt * 60.0f; // Delta factor rispetto a 60fps
+
         for (int i = 0; i < count; ++i) {
             ParticleData& p = pData[i];
             
             if (p.life > 0.0f) {
-                // Interattività col Mouse (Repulsione)
-                float dx = p.x - static_cast<float>(mPos.x());
-                float dy = p.y - static_cast<float>(mPos.y());
+                // Interattività col Mouse (Attrazione Potenziata)
+                float dx = static_cast<float>(mPos.x()) - p.x;
+                float dy = static_cast<float>(mPos.y()) - p.y;
                 float distSq = dx*dx + dy*dy;
-                if (distSq < 10000.0f) { // Raggio di interazione
-                    float f = 0.5f / (distSq + 1.0f);
-                    p.vx += dx * f;
-                    p.vy += dy * f;
+                
+                // Se il mouse è "fuori" (es. coordinate negative o troppo grandi), resettiamo l'effetto
+                bool isMouseValid = mPos.x() >= 0 && mPos.y() >= 0 && mPos.x() <= w && mPos.y() <= h;
+
+                if (isMouseValid && distSq < 90000.0f) { // Raggio aumentato per "tutto schermo"
+                    float f = 3.5f / (distSq + 100.0f);
+                    p.vx += dx * f * df;
+                    p.vy += dy * f * df;
+                } else {
+                    // Attrito per tornare a comportamento normale (frame-rate independent)
+                    float friction = std::pow(0.98f, df);
+                    p.vx *= friction;
+                    p.vy *= friction;
                 }
 
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= p.decay;
+                p.x += p.vx * df;
+                p.y += p.vy * df;
+
+                // Evitamento del Tao centrale (Rimbalzo/Giramento intorno)
+                float tdx = p.x - cx;
+                float tdy = p.y - cy;
+                float tDistSq = tdx*tdx + tdy*tdy;
+                if (tDistSq < rSq) {
+                    float tDist = std::sqrt(tDistSq);
+                    float nx = tdx / tDist;
+                    float ny = tdy / tDist;
+                    
+                    // Forza di repulsione dal centro
+                    float push = (r - tDist) * 0.2f;
+                    p.x += nx * push;
+                    p.y += ny * push;
+                    
+                    // Riflessione velocità per "rimbalzare"
+                    float dot = p.vx * nx + p.vy * ny;
+                    if (dot < 0) {
+                        p.vx -= 1.5f * dot * nx;
+                        p.vy -= 1.5f * dot * ny;
+                    }
+                }
+
+                p.life -= p.decay * df;
             } else {
                 // Respawn logic
                 p.life = 1.0f;
                 double angle = gen->generateDouble() * M_PI * 2.0;
-                double dist = r * (1.1 + gen->generateDouble() * 0.5);
+                double dist = r * (0.5 + gen->generateDouble() * 2.0); 
                 
                 p.x = cx + static_cast<float>(std::cos(angle) * dist);
                 p.y = cy + static_cast<float>(std::sin(angle) * dist);
                 
-                p.vx = (gen->generateDouble() - 0.5f) * 0.4f;
-                p.vy = (gen->generateDouble() - 0.5f) * 0.4f;
-                p.decay = 0.005f + gen->generateDouble() * 0.01f;
-                p.size = 5.0f + gen->generateDouble() * 15.0f;
+                p.vx = (gen->generateDouble() - 0.5f) * 0.6f;
+                p.vy = (gen->generateDouble() - 0.5f) * 0.6f;
+                // Se spawniamo dentro il Tao, spingiamo fuori
+                float sdx = p.x - cx;
+                float sdy = p.y - cy;
+                if (sdx*sdx + sdy*sdy < rSq) {
+                  p.x += (sdx > 0 ? r : -r);
+                }
+                // Decay calibrato per 60fps
+                p.decay = 0.003f + gen->generateDouble() * 0.008f;
+                p.size = 2.0f + gen->generateDouble() * 8.0f;
             }
         }
     });
@@ -213,12 +254,34 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         // Nodo Tao
         QSGTransformNode *tNode = new QSGTransformNode();
+        
+        // Glow Background Node (Nuovo: Colore sofffuso come WebGL)
+        QSGSimpleTextureNode *gNode = new QSGSimpleTextureNode();
+        QSGTexture *tGlowBg = window()->createTextureFromImage(generateGlowTexture(256));
+        gNode->setTexture(tGlowBg);
+        gNode->setOwnsTexture(true);
+        tNode->appendChildNode(gNode);
+
         QSGSimpleTextureNode *sNode = new QSGSimpleTextureNode();
-        QSGTexture *tTao = window()->createTextureFromImage(generateTaoTexture(256)); // 256 è sufficiente per plasmoidi
+        QSGTexture *tTao = window()->createTextureFromImage(generateTaoTexture(256)); 
         tTao->setFiltering(QSGTexture::Linear);
         sNode->setTexture(tTao);
         sNode->setOwnsTexture(true);
         tNode->appendChildNode(sNode);
+
+        // Nodo Orologio (Opzionale)
+        QSGGeometryNode *cNode = new QSGGeometryNode();
+        QSGGeometry *cGeo = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 0);
+        cGeo->setLineWidth(2);
+        cGeo->setDrawingMode(QSGGeometry::DrawLines);
+        cNode->setGeometry(cGeo);
+        cNode->setFlag(QSGNode::OwnsGeometry);
+        QSGFlatColorMaterial *cMat = new QSGFlatColorMaterial();
+        cMat->setColor(QColor(255, 255, 255, 180));
+        cNode->setMaterial(cMat);
+        cNode->setFlag(QSGNode::OwnsMaterial);
+        tNode->appendChildNode(cNode);
+
         root->appendChildNode(tNode);
     }
 
@@ -229,17 +292,58 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     last = current;
     m_lastDt = dt;
     
-    m_rotation += (m_rotationSpeed * dt);
+    // Unifichiamo la velocità con la versione WebGL:
+    // WebGL usa (speed / 1000) radianti per frame (a 60fps).
+    // Quindi in secondi è (speed / 1000) * 60 radianti/sec.
+    // Direzione: Qt rotate è CCW, quindi per Clockwise serve segno negativo.
+    // Fix Clockwise Inversion: Qt rotate positive is CW in screen space.
+    // Se m_clockwise è true, vogliamo rotazione positiva.
+    float dir = m_clockwise ? 1.0f : -1.0f;
+    float speedFactor = 0.06f; 
+    m_rotation += (m_rotationSpeed * speedFactor * dir * dt);
 
     // Recupero Nodi figli
     QSGGeometryNode *pNode = static_cast<QSGGeometryNode*>(root->childAtIndex(0));
     QSGTransformNode *tNode = static_cast<QSGTransformNode*>(root->childAtIndex(1));
-    QSGSimpleTextureNode *sNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(0));
-
+    
     // Update Tao (Matrice e Rettangolo)
     float w = width(), h = height();
     float r = qMin(w, h) / 4.5f;
+    
+    // Update Glow (Nodo 0), Tao (Nodo 1), Orologio (Nodo 2)
+    QSGSimpleTextureNode *gNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(0));
+    QSGSimpleTextureNode *sNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(1));
+    QSGGeometryNode *cNode = static_cast<QSGGeometryNode*>(tNode->childAtIndex(2));
+    
+    // Glow più piccolo e soffuso (1.3 invece di 1.8)
+    gNode->setRect(-r*1.3f, -r*1.3f, r*2.6f, r*2.6f);
     sNode->setRect(-r, -r, r*2, r*2);
+    
+    // Update Orologio
+    if (m_showClock) {
+        QSGGeometry *geo = cNode->geometry();
+        geo->allocate(6);
+        QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
+        QTime now = QTime::currentTime();
+        float ms = now.msec() / 1000.0f;
+        float s = (now.second() + ms) * 6.0f;
+        float m = (now.minute() + s / 360.0f) * 6.0f;
+        float h = (now.hour() % 12 + m / 360.0f) * 30.0f;
+
+        auto setHand = [&](float angle, float len, int idx) {
+            float rad = qDegreesToRadians(angle - 90);
+            v[idx*2].x = 0; v[idx*2].y = 0;
+            v[idx*2+1].x = std::cos(rad) * len; v[idx*2+1].y = std::sin(rad) * len;
+        };
+        setHand(h, r * 0.5f, 0);
+        setHand(m, r * 0.8f, 1);
+        setHand(s, r * 0.9f, 2);
+        cNode->markDirty(QSGNode::DirtyGeometry);
+    } else {
+        cNode->geometry()->allocate(0);
+        cNode->markDirty(QSGNode::DirtyGeometry);
+    }
+
     QMatrix4x4 m;
     m.translate(w/2.0f, h/2.0f);
     m.rotate(qRadiansToDegrees(m_rotation), 0, 0, 1);
@@ -263,13 +367,21 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             const ParticleData &p = pData[i];
             float hs = p.size; 
             
-            // Colori dinamici (Effetto "Brace")
-            float speed = std::sqrt(p.vx*p.vx + p.vy*p.vy);
+            // Colori dinamici (Effetto "Brace" + ogni tanto "Fiamma")
             unsigned char alpha = static_cast<unsigned char>(p.life * 255);
-            // Più è veloce, più tende al rosso/bianco luminoso
-            unsigned char red   = static_cast<unsigned char>(qMin(255.0f, 150.0f + speed * 500.0f)); 
-            unsigned char green = static_cast<unsigned char>(qMin(255.0f, 100.0f + speed * 200.0f));
-            unsigned char blue  = 255;
+            unsigned char red, green, blue;
+            
+            if (i % 7 == 0) { // 14% di particelle "Fire/Flame"
+                red = 255;
+                green = static_cast<unsigned char>(100 + p.life * 155); // Da arancione a giallo
+                blue = 0;
+            } else {
+                float speed = std::sqrt(p.vx*p.vx + p.vy*p.vy);
+                // Matched WebGL Cyan: (127, 204, 255) -> (0.5, 0.8, 1.0)
+                red   = static_cast<unsigned char>(qMin(255.0f, 127.0f + speed * 400.0f)); 
+                green = static_cast<unsigned char>(qMin(255.0f, 204.0f + speed * 200.0f));
+                blue  = 255;
+            }
 
             // Unrolling manuale per performance, coordinate UV fisse e colori per vertice
             v[0].x = p.x - hs; v[0].y = p.y - hs; v[0].u = 0; v[0].v = 0;
@@ -300,13 +412,13 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 }
 
 QImage TaoQGraphHybrid::generateGlowTexture(int s) {
-    // Cache texture generation if needed, but usually called once per start
     QImage img(s, s, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
     QPainter p(&img);
     QRadialGradient g(s/2.0, s/2.0, s/2.0);
-    g.setColorAt(0.0, QColor(255, 255, 255, 200));
-    g.setColorAt(0.5, QColor(200, 200, 255, 100));
+    // Colore WebGL: rgba(100, 200, 255, 0.5)
+    g.setColorAt(0.0, QColor(100, 200, 255, 128)); 
+    g.setColorAt(0.7, QColor(100, 200, 255, 40));
     g.setColorAt(1.0, Qt::transparent);
     p.setBrush(g);
     p.setPen(Qt::NoPen);

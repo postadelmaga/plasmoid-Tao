@@ -452,6 +452,8 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/vk_video/vulkan_video_codec_vp9std.h \
  /usr/include/qt6/QtQuick/QSGTextureMaterial \
  /usr/include/qt6/QtQuick/qsgtexturematerial.h \
+ /usr/include/qt6/QtQuick/QSGFlatColorMaterial \
+ /usr/include/qt6/QtQuick/qsgflatcolormaterial.h \
  /usr/include/qt6/QtQuick/QSGTransformNode \
  /usr/include/qt6/QtGui/QPainter /usr/include/qt6/QtGui/qpainter.h \
  /usr/include/qt6/QtGui/qtextoption.h /usr/include/qt6/QtGui/qpen.h \
@@ -868,4 +870,5 @@ CMakeFiles/taoplugin.dir/src/TaoQGraphHybrid.cpp.o: \
  /usr/include/qt6/QtConcurrent/qtconcurrenttask.h \
  /usr/include/qt6/QtConcurrent/qtaskbuilder.h \
  /usr/include/qt6/QtConcurrent/qtconcurrentthreadengine.h \
- /usr/include/qt6/QtConcurrent/qtconcurrentversion.h
+ /usr/include/qt6/QtConcurrent/qtconcurrentversion.h \
+ /usr/include/qt6/QtCore/QTime

@@ -30,32 +30,52 @@
         attribute vec2 a_pos;
         attribute float a_life;
         attribute float a_size;
+        attribute float a_type; // 0: Cyan, 1: Fire
         varying float v_life;
+        varying float v_type;
         void main() {
             v_life = a_life;
+            v_type = a_type;
             gl_Position = vec4(a_pos, 0.0, 1.0);
-            gl_PointSize = a_size * (30.0 * a_life);
+            // Ridotto lo scaling della grandezza (da 30 a 15) per evitare effetto esplosione
+            gl_PointSize = a_size * (15.0 * a_life);
         }
     </script>
     <script id="fs-pts" type="x-shader/x-fragment">
         precision mediump float;
         varying float v_life;
+        varying float v_type;
         void main() {
             float d = distance(gl_PointCoord, vec2(0.5));
             if (d > 0.5) discard;
             float g = (0.5 - d) * 2.0;
-            // Cyan Glow: r=0.5, g=0.8, b=1.0
-            gl_FragColor = vec4(0.5, 0.8, 1.0, g * v_life * 0.7);
+            
+            vec3 color;
+            if (v_type > 0.5) {
+                // Colore Fuoco: Arancione/Rosso
+                color = vec3(1.0, 0.4 + 0.6 * v_life, 0.1);
+            } else {
+                // Colore Cyan standard
+                color = vec3(0.5, 0.8, 1.0);
+            }
+            gl_FragColor = vec4(color, g * v_life * 0.7);
         }
     </script>
 
     <script>
         const canvas = document.getElementById("glCanvas");
-        const gl = canvas.getContext("webgl", { alpha: true, antialias: true });
+        const gl = canvas.getContext("webgl", { alpha: true, antialias: true, preserveDrawingBuffer: false });
 
-        let PARTICLES = 120, SPEED = 0.01, DIR = 1, CLOCK = false, LOWCPU = false;
+        let PARTICLES = 80, SPEED = 0.005, DIR = 1, CLOCK = false, LOWCPU = false, VISIBLE = true;
         let width, height, aspect, rot = 0, time = 0;
         let ptsData = [];
+        let mouseX = -1000, mouseY = -1000, mouseInside = false;
+
+        // Reuse buffers
+        let posArr = new Float32Array(6000);
+        let lifeArr = new Float32Array(3000);
+        let sizeArr = new Float32Array(3000);
+        let typeArr = new Float32Array(3000);
 
         // --- Setup Shaders ---
         function createProg(vsId, fsId) {
@@ -75,42 +95,94 @@
         const posBuf = gl.createBuffer();
         const lifeBuf = gl.createBuffer();
         const sizeBuf = gl.createBuffer();
+        const typeBuf = gl.createBuffer();
 
-        // --- Logic ---
+        // Logic
         function initPts() {
             ptsData = [];
-            for (let i = 0; i < 3000; i++) { // Pre-allochiamo per performance
+            for (let i = 0; i < 3000; i++) {
                 ptsData.push({
                     x: 0, y: 0, vx: 0, vy: 0,
-                    life: 0, decay: 0.002 + Math.random() * 0.004,
-                    sz: Math.random() * 1.5 + 0.5
+                    life: 0, decay: 0.003 + Math.random() * 0.007,
+                    sz: Math.random() * 2.0 + 0.5,
+                    type: Math.random() < 0.15 ? 1 : 0 // 15% Fire
                 });
             }
         }
 
         function respawn(p) {
             let angle = Math.random() * 6.28;
-            let dist = 0.4 + Math.random() * 0.3;
+            let dist = 0.3 + Math.random() * 1.5; // Distribuzione più ampia per riempire
             p.x = Math.cos(angle) * dist;
             p.y = Math.sin(angle) * dist;
-            p.vx = (Math.random() - 0.5) * 0.005;
-            p.vy = (Math.random() - 0.5) * 0.005;
+            p.vx = (Math.random() - 0.5) * 0.004;
+            p.vy = (Math.random() - 0.5) * 0.004;
             p.life = 1.0;
         }
 
-        function update() {
-            rot += SPEED * DIR;
-            time++;
+        let lastTimestamp = 0;
+
+        function update(dt) {
+            if (!VISIBLE) return;
+
+            const df = dt * 60; // Delta factor (1.0 at 60fps)
+            rot += SPEED * DIR * df;
             let active = Math.min(PARTICLES, 3000);
+
+            let mXScaled = (mouseX / width - 0.5) * 2;
+            let mYScaled = -(mouseY / height - 0.5) * 2 / aspect;
+
+            // Tao Radius in normalized coords
+            let rNorm = (Math.min(width, height) / 4.5) / (Math.min(width, height) / 2); // circa 0.44
+
             for (let i = 0; i < active; i++) {
                 let p = ptsData[i];
                 if (p.life <= 0) respawn(p);
-                p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+
+                if (mouseInside) {
+                    let dx = mXScaled - p.x;
+                    let dy = mYScaled - p.y;
+                    let d2 = dx * dx + dy * dy;
+                    if (d2 < 4.0) {
+                        let force = 0.005 / (d2 + 0.1);
+                        p.vx += dx * force * df;
+                        p.vy += dy * force * df;
+                    }
+                } else {
+                    p.vx *= Math.pow(0.98, df);
+                    p.vy *= Math.pow(0.98, df);
+                }
+
+                p.x += p.vx * df;
+                p.y += p.vy * df;
+
+                // Center Avoidance (Tao Rejection)
+                let tdx = p.x;
+                let tdy = p.y * aspect; // Need aspect for circle
+                let tDistSq = tdx * tdx + tdy * tdy;
+                let rNormSq = 0.44 * 0.44;
+
+                if (tDistSq < rNormSq) {
+                    let tDist = Math.sqrt(tDistSq);
+                    let nx = tdx / tDist;
+                    let ny = tdy / tDist;
+
+                    // Simple push-out
+                    p.x = nx * 0.45;
+                    p.y = (ny * 0.45) / aspect;
+
+                    // Reflect velocity
+                    let dot = p.vx * nx + (p.vy * aspect) * ny;
+                    if (dot < 0) {
+                        p.vx -= 1.5 * dot * nx;
+                        p.vy -= (1.5 * dot * ny) / aspect;
+                    }
+                }
+
+                p.life -= p.decay * df;
             }
         }
 
-        // Usiamo un canvas 2D overlay solo per l'orologio e il Tao (per semplicità di disegno)
-        // Ma le PARTICELLE (il carico pesante) sono in WebGL.
         const ctx2d = document.createElement("canvas").getContext("2d");
         document.body.appendChild(ctx2d.canvas);
         ctx2d.canvas.style.position = "absolute";
@@ -127,6 +199,11 @@
         resize();
         initPts();
 
+        // Mouse Tracking
+        window.updateMouse = (x, y, inside) => {
+            mouseX = x; mouseY = y; mouseInside = inside;
+        };
+
         function drawTao() {
             const ctx = ctx2d;
             ctx.clearRect(0, 0, width, height);
@@ -136,11 +213,13 @@
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(rot);
+            ctx.shadowBlur = LOWCPU ? 0 : 20;
+            ctx.shadowColor = "rgba(100, 200, 255, 0.5)";
 
             // Tao Disk
-            ctx.fillStyle = "#f5f5f5";
+            ctx.fillStyle = "#fff";
             ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.28); ctx.fill();
-            ctx.fillStyle = "#111";
+            ctx.fillStyle = "#000";
             ctx.beginPath(); ctx.arc(0, 0, r, -1.57, 1.57);
             ctx.arc(0, r / 2, r / 2, 1.57, -1.57, true);
             ctx.arc(0, -r / 2, r / 2, 1.57, -1.57, false);
@@ -169,49 +248,56 @@
             }
         }
 
-        function render() {
-            update();
+        function render(now) {
+            if (!now) now = performance.now();
+            if (!lastTimestamp) lastTimestamp = now;
+            let dt = (now - lastTimestamp) / 1000;
+            if (dt > 0.1) dt = 0.1;
+            lastTimestamp = now;
 
-            gl.clearColor(0, 0, 0, 0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+            if (VISIBLE) {
+                update(dt);
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.enable(gl.BLEND);
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-            gl.useProgram(ptProg);
-            let active = Math.min(PARTICLES, 3000);
-            const pos = new Float32Array(active * 2);
-            const life = new Float32Array(active);
-            const size = new Float32Array(active);
+                gl.useProgram(ptProg);
+                let active = Math.min(PARTICLES, 3000);
 
-            for (let i = 0; i < active; i++) {
-                pos[i * 2] = ptsData[i].x; pos[i * 2 + 1] = ptsData[i].y * aspect;
-                life[i] = ptsData[i].life;
-                size[i] = ptsData[i].sz;
+                for (let i = 0; i < active; i++) {
+                    posArr[i * 2] = ptsData[i].x;
+                    posArr[i * 2 + 1] = ptsData[i].y * aspect;
+                    lifeArr[i] = ptsData[i].life;
+                    sizeArr[i] = ptsData[i].sz;
+                    typeArr[i] = ptsData[i].type;
+                }
+
+                const setAttr = (locName, data, size, buf) => {
+                    const loc = gl.getAttribLocation(ptProg, locName);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+                    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+                    gl.enableVertexAttribArray(loc);
+                    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+                };
+
+                setAttr("a_pos", posArr.subarray(0, active * 2), 2, posBuf);
+                setAttr("a_life", lifeArr.subarray(0, active), 1, lifeBuf);
+                setAttr("a_size", sizeArr.subarray(0, active), 1, sizeBuf);
+                setAttr("a_type", typeArr.subarray(0, active), 1, typeBuf);
+
+                gl.drawArrays(gl.POINTS, 0, active);
+                drawTao();
             }
-
-            const setAttr = (locName, data, size, buf) => {
-                const loc = gl.getAttribLocation(ptProg, locName);
-                gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-                gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-                gl.enableVertexAttribArray(loc);
-                gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
-            };
-
-            setAttr("a_pos", pos, 2, posBuf);
-            setAttr("a_life", life, 1, lifeBuf);
-            setAttr("a_size", size, 1, sizeBuf);
-
-            gl.drawArrays(gl.POINTS, 0, active);
-
-            drawTao();
             requestAnimationFrame(render);
         }
 
-        window.updateSettings = (count, speed, dir, clock, lowcpu) => {
+        window.updateSettings = (count, speed, dir, clock, lowcpu, visible) => {
             PARTICLES = count; SPEED = speed; DIR = dir; CLOCK = clock; LOWCPU = lowcpu;
+            if (visible !== undefined) VISIBLE = visible;
         };
 
-        render();
+        render(performance.now());
     </script>
 </body>
 
