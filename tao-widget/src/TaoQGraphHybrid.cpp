@@ -87,6 +87,70 @@ void TaoQGraphHybrid::setShowClock(bool show) {
     if (m_showClock == show) return;
     m_showClock = show;
     Q_EMIT showClockChanged();
+    update();
+}
+
+void TaoQGraphHybrid::setHourHandColor(const QColor &c) {
+    if (m_hourHandColor == c) return;
+    m_hourHandColor = c;
+    Q_EMIT hourHandColorChanged();
+    update();
+}
+
+void TaoQGraphHybrid::setMinuteHandColor(const QColor &c) {
+    if (m_minuteHandColor == c) return;
+    m_minuteHandColor = c;
+    Q_EMIT minuteHandColorChanged();
+    update();
+}
+
+void TaoQGraphHybrid::setSecondHandColor(const QColor &c) {
+    if (m_secondHandColor == c) return;
+    m_secondHandColor = c;
+    Q_EMIT secondHandColorChanged();
+    update();
+}
+
+void TaoQGraphHybrid::setGlowColor1(const QColor &c) {
+    if (m_glowColor1 == c) return;
+    m_glowColor1 = c;
+    Q_EMIT glowColor1Changed();
+    update();
+}
+
+void TaoQGraphHybrid::setGlowSize1(double s) {
+    if (qFuzzyCompare(m_glowSize1, s)) return;
+    m_glowSize1 = s;
+    Q_EMIT glowSize1Changed();
+    update();
+}
+
+void TaoQGraphHybrid::setGlowColor2(const QColor &c) {
+    if (m_glowColor2 == c) return;
+    m_glowColor2 = c;
+    Q_EMIT glowColor2Changed();
+    update();
+}
+
+void TaoQGraphHybrid::setGlowSize2(double s) {
+    if (qFuzzyCompare(m_glowSize2, s)) return;
+    m_glowSize2 = s;
+    Q_EMIT glowSize2Changed();
+    update();
+}
+
+void TaoQGraphHybrid::setParticleColor1(const QColor &c) {
+    if (m_particleColor1 == c) return;
+    m_particleColor1 = c;
+    Q_EMIT particleColor1Changed();
+    update();
+}
+
+void TaoQGraphHybrid::setParticleColor2(const QColor &c) {
+    if (m_particleColor2 == c) return;
+    m_particleColor2 = c;
+    Q_EMIT particleColor2Changed();
+    update();
 }
 
 void TaoQGraphHybrid::setLowCpuMode(bool lowCpu) {
@@ -121,7 +185,10 @@ void TaoQGraphHybrid::updateSimulation() {
     const QPointF mPos = m_mousePos;
     const float currentDt = (m_lastDt > 0.001f && m_lastDt < 1.0f) ? m_lastDt : 0.016f;
     
-    QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, currentDt]() {
+    const QColor pc1 = m_particleColor1;
+    const QColor pc2 = m_particleColor2;
+    
+    QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, currentDt, pc1, pc2]() {
         if (count <= 0) return;
 
         float cx = w * 0.5f;
@@ -205,14 +272,14 @@ void TaoQGraphHybrid::updateSimulation() {
                 // (i & 7) == 0 è equivalente veloce a (i % 8) == 0. 
                 // Usiamo modulo 7 come originale se critico, ma &7 è più veloce.
                 if ((i % 7) == 0) { 
-                    red = 255;
-                    green = static_cast<unsigned char>(100 + p.life * 155);
-                    blue = 0;
+                    red = pc2.red();
+                    green = static_cast<unsigned char>(qMin(255, pc2.green() + (int)(p.life * 50)));
+                    blue = pc2.blue();
                 } else {
                     float speed = std::sqrt(p.vx*p.vx + p.vy*p.vy);
-                    red   = static_cast<unsigned char>(qMin(255.0f, 127.0f + speed * 400.0f)); 
-                    green = static_cast<unsigned char>(qMin(255.0f, 204.0f + speed * 200.0f));
-                    blue  = 255;
+                    red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1.red() + speed * 400.0f)); 
+                    green = static_cast<unsigned char>(qMin(255.0f, (float)pc1.green() + speed * 200.0f));
+                    blue  = pc1.blue();
                 }
                 p.packedColor = packColor(red, green, blue, alpha);
 
@@ -236,8 +303,8 @@ void TaoQGraphHybrid::updateSimulation() {
                 
                 p.decay = 0.003f + gen->generateDouble() * 0.008f;
                 p.size = 2.0f + gen->generateDouble() * 8.0f;
-                // Colore iniziale (Alpha 255)
-                p.packedColor = packColor(127, 204, 255, 255);
+                // Colore iniziale
+                p.packedColor = packColor(pc1.red(), pc1.green(), pc1.blue(), 255);
             }
         }
     });
@@ -283,7 +350,7 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         pNode->setFlag(QSGNode::OwnsGeometry);
 
         QSGTextureMaterial *pMat = new QSGTextureMaterial();
-        QSGTexture *tGlow = window()->createTextureFromImage(generateGlowTexture(32));
+        QSGTexture *tGlow = window()->createTextureFromImage(generateGlowTexture(32, Qt::white));
         tGlow->setFiltering(QSGTexture::Linear);
         pMat->setTexture(tGlow);
         pNode->setMaterial(pMat);
@@ -294,11 +361,19 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         // Nodo Tao e Sfondo
         QSGTransformNode *tNode = new QSGTransformNode();
         
-        QSGSimpleTextureNode *gNode = new QSGSimpleTextureNode();
-        QSGTexture *tGlowBg = window()->createTextureFromImage(generateGlowTexture(256));
-        gNode->setTexture(tGlowBg);
-        gNode->setOwnsTexture(true);
-        tNode->appendChildNode(gNode);
+        QSGSimpleTextureNode *gNode1 = new QSGSimpleTextureNode();
+        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1)));
+        gNode1->setOwnsTexture(true);
+        gNode1->setFiltering(QSGTexture::Linear);
+        tNode->appendChildNode(gNode1);
+        m_lastGlowColor1 = m_glowColor1;
+
+        QSGSimpleTextureNode *gNode2 = new QSGSimpleTextureNode();
+        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2)));
+        gNode2->setOwnsTexture(true);
+        gNode2->setFiltering(QSGTexture::Linear);
+        tNode->appendChildNode(gNode2);
+        m_lastGlowColor2 = m_glowColor2;
 
         QSGSimpleTextureNode *sNode = new QSGSimpleTextureNode();
         QSGTexture *tTao = window()->createTextureFromImage(generateTaoTexture(256)); 
@@ -307,18 +382,28 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         sNode->setOwnsTexture(true);
         tNode->appendChildNode(sNode);
 
-        // Nodo Orologio
-        QSGGeometryNode *cNode = new QSGGeometryNode();
-        QSGGeometry *cGeo = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 0);
-        cGeo->setLineWidth(2);
-        cGeo->setDrawingMode(QSGGeometry::DrawLines);
-        cNode->setGeometry(cGeo);
-        cNode->setFlag(QSGNode::OwnsGeometry);
-        QSGFlatColorMaterial *cMat = new QSGFlatColorMaterial();
-        cMat->setColor(QColor(255, 255, 255, 180));
-        cNode->setMaterial(cMat);
-        cNode->setFlag(QSGNode::OwnsMaterial);
-        tNode->appendChildNode(cNode);
+        // Nodo Orologio (Spostato fuori da tNode per non ruotare col Tao)
+        QSGTransformNode *cTransNode = new QSGTransformNode();
+        
+        auto createHand = [&](float width, QColor col) {
+            QSGGeometryNode *hn = new QSGGeometryNode();
+            QSGGeometry *hg = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
+            hg->setLineWidth(width);
+            hg->setDrawingMode(QSGGeometry::DrawLines);
+            hn->setGeometry(hg);
+            hn->setFlag(QSGNode::OwnsGeometry);
+            QSGFlatColorMaterial *hm = new QSGFlatColorMaterial();
+            hm->setColor(col);
+            hn->setMaterial(hm);
+            hn->setFlag(QSGNode::OwnsMaterial);
+            return hn;
+        };
+
+        cTransNode->appendChildNode(createHand(5, m_hourHandColor));   // Ore
+        cTransNode->appendChildNode(createHand(3, m_minuteHandColor)); // Minuti
+        cTransNode->appendChildNode(createHand(1.5f, m_secondHandColor)); // Secondi
+        
+        root->appendChildNode(cTransNode);
 
         root->appendChildNode(tNode);
     }
@@ -334,40 +419,82 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     m_rotation += (m_rotationSpeed * speedFactor * dir * dt);
 
     QSGGeometryNode *pNode = static_cast<QSGGeometryNode*>(root->childAtIndex(0));
-    QSGTransformNode *tNode = static_cast<QSGTransformNode*>(root->childAtIndex(1));
+    QSGTransformNode *cTransNode = static_cast<QSGTransformNode*>(root->childAtIndex(1));
+    QSGTransformNode *tNode = static_cast<QSGTransformNode*>(root->childAtIndex(2));
     
     float w = width(), h = height();
     float r = qMin(w, h) / 4.5f;
     
-    QSGSimpleTextureNode *gNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(0));
-    QSGSimpleTextureNode *sNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(1));
-    QSGGeometryNode *cNode = static_cast<QSGGeometryNode*>(tNode->childAtIndex(2));
+    QSGSimpleTextureNode *gNode1 = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(0));
+    QSGSimpleTextureNode *gNode2 = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(1));
+    QSGSimpleTextureNode *sNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(2));
     
-    gNode->setRect(-r*1.3f, -r*1.3f, r*2.6f, r*2.6f);
+    float gs1 = m_glowSize1;
+    if (gs1 > 0.01f) {
+        gNode1->setRect(-r*gs1, -r*gs1, r*2*gs1, r*2*gs1);
+    } else {
+        gNode1->setRect(0, 0, 0, 0);
+    }
+
+    if (m_lastGlowColor1 != m_glowColor1) {
+        QSGTexture *old = gNode1->texture();
+        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1)));
+        delete old;
+        m_lastGlowColor1 = m_glowColor1;
+    }
+
+    float gs2 = m_glowSize2;
+    if (gs2 > 0.01f) {
+        gNode2->setRect(-r*gs2, -r*gs2, r*2*gs2, r*2*gs2);
+    } else {
+        gNode2->setRect(0, 0, 0, 0);
+    }
+
+    if (m_lastGlowColor2 != m_glowColor2) {
+        QSGTexture *old = gNode2->texture();
+        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2)));
+        delete old;
+        m_lastGlowColor2 = m_glowColor2;
+    }
+
     sNode->setRect(-r, -r, r*2, r*2);
     
     if (m_showClock) {
-        QSGGeometry *geo = cNode->geometry();
-        geo->allocate(6);
-        QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
         QTime now = QTime::currentTime();
         float ms = now.msec() / 1000.0f;
         float s = (now.second() + ms) * 6.0f;
         float m = (now.minute() + s / 360.0f) * 6.0f;
         float h = (now.hour() % 12 + m / 360.0f) * 30.0f;
 
-        auto setHand = [&](float angle, float len, int idx) {
+        auto updateHand = [&](int idx, float angle, float len, QColor col) {
+            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cTransNode->childAtIndex(idx));
+            QSGGeometry *geo = hn->geometry();
+            if (geo->vertexCount() != 2) geo->allocate(2);
+            QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
             float rad = qDegreesToRadians(angle - 90);
-            v[idx*2].x = 0; v[idx*2].y = 0;
-            v[idx*2+1].x = std::cos(rad) * len; v[idx*2+1].y = std::sin(rad) * len;
+            v[0].x = 0; v[0].y = 0;
+            v[1].x = std::cos(rad) * len; v[1].y = std::sin(rad) * len;
+            hn->markDirty(QSGNode::DirtyGeometry);
+            
+            static_cast<QSGFlatColorMaterial*>(hn->material())->setColor(col);
+            hn->markDirty(QSGNode::DirtyMaterial);
         };
-        setHand(h, r * 0.5f, 0);
-        setHand(m, r * 0.8f, 1);
-        setHand(s, r * 0.9f, 2);
-        cNode->markDirty(QSGNode::DirtyGeometry);
+
+        updateHand(0, h, r * 0.5f, m_hourHandColor);
+        updateHand(1, m, r * 0.8f, m_minuteHandColor);
+        updateHand(2, s, r * 0.9f, m_secondHandColor);
+
+        QMatrix4x4 cm;
+        cm.translate(w/2.0f, h/2.0f);
+        cTransNode->setMatrix(cm);
     } else {
-        if (cNode->geometry()->vertexCount() > 0)
-            cNode->geometry()->allocate(0);
+        for (int i = 0; i < 3; ++i) {
+            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cTransNode->childAtIndex(i));
+            if (hn->geometry()->vertexCount() > 0) {
+                hn->geometry()->allocate(0);
+                hn->markDirty(QSGNode::DirtyGeometry);
+            }
+        }
     }
 
     QMatrix4x4 m;
@@ -414,13 +541,15 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     return root;
 }
 
-QImage TaoQGraphHybrid::generateGlowTexture(int s) {
+QImage TaoQGraphHybrid::generateGlowTexture(int s, const QColor &color) {
     QImage img(s, s, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
     QPainter p(&img);
     QRadialGradient g(s/2.0, s/2.0, s/2.0);
-    g.setColorAt(0.0, QColor(100, 200, 255, 128)); 
-    g.setColorAt(0.7, QColor(100, 200, 255, 40));
+    g.setColorAt(0.0, color); 
+    QColor fade = color;
+    fade.setAlpha(color.alpha() * 0.3); 
+    g.setColorAt(0.7, fade);
     g.setColorAt(1.0, Qt::transparent);
     p.setBrush(g);
     p.setPen(Qt::NoPen);
