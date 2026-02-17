@@ -8,6 +8,9 @@
 #include <vector>
 #include <QSGNode>
 #include <QSGGeometry>
+#include <QSGMaterial>
+#include <QSGMaterialShader>
+#include <QSGTexture>
 
 // Struttura ottimizzata per la simulazione
 struct ParticleData {
@@ -18,6 +21,19 @@ struct ParticleData {
     float size;
     quint32 packedColor; // Colore pre-calcolato (ARGB/ABGR)
 };
+
+// ── Custom particle material ──────────────────────────────────────────────────
+// Supports three vertex inputs: position(0), uv(1), color(2).
+// QSGTextureMaterial only knows about 0 & 1, so we roll our own.
+
+class ParticleMaterial : public QSGMaterial
+{
+public:
+    ParticleMaterial();
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override;
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 class TaoQGraphHybrid : public QQuickItem
 {

@@ -18,6 +18,8 @@ PlasmoidItem {
 
     Plasmoid.backgroundHints: root.transparentBackground ? PlasmaCore.Types.NoBackground : PlasmaCore.Types.DefaultBackground
     preferredRepresentation: fullRepresentation
+    width: Kirigami.Units.gridUnit * 20
+    height: Kirigami.Units.gridUnit * 15
 
     fullRepresentation: Item {
         Layout.fillWidth: true

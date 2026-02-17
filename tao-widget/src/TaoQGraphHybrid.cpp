@@ -1,8 +1,13 @@
 #include "TaoQGraphHybrid.h"
 #include <QSGGeometryNode>
 #include <QSGSimpleTextureNode>
-#include <QSGTextureMaterial>
+#include <QSGMaterial>
+#include <QSGMaterialShader>
 #include <QSGFlatColorMaterial>
+#include <QFile>
+#include <QDebug>
+#include <QFileInfo>
+#include <dlfcn.h>
 #include <QSGTransformNode>
 #include <QPainter>
 #include <QtMath>
@@ -13,9 +18,93 @@
 #include <cstring> // Necessario per std::memcpy e std::memset
 #include <cmath>
 
-// Helper per packing colore veloce (Little Endian: A-B-G-R in memoria -> 0xAABBGGRR)
+// ── ParticleMaterialShader ────────────────────────────────────────────────────
+
+// Returns the directory containing libtaoplugin.so at runtime using dladdr.
+// This is the only reliable way to locate sibling files in a Plasmoid plugin.
+static QString soDir()
+{
+    Dl_info info;
+    if (dladdr(reinterpret_cast<void*>(&soDir), &info) && info.dli_fname)
+        return QFileInfo(QString::fromUtf8(info.dli_fname)).absolutePath();
+    return QString();
+}
+
+class ParticleMaterialShader : public QSGMaterialShader
+{
+public:
+    ParticleMaterialShader()
+    {
+        const QString dir  = soDir();
+        const QString vert = dir + QStringLiteral("/shaders/particle.vert.qsb");
+        const QString frag = dir + QStringLiteral("/shaders/particle.frag.qsb");
+
+        qDebug() << "[ParticleShader] .so dir:" << dir;
+        qDebug() << "[ParticleShader] vert exists:" << QFile::exists(vert) << vert;
+        qDebug() << "[ParticleShader] frag exists:" << QFile::exists(frag) << frag;
+
+        setShaderFileName(VertexStage,   vert);
+        setShaderFileName(FragmentStage, frag);
+    }
+
+    bool updateUniformData(RenderState &state,
+                           QSGMaterial *newMaterial,
+                           QSGMaterial * /*oldMaterial*/) override
+    {
+        bool changed = false;
+        QByteArray *buf = state.uniformData();
+
+        // Offset 0: mat4 qt_Matrix  (64 bytes)
+        if (state.isMatrixDirty()) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data(), m.constData(), 64);
+            changed = true;
+        }
+        // Offset 64: float qt_Opacity  (4 bytes)
+        if (state.isOpacityDirty()) {
+            const float opacity = state.opacity();
+            memcpy(buf->data() + 64, &opacity, 4);
+            changed = true;
+        }
+        Q_UNUSED(newMaterial)
+        return changed;
+    }
+
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── ParticleMaterial ──────────────────────────────────────────────────────────
+static QSGMaterialType particleMaterialType;
+
+ParticleMaterial::ParticleMaterial()
+{
+    setFlag(Blending, true);
+    // Disable Qt Quick scene graph batching: batching rewrites the vertex
+    // shader to add an extra vec4 input, which would misalign our custom
+    // attribute layout (position=0, uv=1, color=2).
+    setFlag(RequiresFullMatrix, true);
+}
+
+QSGMaterialType *ParticleMaterial::type() const
+{
+    return &particleMaterialType;
+}
+
+QSGMaterialShader *ParticleMaterial::createShader(QSGRendererInterface::RenderMode) const
+{
+    return new ParticleMaterialShader();
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Pack color with premultiplied alpha so Qt's default blend equation
+// (src=1, dst=1-src_alpha / premultiplied mode) renders correctly.
+// GPU reads the quint32 bytes in memory order: byte0=R, byte1=G, byte2=B, byte3=A
 inline quint32 packColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
-    return (a << 24) | (r << 16) | (g << 8) | b;
+    float af = a / 255.0f;
+    unsigned char pr = static_cast<unsigned char>(r * af);
+    unsigned char pg = static_cast<unsigned char>(g * af);
+    unsigned char pb = static_cast<unsigned char>(b * af);
+    return (quint32(a) << 24) | (quint32(pb) << 16) | (quint32(pg) << 8) | quint32(pr);
 }
 
 // Struttura vertice allineata per la GPU
@@ -350,10 +439,7 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         pNode->setGeometry(pGeo);
         pNode->setFlag(QSGNode::OwnsGeometry);
 
-        QSGTextureMaterial *pMat = new QSGTextureMaterial();
-        QSGTexture *tGlow = window()->createTextureFromImage(generateGlowTexture(32, Qt::white));
-        tGlow->setFiltering(QSGTexture::Linear);
-        pMat->setTexture(tGlow);
+        ParticleMaterial *pMat = new ParticleMaterial();
         pNode->setMaterial(pMat);
         pNode->setFlag(QSGNode::OwnsMaterial);
         
@@ -543,13 +629,15 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 }
 
 QImage TaoQGraphHybrid::generateGlowTexture(int s, const QColor &color) {
-    QImage img(s, s, QImage::Format_ARGB32_Premultiplied);
+    // Use RGBA8888 so the GPU always sees R,G,B,A in that order regardless
+    // of RHI backend — ARGB32 gets byte-swapped on some backends.
+    QImage img(s, s, QImage::Format_RGBA8888);
     img.fill(Qt::transparent);
     QPainter p(&img);
     QRadialGradient g(s/2.0, s/2.0, s/2.0);
-    g.setColorAt(0.0, color); 
+    g.setColorAt(0.0, color);
     QColor fade = color;
-    fade.setAlpha(color.alpha() * 0.3); 
+    fade.setAlpha(color.alpha() * 0.3);
     g.setColorAt(0.7, fade);
     g.setColorAt(1.0, Qt::transparent);
     p.setBrush(g);

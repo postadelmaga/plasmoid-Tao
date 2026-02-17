@@ -11,14 +11,31 @@ echo "========================================"
 PROJECT_DIR=$(pwd)
 BUILD_DIR="${PROJECT_DIR}/build_cpp"
 NATIVE_DIR="${PROJECT_DIR}/tao-widget/contents/ui/native"
+SHADER_SRC_DIR="${PROJECT_DIR}/tao-widget/src/shaders"
+SHADER_OUT_DIR="${NATIVE_DIR}/shaders"
+QSB="/usr/lib/qt6/bin/qsb"
 
-echo "[1/4] Pulizia vecchi file..."
+echo "[1/5] Pulizia vecchi file..."
 rm -f tao-widget.plasmoid
 rm -f "$NATIVE_DIR/libtaoplugin.so"
 # Non rimuoviamo build_cpp/ per velocizzare le ricompilazioni successive (make è incrementale)
 
-# 2. Compilazione del Plugin C++ Nativo
-echo "[2/4] Compilazione del plugin nativo C++..."
+# 2. Compilazione shader
+echo "[2/5] Compilazione shader GLSL → QSB..."
+mkdir -p "$SHADER_OUT_DIR"
+
+"$QSB" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
+    -o "$SHADER_OUT_DIR/particle.vert.qsb" \
+    "$SHADER_SRC_DIR/particle.vert"
+
+"$QSB" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
+    -o "$SHADER_OUT_DIR/particle.frag.qsb" \
+    "$SHADER_SRC_DIR/particle.frag"
+
+echo "✓ Shader compilati."
+
+# 3. Compilazione del Plugin C++ Nativo
+echo "[3/5] Compilazione del plugin nativo C++..."
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
@@ -31,14 +48,14 @@ echo ""
 echo "✓ Compilazione completata con successo."
 echo ""
 
-# 3. Preparazione Plugin per distribuzione Portable
-echo "[3/4] Integrazione plugin nel pacchetto..."
+# 4. Preparazione Plugin per distribuzione Portable
+echo "[4/5] Integrazione plugin nel pacchetto..."
 mkdir -p "$NATIVE_DIR"
 cp "$BUILD_DIR/bin/libtaoplugin.so" "$NATIVE_DIR/"
 
-# 4. Creazione del pacchetto .plasmoid
+# 5. Creazione del pacchetto .plasmoid
 cd "$PROJECT_DIR"
-echo "[4/4] Generazione file tao-widget.plasmoid..."
+echo "[5/5] Generazione file tao-widget.plasmoid..."
 
 # Impacchettiamo (incluso il plugin appena compilato in contents/ui/native)
 zip -r tao-widget.plasmoid tao-widget/ \
@@ -48,7 +65,7 @@ zip -r tao-widget.plasmoid tao-widget/ \
     -x "tao-widget/reference/*" \
     -x "tao-widget/screenshots/*"
 
-# 5. Verifica finale
+# 6. Verifica finale
 if [ -f "tao-widget.plasmoid" ]; then
     echo "========================================"
     echo "✓ OPERAZIONE COMPLETATA"
@@ -56,6 +73,9 @@ if [ -f "tao-widget.plasmoid" ]; then
     echo ""
     echo "Il plugin nativo si trova dentro:"
     echo "  tao-widget/contents/ui/native/libtaoplugin.so"
+    echo ""
+    echo "Gli shader compilati si trovano in:"
+    echo "  tao-widget/contents/ui/native/shaders/"
     echo ""
     echo "Comando per installare/aggiornare:"
     echo "  kpackagetool6 -t Plasma/Applet --install tao-widget.plasmoid"

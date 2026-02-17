@@ -48,6 +48,7 @@ target_link_libraries(taoplugin
     KF6::ConfigCore
     Plasma::Plasma
     Plasma::PlasmaQuick
+    ${CMAKE_DL_LIBS}
 )
 
 # Output directory for the shared library
