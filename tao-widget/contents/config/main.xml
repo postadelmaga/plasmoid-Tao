@@ -5,7 +5,21 @@
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
   <kcfgfile name=""/>
 
+  <!-- Corresponds to configGeneral.qml -->
   <group name="General">
+    <entry name="lowCpuMode" type="Bool">
+      <default>false</default>
+    </entry>
+    <entry name="renderEngine" type="Int">
+      <default>1</default>
+    </entry>
+    <entry name="transparentBackground" type="Bool">
+      <default>true</default>
+    </entry>
+  </group>
+
+  <!-- Corresponds to configParticles.qml -->
+  <group name="Particles">
     <entry name="particleCount" type="Int">
       <default>80</default>
     </entry>
@@ -15,17 +29,18 @@
     <entry name="clockwise" type="Bool">
       <default>true</default>
     </entry>
+    <entry name="particleColor1" type="Color">
+      <default>#7fcdff</default>
+    </entry>
+    <entry name="particleColor2" type="Color">
+      <default>#ffaa00</default>
+    </entry>
+  </group>
+
+  <!-- Corresponds to configClock.qml -->
+  <group name="Clock">
     <entry name="showClock" type="Bool">
       <default>false</default>
-    </entry>
-    <entry name="lowCpuMode" type="Bool">
-      <default>false</default>
-    </entry>
-    <entry name="renderEngine" type="Int">
-      <default>1</default>
-    </entry>
-    <entry name="transparentBackground" type="Bool">
-      <default>true</default>
     </entry>
     <entry name="hourHandColor" type="Color">
       <default>#ffffff</default>
@@ -36,6 +51,10 @@
     <entry name="secondHandColor" type="Color">
       <default>#ffaa88</default>
     </entry>
+  </group>
+
+  <!-- Corresponds to configAppearance.qml -->
+  <group name="Appearance">
     <entry name="glowColor1" type="Color">
       <default>#64c8ff</default>
     </entry>
@@ -47,12 +66,6 @@
     </entry>
     <entry name="glowSize2" type="Double">
       <default>0.0</default>
-    </entry>
-    <entry name="particleColor1" type="Color">
-      <default>#7fcdff</default>
-    </entry>
-    <entry name="particleColor2" type="Color">
-      <default>#ffaa00</default>
     </entry>
   </group>
 

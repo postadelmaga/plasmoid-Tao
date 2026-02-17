@@ -1,12 +1,11 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
+import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.kquickcontrols as KQuickControls
 
-Kirigami.FormLayout {
-    id: page
-
+KCM.SimpleKCM {
     property alias cfg_glowColor1: glowColor1Button.color
     property alias cfg_glowSize1: glowSize1Slider.value
     property alias cfg_glowColor2: glowColor2Button.color
@@ -16,62 +15,67 @@ Kirigami.FormLayout {
     property color cfg_glowColor2Default: "#64c8ff"
     property real cfg_glowSize2Default: 0
 
-    Kirigami.Separator {
-        Kirigami.FormData.isSection: true
-        Kirigami.FormData.label: i18n("Glow 1 (Main)")
-    }
+    Kirigami.FormLayout {
+        anchors.fill: parent
 
-    RowLayout {
-        Kirigami.FormData.label: i18n("Color:")
-
-        KQuickControls.ColorButton {
-            id: glowColor1Button
-
-            Layout.fillWidth: true
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Glow 1 (Main)")
         }
 
-    }
+        RowLayout {
+            Kirigami.FormData.label: i18n("Color:")
 
-    RowLayout {
-        Kirigami.FormData.label: i18n("Size:")
+            KQuickControls.ColorButton {
+                id: glowColor1Button
 
-        QQC2.Slider {
-            id: glowSize1Slider
+                Layout.fillWidth: true
+            }
 
-            Layout.fillWidth: true
-            from: 0
-            to: 4
-            stepSize: 0.1
         }
 
-    }
+        RowLayout {
+            Kirigami.FormData.label: i18n("Size:")
 
-    Kirigami.Separator {
-        Kirigami.FormData.isSection: true
-        Kirigami.FormData.label: i18n("Glow 2 (Optional)")
-    }
+            QQC2.Slider {
+                id: glowSize1Slider
 
-    RowLayout {
-        Kirigami.FormData.label: i18n("Color:")
+                Layout.fillWidth: true
+                from: 0
+                to: 4
+                stepSize: 0.1
+            }
 
-        KQuickControls.ColorButton {
-            id: glowColor2Button
-
-            Layout.fillWidth: true
         }
 
-    }
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Glow 2 (Optional)")
+        }
 
-    RowLayout {
-        Kirigami.FormData.label: i18n("Size:")
+        RowLayout {
+            Kirigami.FormData.label: i18n("Color:")
 
-        QQC2.Slider {
-            id: glowSize2Slider
+            KQuickControls.ColorButton {
+                id: glowColor2Button
 
-            Layout.fillWidth: true
-            from: 0
-            to: 4
-            stepSize: 0.1
+                Layout.fillWidth: true
+            }
+
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Size:")
+
+            QQC2.Slider {
+                id: glowSize2Slider
+
+                Layout.fillWidth: true
+                from: 0
+                to: 4
+                stepSize: 0.1
+            }
+
         }
 
     }
