@@ -200,7 +200,6 @@ void TaoQGraphHybrid::updateSimulation() {
         auto* gen = QRandomGenerator::global(); 
 
         const float df = currentDt * 60.0f; 
-        const float friction = std::pow(0.98f, df); // Pre-calcolo frizione
 
         // Pre-calcolo limiti mouse per evitare check ripetuti
         const bool isMouseValid = mPos.x() >= 0 && mPos.y() >= 0 && mPos.x() <= w && mPos.y() <= h;
@@ -223,10 +222,12 @@ void TaoQGraphHybrid::updateSimulation() {
                         p.vx += dx * f * df;
                         p.vy += dy * f * df;
                     } else {
+                        const float friction = std::pow(0.98f, df); // Pre-calcolo frizione
                         p.vx *= friction;
                         p.vy *= friction;
                     }
                 } else {
+                    const float friction = std::pow(0.98f, df); // Pre-calcolo frizione
                     p.vx *= friction;
                     p.vy *= friction;
                 }

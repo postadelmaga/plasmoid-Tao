@@ -3,301 +3,407 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-
         body {
+            margin: 0;
+            overflow: hidden;
             background: transparent;
         }
 
         canvas {
             display: block;
-            width: 100vw;
-            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
+
+        #glCanvas {
+            z-index: 1;
+        }
+
+        /* Sfondo particelle */
+        #uiCanvas {
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Tao e Orologio sopra */
     </style>
 </head>
 
 <body>
     <canvas id="glCanvas"></canvas>
-
-    <!-- Shader per le Particelle -->
-    <script id="vs-pts" type="x-shader/x-vertex">
-        attribute vec2 a_pos;
-        attribute float a_life;
-        attribute float a_size;
-        attribute float a_type; // 0: Cyan, 1: Fire
-        varying float v_life;
-        varying float v_type;
-        void main() {
-            v_life = a_life;
-            v_type = a_type;
-            gl_Position = vec4(a_pos, 0.0, 1.0);
-            // Ridotto lo scaling della grandezza (da 30 a 15) per evitare effetto esplosione
-            gl_PointSize = a_size * (15.0 * a_life);
-        }
-    </script>
-    <script id="fs-pts" type="x-shader/x-fragment">
-        precision mediump float;
-        varying float v_life;
-        varying float v_type;
-        void main() {
-            float d = distance(gl_PointCoord, vec2(0.5));
-            if (d > 0.5) discard;
-            float g = (0.5 - d) * 2.0;
-            
-            vec3 color;
-            if (v_type > 0.5) {
-                // Colore Fuoco: Arancione/Rosso
-                color = vec3(1.0, 0.4 + 0.6 * v_life, 0.1);
-            } else {
-                // Colore Cyan standard
-                color = vec3(0.5, 0.8, 1.0);
-            }
-            gl_FragColor = vec4(color, g * v_life * 0.7);
-        }
-    </script>
+    <canvas id="uiCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById("glCanvas");
-        const gl = canvas.getContext("webgl", { alpha: true, antialias: true, preserveDrawingBuffer: false });
-
-        let PARTICLES = 80, SPEED = 0.005, DIR = 1, CLOCK = false, LOWCPU = false, VISIBLE = true;
-        let width, height, aspect, rot = 0, time = 0;
-        let ptsData = [];
-        let mouseX = -1000, mouseY = -1000, mouseInside = false;
-
-        // Reuse buffers
-        let posArr = new Float32Array(6000);
-        let lifeArr = new Float32Array(3000);
-        let sizeArr = new Float32Array(3000);
-        let typeArr = new Float32Array(3000);
-
-        // --- Setup Shaders ---
-        function createProg(vsId, fsId) {
-            const vs = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vs, document.getElementById(vsId).text);
-            gl.compileShader(vs);
-            const fs = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(fs, document.getElementById(fsId).text);
-            gl.compileShader(fs);
-            const p = gl.createProgram();
-            gl.attachShader(p, vs); gl.attachShader(p, fs);
-            gl.linkProgram(p);
-            return p;
-        }
-
-        const ptProg = createProg("vs-pts", "fs-pts");
-        const posBuf = gl.createBuffer();
-        const lifeBuf = gl.createBuffer();
-        const sizeBuf = gl.createBuffer();
-        const typeBuf = gl.createBuffer();
-
-        // Logic
-        function initPts() {
-            ptsData = [];
-            for (let i = 0; i < 3000; i++) {
-                ptsData.push({
-                    x: 0, y: 0, vx: 0, vy: 0,
-                    life: 0, decay: 0.003 + Math.random() * 0.007,
-                    sz: Math.random() * 2.0 + 0.5,
-                    type: Math.random() < 0.15 ? 1 : 0 // 15% Fire
-                });
-            }
-        }
-
-        function respawn(p) {
-            let angle = Math.random() * 6.28;
-            let dist = 0.3 + Math.random() * 1.5; // Distribuzione più ampia per riempire
-            p.x = Math.cos(angle) * dist;
-            p.y = Math.sin(angle) * dist;
-            p.vx = (Math.random() - 0.5) * 0.004;
-            p.vy = (Math.random() - 0.5) * 0.004;
-            p.life = 1.0;
-        }
-
-        let lastTimestamp = 0;
-
-        function update(dt) {
-            if (!VISIBLE) return;
-
-            const df = dt * 60; // Delta factor (1.0 at 60fps)
-            rot += SPEED * DIR * df;
-            let active = Math.min(PARTICLES, 3000);
-
-            let mXScaled = (mouseX / width - 0.5) * 2;
-            let mYScaled = -(mouseY / height - 0.5) * 2 / aspect;
-
-            // Tao Radius in normalized coords
-            let rNorm = (Math.min(width, height) / 4.5) / (Math.min(width, height) / 2); // circa 0.44
-
-            for (let i = 0; i < active; i++) {
-                let p = ptsData[i];
-                if (p.life <= 0) respawn(p);
-
-                if (mouseInside) {
-                    let dx = mXScaled - p.x;
-                    let dy = mYScaled - p.y;
-                    let d2 = dx * dx + dy * dy;
-                    if (d2 < 4.0) {
-                        let force = 0.005 / (d2 + 0.1);
-                        p.vx += dx * force * df;
-                        p.vy += dy * force * df;
-                    }
-                } else {
-                    p.vx *= Math.pow(0.98, df);
-                    p.vy *= Math.pow(0.98, df);
-                }
-
-                p.x += p.vx * df;
-                p.y += p.vy * df;
-
-                // Center Avoidance (Tao Rejection)
-                let tdx = p.x;
-                let tdy = p.y * aspect; // Need aspect for circle
-                let tDistSq = tdx * tdx + tdy * tdy;
-                let rNormSq = 0.44 * 0.44;
-
-                if (tDistSq < rNormSq) {
-                    let tDist = Math.sqrt(tDistSq);
-                    let nx = tdx / tDist;
-                    let ny = tdy / tDist;
-
-                    // Simple push-out
-                    p.x = nx * 0.45;
-                    p.y = (ny * 0.45) / aspect;
-
-                    // Reflect velocity
-                    let dot = p.vx * nx + (p.vy * aspect) * ny;
-                    if (dot < 0) {
-                        p.vx -= 1.5 * dot * nx;
-                        p.vy -= (1.5 * dot * ny) / aspect;
-                    }
-                }
-
-                p.life -= p.decay * df;
-            }
-        }
-
-        const ctx2d = document.createElement("canvas").getContext("2d");
-        document.body.appendChild(ctx2d.canvas);
-        ctx2d.canvas.style.position = "absolute";
-        ctx2d.canvas.style.top = "0"; ctx2d.canvas.style.left = "0";
-        ctx2d.canvas.style.pointerEvents = "none";
-
-        function resize() {
-            width = canvas.width = ctx2d.canvas.width = window.innerWidth;
-            height = canvas.height = ctx2d.canvas.height = window.innerHeight;
-            aspect = width / height;
-            gl.viewport(0, 0, width, height);
-        }
-        window.onresize = resize;
-        resize();
-        initPts();
-
-        // Mouse Tracking
-        window.updateMouse = (x, y, inside) => {
-            mouseX = x; mouseY = y; mouseInside = inside;
+        // --- CONFIGURAZIONE CENTRALE ---
+        const Config = {
+            particles: 80,
+            speed: 0.005,
+            direction: 1, // 1 or -1
+            showClock: false,
+            lowCpu: false,
+            rotation: 0,
+            maxParticles: 3000
         };
 
-        function drawTao() {
-            const ctx = ctx2d;
-            ctx.clearRect(0, 0, width, height);
-            let r = Math.min(width, height) / 4.5;
-            let cx = width / 2, cy = height / 2;
+        const Mouse = { x: -1000, y: -1000, inside: false };
 
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(rot);
-            ctx.shadowBlur = LOWCPU ? 0 : 20;
-            ctx.shadowColor = "rgba(100, 200, 255, 0.5)";
+        // --- SHADERS ---
+        const SHADERS = {
+            vs: `
+                attribute vec2 a_position;
+                attribute float a_life;
+                attribute float a_size;
+                attribute float a_type;
+                varying float v_life;
+                varying float v_type;
+                
+                void main() {
+                    v_life = a_life;
+                    v_type = a_type;
+                    gl_Position = vec4(a_position, 0.0, 1.0);
+                    // Dimensione dinamica basata sulla vita
+                    gl_PointSize = a_size * (15.0 * a_life); 
+                }
+            `,
+            fs: `
+                precision mediump float;
+                varying float v_life;
+                varying float v_type;
+                
+                void main() {
+                    // Crea un punto rotondo sfumato
+                    float d = distance(gl_PointCoord, vec2(0.5));
+                    if (d > 0.5) discard;
+                    float alpha = (0.5 - d) * 2.0;
+                    
+                    vec3 color;
+                    if (v_type > 0.5) {
+                        color = vec3(1.0, 0.4 + 0.6 * v_life, 0.1); // Fuoco
+                    } else {
+                        color = vec3(0.5, 0.8, 1.0); // Ciano
+                    }
+                    
+                    gl_FragColor = vec4(color, alpha * v_life * 0.7);
+                }
+            `
+        };
 
-            // Tao Disk
-            ctx.fillStyle = "#fff";
-            ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.28); ctx.fill();
-            ctx.fillStyle = "#000";
-            ctx.beginPath(); ctx.arc(0, 0, r, -1.57, 1.57);
-            ctx.arc(0, r / 2, r / 2, 1.57, -1.57, true);
-            ctx.arc(0, -r / 2, r / 2, 1.57, -1.57, false);
-            ctx.fill();
-            // Eyes
-            ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, 6.28); ctx.fill();
-            ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, 6.28); ctx.fill();
+        // --- CLASSE: GESTIONE OVERLAY 2D (Tao e Orologio) ---
+        class TaoOverlay {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext("2d");
+                this.width = 0;
+                this.height = 0;
+            }
 
-            ctx.restore();
+            resize(w, h) {
+                this.width = this.canvas.width = w;
+                this.height = this.canvas.height = h;
+            }
 
-            if (CLOCK) {
-                let now = new Date();
-                let s = now.getSeconds() + now.getMilliseconds() / 1000;
-                let m = now.getMinutes() + s / 60;
-                let h = (now.getHours() % 12) + m / 60;
-                ctx.save(); ctx.translate(cx, cy); ctx.lineCap = "round";
-                const drawHand = (a, len, w, col) => {
-                    ctx.strokeStyle = col; ctx.lineWidth = w;
+            draw() {
+                const ctx = this.ctx;
+                const { width, height } = this;
+                const r = Math.min(width, height) / 4.5;
+                const cx = width / 2;
+                const cy = height / 2;
+
+                ctx.clearRect(0, 0, width, height);
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(Config.rotation);
+
+                // Ombra (disabilitata in lowCpu)
+                if (!Config.lowCpu) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = "rgba(100, 200, 255, 0.5)";
+                }
+
+                // Disegno Tao
+                this.drawTaoBody(ctx, r);
+                ctx.restore();
+
+                // Orologio (se attivo)
+                if (Config.showClock) {
+                    this.drawClock(ctx, cx, cy, r);
+                }
+            }
+
+            drawTaoBody(ctx, r) {
+                // Cerchio bianco
+                ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+                // Metà nera e curve
+                ctx.fillStyle = "#000";
+                ctx.beginPath();
+                ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
+                ctx.arc(0, r / 2, r / 2, Math.PI / 2, -Math.PI / 2, true);
+                ctx.arc(0, -r / 2, r / 2, Math.PI / 2, -Math.PI / 2, false);
+                ctx.fill();
+
+                // Occhi
+                ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
+            }
+
+            drawClock(ctx, cx, cy, r) {
+                const now = new Date();
+                const s = now.getSeconds() + now.getMilliseconds() / 1000;
+                const m = now.getMinutes() + s / 60;
+                const h = (now.getHours() % 12) + m / 60;
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.lineCap = "round";
+
+                const hand = (val, max, len, width, color) => {
+                    const angle = (val / max) * Math.PI * 2 - Math.PI / 2;
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = width;
                     ctx.beginPath(); ctx.moveTo(0, 0);
-                    ctx.lineTo(Math.cos(a - 1.57) * len, Math.sin(a - 1.57) * len); ctx.stroke();
+                    ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+                    ctx.stroke();
                 };
-                drawHand((h / 12) * 6.28, r * 0.5, 5, "rgba(255,255,255,0.8)");
-                drawHand((m / 60) * 6.28, r * 0.8, 3, "rgba(136,204,255,0.8)");
-                drawHand((s / 60) * 6.28, r * 0.9, 1.5, "rgba(255,170,136,0.8)");
+
+                hand(h, 12, r * 0.5, 5, "rgba(255,255,255,0.8)");
+                hand(m, 60, r * 0.8, 3, "rgba(136,204,255,0.8)");
+                hand(s, 60, r * 0.9, 1.5, "rgba(255,170,136,0.8)");
+
                 ctx.restore();
             }
         }
 
-        function render(now) {
-            if (!now) now = performance.now();
-            if (!lastTimestamp) lastTimestamp = now;
-            let dt = (now - lastTimestamp) / 1000;
-            if (dt > 0.1) dt = 0.1;
-            lastTimestamp = now;
+        // --- CLASSE: MOTORE PARTICELLE (Fisica + WebGL) ---
+        class ParticleEngine {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.gl = this.canvas.getContext("webgl", { alpha: true, antialias: true });
 
-            if (VISIBLE) {
-                update(dt);
-                gl.clearColor(0, 0, 0, 0);
-                gl.clear(gl.COLOR_BUFFER_BIT);
+                this.count = Config.maxParticles;
+                this.particles = [];
+                this.aspect = 1;
+
+                // Typed Arrays per WebGL (allocate una volta sola per performance)
+                this.dataPos = new Float32Array(this.count * 2);
+                this.dataLife = new Float32Array(this.count);
+                this.dataSize = new Float32Array(this.count);
+                this.dataType = new Float32Array(this.count);
+
+                this.initGL();
+                this.initParticles();
+            }
+
+            initGL() {
+                const gl = this.gl;
+                const createShader = (type, src) => {
+                    const s = gl.createShader(type);
+                    gl.shaderSource(s, src);
+                    gl.compileShader(s);
+                    return s;
+                };
+
+                const prog = gl.createProgram();
+                gl.attachShader(prog, createShader(gl.VERTEX_SHADER, SHADERS.vs));
+                gl.attachShader(prog, createShader(gl.FRAGMENT_SHADER, SHADERS.fs));
+                gl.linkProgram(prog);
+                gl.useProgram(prog);
+                this.program = prog;
+
+                // Buffer Setup
+                this.bufPos = gl.createBuffer();
+                this.bufLife = gl.createBuffer();
+                this.bufSize = gl.createBuffer();
+                this.bufType = gl.createBuffer();
+
                 gl.enable(gl.BLEND);
                 gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+            }
 
-                gl.useProgram(ptProg);
-                let active = Math.min(PARTICLES, 3000);
+            resize(w, h) {
+                this.canvas.width = w;
+                this.canvas.height = h;
+                this.aspect = w / h;
+                this.gl.viewport(0, 0, w, h);
+            }
 
-                for (let i = 0; i < active; i++) {
-                    posArr[i * 2] = ptsData[i].x;
-                    posArr[i * 2 + 1] = ptsData[i].y * aspect;
-                    lifeArr[i] = ptsData[i].life;
-                    sizeArr[i] = ptsData[i].sz;
-                    typeArr[i] = ptsData[i].type;
+            initParticles() {
+                for (let i = 0; i < this.count; i++) {
+                    this.particles.push({
+                        x: 0, y: 0, vx: 0, vy: 0,
+                        life: 0,
+                        decay: 0.003 + Math.random() * 0.007,
+                        size: Math.random() * 2.0 + 0.5,
+                        type: Math.random() < 0.15 ? 1 : 0 // 15% Fuoco
+                    });
                 }
+            }
 
-                const setAttr = (locName, data, size, buf) => {
-                    const loc = gl.getAttribLocation(ptProg, locName);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-                    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+            respawn(p) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 0.3 + Math.random() * 1.5;
+                p.x = Math.cos(angle) * dist;
+                p.y = Math.sin(angle) * dist;
+                p.vx = (Math.random() - 0.5) * 0.004;
+                p.vy = (Math.random() - 0.5) * 0.004;
+                p.life = 1.0;
+            }
+
+            updatePhysics(dt) {
+                const df = dt * 60; // Delta factor
+                const activeCount = Math.min(Config.particles, Config.maxParticles);
+
+                // Coordinate mouse normalizzate per WebGL (-1 to 1)
+                const mx = (Mouse.x / this.canvas.width - 0.5) * 2;
+                const my = -(Mouse.y / this.canvas.height - 0.5) * 2 / this.aspect;
+
+                // Raggio del Tao (circa 0.44 nello spazio normalizzato)
+                const taoRadiusSq = 0.44 * 0.44;
+
+                for (let i = 0; i < activeCount; i++) {
+                    const p = this.particles[i];
+
+                    if (p.life <= 0) this.respawn(p);
+
+                    // Attrazione Mouse
+                    if (Mouse.inside) {
+                        const dx = mx - p.x;
+                        const dy = my - p.y;
+                        const distSq = dx * dx + dy * dy;
+                        if (distSq < 4.0) {
+                            let force = 0.001 / (distSq + 2);
+                            p.vx += dx * force * df;
+                            p.vy += dy * force * df;
+                        }
+                        else {
+                            const friction = Math.pow(0.98, df);
+                            p.vx *= friction;
+                            p.vy *= friction;
+                        }
+                    } else {
+                        // Attrito
+                        const friction = Math.pow(0.98, df);
+                        p.vx *= friction;
+                        p.vy *= friction;
+                    }
+
+                    // Movimento
+                    p.x += p.vx * df;
+                    p.y += p.vy * df;
+
+                    // Collisione Tao (Centro)
+                    // Il Tao è un cerchio perfetto, ma in coordinate OpenGL (x, y*aspect) appare schiacciato se non correggiamo
+                    const tdx = p.x;
+                    const tdy = p.y * this.aspect;
+                    const tDistSq = tdx * tdx + tdy * tdy;
+
+                    if (tDistSq < taoRadiusSq) {
+                        const dist = Math.sqrt(tDistSq);
+                        const nx = tdx / dist;
+                        const ny = tdy / dist;
+
+                        // Spingi fuori
+                        p.x = nx * 0.45;
+                        p.y = (ny * 0.45) / this.aspect;
+
+                        // Rimbalzo
+                        const dot = p.vx * nx + (p.vy * this.aspect) * ny;
+                        if (dot < 0) {
+                            p.vx -= 1.5 * dot * nx;
+                            p.vy -= (1.5 * dot * ny) / this.aspect;
+                        }
+                    }
+
+                    p.life -= p.decay * df;
+
+                    // Aggiorna Buffer Arrays
+                    this.dataPos[i * 2] = p.x;
+                    this.dataPos[i * 2 + 1] = p.y * this.aspect; // Correggi aspetto per rendering
+                    this.dataLife[i] = p.life;
+                    this.dataSize[i] = p.size;
+                    this.dataType[i] = p.type;
+                }
+            }
+
+            render() {
+                const gl = this.gl;
+                const activeCount = Math.min(Config.particles, Config.maxParticles);
+
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                // Helper per bindare attributi
+                const bindAttrib = (name, buffer, data, size) => {
+                    const loc = gl.getAttribLocation(this.program, name);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW); // Re-upload dati
                     gl.enableVertexAttribArray(loc);
                     gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
                 };
 
-                setAttr("a_pos", posArr.subarray(0, active * 2), 2, posBuf);
-                setAttr("a_life", lifeArr.subarray(0, active), 1, lifeBuf);
-                setAttr("a_size", sizeArr.subarray(0, active), 1, sizeBuf);
-                setAttr("a_type", typeArr.subarray(0, active), 1, typeBuf);
+                // Carichiamo solo i dati delle particelle attive
+                bindAttrib("a_position", this.bufPos, this.dataPos.subarray(0, activeCount * 2), 2);
+                bindAttrib("a_life", this.bufLife, this.dataLife.subarray(0, activeCount), 1);
+                bindAttrib("a_size", this.bufSize, this.dataSize.subarray(0, activeCount), 1);
+                bindAttrib("a_type", this.bufType, this.dataType.subarray(0, activeCount), 1);
 
-                gl.drawArrays(gl.POINTS, 0, active);
-                drawTao();
+                gl.drawArrays(gl.POINTS, 0, activeCount);
             }
-            requestAnimationFrame(render);
         }
 
-        window.updateSettings = (count, speed, dir, clock, lowcpu, visible) => {
-            PARTICLES = count; SPEED = speed; DIR = dir; CLOCK = clock; LOWCPU = lowcpu;
-            if (visible !== undefined) VISIBLE = visible;
+        // --- MAIN APP ---
+        const overlay = new TaoOverlay("uiCanvas");
+        const engine = new ParticleEngine("glCanvas");
+
+        function resize() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            overlay.resize(w, h);
+            engine.resize(w, h);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let lastTime = 0;
+        function loop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            let dt = (timestamp - lastTime) / 1000;
+            if (dt > 0.1) dt = 0.1; // Cap per lag spikes
+            lastTime = timestamp;
+
+            // Aggiorna rotazione globale
+            const df = dt * 60;
+            Config.rotation += Config.speed * Config.direction * df;
+
+            // Logica e Rendering
+            engine.updatePhysics(dt);
+            engine.render();
+            overlay.draw();
+
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+
+        // --- INTERFACCIA QML ---
+        window.updateMouse = (x, y, inside) => {
+            Mouse.x = x;
+            Mouse.y = y;
+            Mouse.inside = inside;
         };
 
-        render(performance.now());
+        window.updateSettings = (count, speed, dir, clock, lowcpu) => {
+            Config.particles = count;
+            Config.speed = speed;
+            Config.direction = dir;
+            Config.showClock = clock;
+            Config.lowCpu = lowcpu;
+        };
     </script>
 </body>
 

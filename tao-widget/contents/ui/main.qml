@@ -1,7 +1,5 @@
 import QtQuick
-import QtQuick.Effects
 import QtQuick.Layouts
-import QtWebEngine
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
@@ -9,6 +7,7 @@ import org.kde.plasma.plasmoid
 PlasmoidItem {
     id: root
 
+    // --- Proprietà del Plasmoide ---
     property int particleCount: plasmoid.configuration.particleCount
     property int rotationSpeed: plasmoid.configuration.rotationSpeed
     property bool clockwise: plasmoid.configuration.clockwise
@@ -16,7 +15,6 @@ PlasmoidItem {
     property bool lowCpuMode: plasmoid.configuration.lowCpuMode
     property bool transparentBackground: plasmoid.configuration.transparentBackground
     property int renderEngine: plasmoid.configuration.renderEngine // 0: WebGL, 1: Native
-    readonly property bool isActuallyVisible: (plasmoid.visible !== false) && (plasmoid.expanded !== false)
 
     Plasmoid.backgroundHints: root.transparentBackground ? PlasmaCore.Types.NoBackground : PlasmaCore.Types.DefaultBackground
     preferredRepresentation: fullRepresentation
@@ -27,128 +25,89 @@ PlasmoidItem {
         Layout.preferredWidth: (Kirigami.Units.gridUnit || 18) * 20
         Layout.preferredHeight: Layout.preferredWidth
 
+        // --- 1. SETTINGS OBJECT (Il "Pacchetto" di dati) ---
+        // Raggruppiamo tutte le configurazioni qui.
+        // I file esterni leggeranno solo "settings.nomeProprietà"
+        QtObject {
+            id: viewSettings
+
+            // Usiamo readonly per sicurezza, tanto cambiano solo se cambia root
+            readonly property int particleCount: root.particleCount
+            readonly property int rotationSpeed: root.rotationSpeed
+            readonly property bool clockwise: root.clockwise
+            readonly property bool showClock: root.showClock
+            readonly property bool lowCpuMode: root.lowCpuMode
+        }
+
         Rectangle {
             id: mainContainer
+
             anchors.fill: parent
             color: "transparent"
             clip: true
 
-            // 2. Native C++ Renderer (Zen Engine)
+            // --- 2. NATIVE LOADER ---
             Loader {
                 id: nativeLoader
+
                 anchors.fill: parent
-                // Carica solo se engine è 1
-                active: root.renderEngine === 1 && root.isActuallyVisible
+                // Attivo SOLO se engine == 1
+                active: root.renderEngine === 1
                 visible: active && status === Loader.Ready
                 source: "NativeRenderer.qml"
 
+                // Un solo binding per passare TUTTO!
                 Binding {
                     target: nativeLoader.item
-                    property: "particleCount"
-                    value: root.particleCount
+                    property: "settings"
+                    value: viewSettings
                     when: nativeLoader.status === Loader.Ready
                 }
-                Binding {
-                    target: nativeLoader.item
-                    property: "rotationSpeed"
-                    value: root.rotationSpeed
-                    when: nativeLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: nativeLoader.item
-                    property: "clockwise"
-                    value: root.clockwise
-                    when: nativeLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: nativeLoader.item
-                    property: "showClock"
-                    value: root.showClock
-                    when: nativeLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: nativeLoader.item
-                    property: "lowCpuMode"
-                    value: root.lowCpuMode
-                    when: nativeLoader.status === Loader.Ready
-                }
+
             }
 
-            // 1. Web Renderer (Web Engine / WebGL) - ORA DENTRO UN LOADER
+            // --- 3. WEB LOADER ---
             Loader {
                 id: webLoader
-                anchors.fill: parent
 
-                // Active controlla la CREAZIONE dell'oggetto.
-                // Si crea solo se engine è 0 OPPURE se l'engine nativo è andato in errore.
-                active: (root.renderEngine === 0 || (root.renderEngine === 1 && nativeLoader.status === Loader.Error)) && root.isActuallyVisible
+                anchors.fill: parent
+                // Attivo se engine == 0 OPPURE se il nativo fallisce
+                active: (root.renderEngine === 0 || (root.renderEngine === 1 && nativeLoader.status === Loader.Error))
                 visible: active
                 source: "WebRenderer.qml"
 
+                // Un solo binding anche qui
                 Binding {
                     target: webLoader.item
-                    property: "particleCount"
-                    value: root.particleCount
-                    when: webLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: webLoader.item
-                    property: "rotationSpeed"
-                    value: root.rotationSpeed
-                    when: webLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: webLoader.item
-                    property: "clockwise"
-                    value: root.clockwise
-                    when: webLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: webLoader.item
-                    property: "showClock"
-                    value: root.showClock
-                    when: webLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: webLoader.item
-                    property: "lowCpuMode"
-                    value: root.lowCpuMode
-                    when: webLoader.status === Loader.Ready
-                }
-                Binding {
-                    target: webLoader.item
-                    property: "isActuallyVisible"
-                    value: root.isActuallyVisible
+                    property: "settings"
+                    value: viewSettings
                     when: webLoader.status === Loader.Ready
                 }
 
             }
 
-            // Mouse Area for both engines
+            // --- 4. MOUSE AREA UNIFICATA ---
             MouseArea {
-                function updateMouse(x, y, inside) {
-                    // Gestione Native
-                    if (nativeLoader.item)
-                        nativeLoader.item.mousePos = inside ? Qt.point(x, y) : Qt.point(-1000, -1000);
+                // Funzione helper per smistare l'evento al loader attivo
+                function dispatchMouse(x, y, inside) {
+                    var item = nativeLoader.item || webLoader.item;
+                    if (item)
+                        item.updateMouse(x, y, inside);
 
-                    // Gestione Web: controlliamo se webLoader ha caricato l'item
-                    if (webLoader.item) {
-                        // Nota: non possiamo chiamare webView direttamente per ID dall'esterno del Component
-                        // Usiamo webLoader.item per accedere all'oggetto caricato
-                        webLoader.item.runJavaScript(`if(window.updateMouse)window.updateMouse(${x},${y},${inside});`);
-                    }
                 }
 
                 anchors.fill: parent
                 hoverEnabled: true
-                enabled: root.isActuallyVisible
-
+                enabled: true
                 onPositionChanged: (mouse) => {
-                    return updateMouse(mouse.x, mouse.y, true);
+                    return dispatchMouse(mouse.x, mouse.y, true);
                 }
-                onEntered: updateMouse(mouseX, mouseY, true)
-                onExited: updateMouse(-1000, -1000, false)
+                onEntered: dispatchMouse(mouseX, mouseY, true)
+                onExited: dispatchMouse(-1000, -1000, false)
             }
+
         }
+
     }
+
 }
