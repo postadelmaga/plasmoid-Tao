@@ -18,12 +18,7 @@ WebEngineView {
             return ;
 
         // Accediamo alle proprietà tramite l'oggetto settings
-        var p = viewSettings.particleCount;
-        var s = viewSettings.rotationSpeed / 1000;
-        var d = viewSettings.clockwise ? 1 : -1;
-        var c = viewSettings.showClock;
-        var l = viewSettings.lowCpuMode;
-        runJavaScript(`if(window.updateSettings)window.updateSettings(${p},${s},${d},${c},${l});`);
+        runJavaScript(`if(window.updateSettings)window.updateSettings(${viewSettings.particleCount},${viewSettings.rotationSpeed},${viewSettings.clockwise},${viewSettings.showClock},${viewSettings.lowCpuMode});`);
     }
 
     anchors.fill: parent
