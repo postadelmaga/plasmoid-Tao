@@ -11,11 +11,6 @@ KCM.SimpleKCM {
     property alias cfg_clockwise: clockwiseRadio.checked
     property alias cfg_particleColor1: particleColor1Button.color
     property alias cfg_particleColor2: particleColor2Button.color
-    property int cfg_particleCountDefault: 80
-    property int cfg_rotationSpeedDefault: 5
-    property bool cfg_clockwiseDefault: true
-    property color cfg_particleColor1Default: "#7fcdff"
-    property color cfg_particleColor2Default: "#ffaa00"
 
     Kirigami.FormLayout {
         anchors.fill: parent

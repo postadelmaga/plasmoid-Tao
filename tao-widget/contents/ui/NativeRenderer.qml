@@ -5,7 +5,7 @@ Item {
     id: renderer
 
     // 1. Riceviamo l'oggetto unificato 'settings' dal main.qml
-    property QtObject settings: null
+    property QtObject objsettings: null
     // 2. Manteniamo la proprietà interna per il mouse (che serve al componente ibrido)
     property point mousePos: Qt.point(-1000, -1000)
 
@@ -23,11 +23,23 @@ Item {
         // nel millisecondo in cui il Loader crea l'oggetto ma il binding non è ancora arrivato.
 
         anchors.fill: parent
-        particleCount: renderer.settings ? renderer.settings.particleCount : 0
-        rotationSpeed: renderer.settings ? renderer.settings.rotationSpeed : 0
-        clockwise: renderer.settings ? renderer.settings.clockwise : false
-        showClock: renderer.settings ? renderer.settings.showClock : false
-        lowCpuMode: renderer.settings ? renderer.settings.lowCpuMode : false
+        particleCount: renderer.objsettings ? renderer.objsettings.particleCount : 0
+        rotationSpeed: renderer.objsettings ? renderer.objsettings.rotationSpeed : 0
+        clockwise: renderer.objsettings ? renderer.objsettings.clockwise : false
+        showClock: renderer.objsettings ? renderer.objsettings.showClock : false
+        lowCpuMode: renderer.objsettings ? renderer.objsettings.lowCpuMode : false
+        // Clock Colors
+        hourHandColor: renderer.objsettings ? renderer.objsettings.hourHandColor : "white"
+        minuteHandColor: renderer.objsettings ? renderer.objsettings.minuteHandColor : "blue"
+        secondHandColor: renderer.objsettings ? renderer.objsettings.secondHandColor : "red"
+        // Glow
+        glowColor1: renderer.objsettings ? renderer.objsettings.glowColor1 : "white"
+        glowSize1: renderer.objsettings ? renderer.objsettings.glowSize1 : 0
+        glowColor2: renderer.objsettings ? renderer.objsettings.glowColor2 : "white"
+        glowSize2: renderer.objsettings ? renderer.objsettings.glowSize2 : 0
+        // Particle Colors
+        particleColor1: renderer.objsettings ? renderer.objsettings.particleColor1 : "white"
+        particleColor2: renderer.objsettings ? renderer.objsettings.particleColor2 : "white"
         // Il mouse usa la proprietà locale aggiornata dalla funzione sopra
         mousePos: renderer.mousePos
     }

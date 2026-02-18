@@ -15,6 +15,18 @@ PlasmoidItem {
     property bool lowCpuMode: plasmoid.configuration.lowCpuMode
     property bool transparentBackground: plasmoid.configuration.transparentBackground
     property int renderEngine: plasmoid.configuration.renderEngine // 0: WebGL, 1: Native
+    // Clock Colors
+    property color hourHandColor: plasmoid.configuration.hourHandColor
+    property color minuteHandColor: plasmoid.configuration.minuteHandColor
+    property color secondHandColor: plasmoid.configuration.secondHandColor
+    // Appearance (Glow)
+    property color glowColor1: plasmoid.configuration.glowColor1
+    property double glowSize1: plasmoid.configuration.glowSize1
+    property color glowColor2: plasmoid.configuration.glowColor2
+    property double glowSize2: plasmoid.configuration.glowSize2
+    // Particles
+    property color particleColor1: plasmoid.configuration.particleColor1
+    property color particleColor2: plasmoid.configuration.particleColor2
 
     Plasmoid.backgroundHints: root.transparentBackground ? PlasmaCore.Types.NoBackground : PlasmaCore.Types.DefaultBackground
     preferredRepresentation: fullRepresentation
@@ -31,7 +43,7 @@ PlasmoidItem {
         // Raggruppiamo tutte le configurazioni qui.
         // I file esterni leggeranno solo "settings.nomeProprietà"
         QtObject {
-            id: viewSettings
+            id: objsettings
 
             // Usiamo readonly per sicurezza, tanto cambiano solo se cambia root
             readonly property int particleCount: root.particleCount
@@ -39,6 +51,18 @@ PlasmoidItem {
             readonly property bool clockwise: root.clockwise
             readonly property bool showClock: root.showClock
             readonly property bool lowCpuMode: root.lowCpuMode
+            // Clock
+            readonly property color hourHandColor: root.hourHandColor
+            readonly property color minuteHandColor: root.minuteHandColor
+            readonly property color secondHandColor: root.secondHandColor
+            // Glow
+            readonly property color glowColor1: root.glowColor1
+            readonly property double glowSize1: root.glowSize1
+            readonly property color glowColor2: root.glowColor2
+            readonly property double glowSize2: root.glowSize2
+            // Particles
+            readonly property color particleColor1: root.particleColor1
+            readonly property color particleColor2: root.particleColor2
         }
 
         Rectangle {
@@ -61,8 +85,8 @@ PlasmoidItem {
                 // Un solo binding per passare TUTTO!
                 Binding {
                     target: nativeLoader.item
-                    property: "settings"
-                    value: viewSettings
+                    property: "objsettings"
+                    value: objsettings
                     when: nativeLoader.status === Loader.Ready
                 }
 
@@ -81,8 +105,8 @@ PlasmoidItem {
                 // Un solo binding anche qui
                 Binding {
                     target: webLoader.item
-                    property: "settings"
-                    value: viewSettings
+                    property: "objsettings"
+                    value: objsettings
                     when: webLoader.status === Loader.Ready
                 }
 

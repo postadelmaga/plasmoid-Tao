@@ -10,10 +10,6 @@ KCM.SimpleKCM {
     property alias cfg_hourHandColor: hourHandColorButton.color
     property alias cfg_minuteHandColor: minuteHandColorButton.color
     property alias cfg_secondHandColor: secondHandColorButton.color
-    property bool cfg_showClockDefault: false
-    property color cfg_hourHandColorDefault: "#ffffff"
-    property color cfg_minuteHandColorDefault: "#88ccff"
-    property color cfg_secondHandColorDefault: "#ffaa88"
 
     Kirigami.FormLayout {
         anchors.fill: parent

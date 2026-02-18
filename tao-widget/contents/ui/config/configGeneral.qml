@@ -8,9 +8,6 @@ KCM.SimpleKCM {
     property alias cfg_lowCpuMode: lowCpuCheckBox.checked
     property alias cfg_renderEngine: engineCombo.currentIndex
     property alias cfg_transparentBackground: transparentBgCheckBox.checked
-    property bool cfg_lowCpuModeDefault: false
-    property int cfg_renderEngineDefault: 0
-    property bool cfg_transparentBackgroundDefault: true
 
     Kirigami.FormLayout {
         anchors.fill: parent

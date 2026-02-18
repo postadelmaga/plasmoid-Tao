@@ -10,10 +10,6 @@ KCM.SimpleKCM {
     property alias cfg_glowSize1: glowSize1Slider.value
     property alias cfg_glowColor2: glowColor2Button.color
     property alias cfg_glowSize2: glowSize2Slider.value
-    property color cfg_glowColor1Default: "#64c8ff"
-    property real cfg_glowSize1Default: 1.3
-    property color cfg_glowColor2Default: "#64c8ff"
-    property real cfg_glowSize2Default: 0
 
     Kirigami.FormLayout {
         anchors.fill: parent
