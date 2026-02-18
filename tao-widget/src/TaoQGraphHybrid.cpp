@@ -409,7 +409,11 @@ void TaoQGraphHybrid::updateSimulation() {
             // che il compilatore trasforma in un'operazione SIMD ottimale.
             const float    px  = p.x;
             const float    py  = p.y;
-            const float    hs  = p.size;
+            // p.size equivale al diametro del punto WebGL (gl_PointSize).
+            // Nel quad C++ hs è il RAGGIO, quindi il quad sarebbe 2× più grande.
+            // Dimezzando qui si allinea la dimensione visiva alla versione WebGL
+            // senza alterare la logica di simulazione (collisioni, respawn).
+            const float    hs  = p.size * 0.5f;
             const quint32  col = p.packedColor;
             ParticleQuad&  q   = qData[i];
             q.v[0] = { px - hs, py - hs, 0.0f, 0.0f, col };

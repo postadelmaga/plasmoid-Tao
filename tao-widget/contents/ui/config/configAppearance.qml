@@ -37,9 +37,13 @@ KCM.SimpleKCM {
                 id: glowSize1Slider
 
                 Layout.fillWidth: true
-                from: 1
+                from: 0
                 to: 2
-                stepSize: 0.1
+                stepSize: 0.05
+            }
+
+            QQC2.Label {
+                text: glowSize1Slider.value.toFixed(2)
             }
 
         }
@@ -67,9 +71,13 @@ KCM.SimpleKCM {
                 id: glowSize2Slider
 
                 Layout.fillWidth: true
-                from: 1
+                from: 0
                 to: 2
-                stepSize: 0.1
+                stepSize: 0.05
+            }
+
+            QQC2.Label {
+                text: glowSize2Slider.value.toFixed(2)
             }
 
         }

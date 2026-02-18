@@ -43,7 +43,7 @@
       <default>false</default>
     </entry>
     <entry name="hourHandColor" type="Color">
-      <default>#ffffff</default>
+      <default>##ff4ee8</default>
     </entry>
     <entry name="minuteHandColor" type="Color">
       <default>#88ccff</default>
@@ -59,13 +59,13 @@
       <default>#64c8ff</default>
     </entry>
     <entry name="glowSize1" type="Double">
-      <default>1.5</default>
+      <default>1.2</default>
     </entry>
     <entry name="glowColor2" type="Color">
       <default>#ffaa00</default>
     </entry>
     <entry name="glowSize2" type="Double">
-      <default>1.5</default>
+      <default>1.2</default>
     </entry>
   </group>
 
