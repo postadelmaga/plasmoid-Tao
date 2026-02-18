@@ -40,7 +40,7 @@
       <default>false</default>
     </entry>
     <entry name="hourHandColor" type="Color">
-      <default>##ff4ee8</default>
+      <default>#ff4ee8</default>
     </entry>
     <entry name="minuteHandColor" type="Color">
       <default>#88ccff</default>

@@ -22,7 +22,7 @@ find_package(PlasmaQuick ${KF_MIN_VERSION} REQUIRED)
 
 # Optimization and Performance
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -march=native -ffast-math)
+    add_compile_options(-O3 -march=x86-64-v3 -ffast-math)
 endif()
 
 # Component Plugin

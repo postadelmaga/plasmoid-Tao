@@ -1,86 +1,158 @@
 #!/bin/bash
 
-# Fermati in caso di errore
+# Stop on any error
 set -e
 
-echo "========================================"
-echo "    Tao Widget - Build & Packaging      "
-echo "========================================"
+# ── Colors ────────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
-# 1. Pulizia e preparazione
+ok()    { echo -e "${GREEN}✓${NC} $*"; }
+info()  { echo -e "${CYAN}[${1}/${TOTAL_STEPS}]${NC} ${2}"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+die()   { echo -e "\n${RED}✗ ERROR:${NC} $*\n" >&2; show_help; exit 1; }
+
+TOTAL_STEPS=5
+
+# ── Dependency hints ──────────────────────────────────────────────────────────
+show_help() {
+    echo -e "${BOLD}Missing dependencies? Install them with:${NC}"
+    echo
+    echo -e "  ${CYAN}Arch Linux / Manjaro:${NC}"
+    echo "    sudo pacman -S cmake ninja extra-cmake-modules qt6-base qt6-declarative"
+    echo "    sudo pacman -S kf6-config kf6-coreaddons plasma-framework"
+    echo "    sudo pacman -S qt6-shader-baker   # provides qsb"
+    echo
+    echo -e "  ${CYAN}Ubuntu 24.04 / KDE Neon:${NC}"
+    echo "    sudo apt install cmake ninja-build extra-cmake-modules"
+    echo "    sudo apt install qt6-base-dev qt6-declarative-dev qt6-tools-dev"
+    echo "    sudo apt install libkf6config-dev libkf6coreaddons-dev"
+    echo "    sudo apt install libplasma-dev"
+    echo "    sudo apt install qt6-shader-baker  # provides qsb6"
+    echo
+    echo -e "  ${CYAN}Fedora:${NC}"
+    echo "    sudo dnf install cmake ninja-build extra-cmake-modules"
+    echo "    sudo dnf install qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qttools-devel"
+    echo "    sudo dnf install kf6-kconfig-devel kf6-kcoreaddons-devel plasma-devel"
+    echo
+}
+
+echo -e "${BOLD}"
+echo "========================================"
+echo "    Tao Widget — Build & Packaging      "
+echo "========================================"
+echo -e "${NC}"
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
 PROJECT_DIR=$(pwd)
 BUILD_DIR="${PROJECT_DIR}/build_cpp"
 NATIVE_DIR="${PROJECT_DIR}/tao-widget/contents/ui/native"
 SHADER_SRC_DIR="${PROJECT_DIR}/tao-widget/src/shaders"
 SHADER_OUT_DIR="${NATIVE_DIR}/shaders"
-QSB="/usr/lib/qt6/bin/qsb"
 
-echo "[1/5] Pulizia vecchi file..."
-rm -f tao-widget.plasmoid
-rm -f "$NATIVE_DIR/libtaoplugin.so"
-# Non rimuoviamo build_cpp/ per velocizzare le ricompilazioni successive (make è incrementale)
-
-# 2. Compilazione shader
-echo "[2/5] Compilazione shader GLSL → QSB..."
-mkdir -p "$SHADER_OUT_DIR"
-
-"$QSB" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
-    -o "$SHADER_OUT_DIR/particle.vert.qsb" \
-    "$SHADER_SRC_DIR/particle.vert"
-
-"$QSB" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
-    -o "$SHADER_OUT_DIR/particle.frag.qsb" \
-    "$SHADER_SRC_DIR/particle.frag"
-
-echo "✓ Shader compilati."
-
-# 3. Compilazione del Plugin C++ Nativo
-echo "[3/5] Compilazione del plugin nativo C++..."
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
-
-# Puntiamo a tao-widget dove si trova il CMakeLists.txt
-cmake "$PROJECT_DIR/tao-widget"
-make clean
-make -j$(nproc)
-
-echo ""
-echo "✓ Compilazione completata con successo."
-echo ""
-
-# 4. Preparazione Plugin per distribuzione Portable
-echo "[4/5] Integrazione plugin nel pacchetto..."
-mkdir -p "$NATIVE_DIR"
-cp "$BUILD_DIR/bin/libtaoplugin.so" "$NATIVE_DIR/"
-
-# 5. Creazione del pacchetto .plasmoid
-cd "$PROJECT_DIR"
-echo "[5/5] Generazione file tao-widget.plasmoid..."
-
-# Impacchettiamo (incluso il plugin appena compilato in contents/ui/native)
-zip -r tao-widget.plasmoid tao-widget/ \
-    -x "tao-widget/.git/*" \
-    -x "tao-widget/src/*" \
-    -x "tao-widget/CMakeLists.txt" \
-    -x "tao-widget/reference/*" \
-    -x "tao-widget/screenshots/*"
-
-# 6. Verifica finale
-if [ -f "tao-widget.plasmoid" ]; then
-    echo "========================================"
-    echo "✓ OPERAZIONE COMPLETATA"
-    echo "Il pacchetto è pronto per la distribuzione."
-    echo ""
-    echo "Il plugin nativo si trova dentro:"
-    echo "  tao-widget/contents/ui/native/libtaoplugin.so"
-    echo ""
-    echo "Gli shader compilati si trovano in:"
-    echo "  tao-widget/contents/ui/native/shaders/"
-    echo ""
-    echo "Comando per installare/aggiornare:"
-    echo "  kpackagetool6 -t Plasma/Applet --install tao-widget.plasmoid"
-    echo "========================================"
+# Locate qsb — name varies by distro
+if   command -v qsb   &>/dev/null; then QSB=$(command -v qsb)
+elif command -v qsb6  &>/dev/null; then QSB=$(command -v qsb6)
+elif [ -x "/usr/lib/qt6/bin/qsb" ]; then QSB="/usr/lib/qt6/bin/qsb"
 else
-    echo "✗ Errore: Impossibile creare il file .plasmoid"
-    exit 1
+    die "qsb (Qt Shader Baker) not found.\n\
+       Make sure qt6-shader-baker (Arch) or qt6-tools-dev (Ubuntu) is installed."
+fi
+
+# ── Step 1: Cleanup ───────────────────────────────────────────────────────────
+info 1 "Cleaning old artifacts..."
+rm -f tao-widget.plasmoid
+rm -f "${NATIVE_DIR}/libtaoplugin.so"
+# build_cpp/ is kept intentionally to speed up incremental rebuilds
+
+# ── Step 2: Compile shaders ───────────────────────────────────────────────────
+info 2 "Compiling GLSL shaders → QSB..."
+mkdir -p "${SHADER_OUT_DIR}"
+
+for shader_type in vert frag; do
+    src="${SHADER_SRC_DIR}/particle.${shader_type}"
+    out="${SHADER_OUT_DIR}/particle.${shader_type}.qsb"
+
+    [ -f "${src}" ] || die "Shader source not found: ${src}"
+
+    "${QSB}" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
+        -o "${out}" "${src}" \
+        || die "Shader compilation failed for: ${src}\n\
+       Check that '${QSB}' supports the requested targets."
+done
+
+ok "Shaders compiled."
+
+# ── Step 3: Compile native C++ plugin ─────────────────────────────────────────
+info 3 "Compiling native C++ plugin..."
+
+command -v cmake &>/dev/null \
+    || die "cmake not found. See package hints above."
+
+mkdir -p "${BUILD_DIR}"
+cd "${BUILD_DIR}"
+
+cmake "${PROJECT_DIR}/tao-widget" \
+    -DCMAKE_BUILD_TYPE=Release \
+    || die "CMake configuration failed.\n\
+       Check that all KDE/Qt6 development packages are installed.\n\
+       Run this script again after installing missing dependencies."
+
+make clean
+make -j"$(nproc)" \
+    || die "Compilation failed.\n\
+       Check the error output above for missing headers or libraries."
+
+echo
+ok "Native plugin compiled successfully."
+echo
+
+# ── Step 4: Package plugin ────────────────────────────────────────────────────
+info 4 "Integrating plugin into package..."
+mkdir -p "${NATIVE_DIR}"
+
+[ -f "${BUILD_DIR}/bin/libtaoplugin.so" ] \
+    || die "libtaoplugin.so not found in ${BUILD_DIR}/bin/\n\
+       The build may have succeeded but placed the .so in an unexpected location.\n\
+       Check CMakeLists.txt LIBRARY_OUTPUT_DIRECTORY setting."
+
+cp "${BUILD_DIR}/bin/libtaoplugin.so" "${NATIVE_DIR}/"
+ok "Plugin copied to ${NATIVE_DIR}/"
+
+# ── Step 5: Create .plasmoid package ─────────────────────────────────────────
+cd "${PROJECT_DIR}"
+info 5 "Generating tao-widget.plasmoid..."
+
+command -v zip &>/dev/null \
+    || die "'zip' not found. Install it with: sudo pacman -S zip  /  sudo apt install zip"
+
+zip -r tao-widget.plasmoid tao-widget/ \
+    -x "tao-widget/.git/*"        \
+    -x "tao-widget/src/*"         \
+    -x "tao-widget/CMakeLists.txt"\
+    -x "tao-widget/reference/*"   \
+    -x "tao-widget/screenshots/*" \
+    || die "Failed to create .plasmoid archive."
+
+# ── Final report ──────────────────────────────────────────────────────────────
+if [ -f "tao-widget.plasmoid" ]; then
+    SIZE=$(du -sh tao-widget.plasmoid | cut -f1)
+    echo
+    echo -e "${GREEN}${BOLD}========================================"
+    echo "✓ BUILD COMPLETE"
+    echo -e "========================================${NC}"
+    echo
+    echo -e "  Package:       ${BOLD}tao-widget.plasmoid${NC} (${SIZE})"
+    echo -e "  Native plugin: ${BOLD}${NATIVE_DIR}/libtaoplugin.so${NC}"
+    echo -e "  Shaders:       ${BOLD}${SHADER_OUT_DIR}/${NC}"
+    echo
+    echo -e "${BOLD}Install / update:${NC}"
+    echo "  kpackagetool6 -t Plasma/Applet --install tao-widget.plasmoid"
+    echo
+    echo -e "${BOLD}Force reinstall (if already installed):${NC}"
+    echo "  kpackagetool6 -t Plasma/Applet --remove  org.kde.plasma.taowidget"
+    echo "  kpackagetool6 -t Plasma/Applet --install tao-widget.plasmoid"
+    echo
+else
+    die "Package file not created despite no errors — check disk space and permissions."
 fi
