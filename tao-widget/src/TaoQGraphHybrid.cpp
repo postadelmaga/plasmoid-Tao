@@ -435,53 +435,48 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (!root) {
         root = new QSGNode();
 
-        // Nodo Particelle
+        // 0. Nodo Particelle
         QSGGeometryNode *pNode = new QSGGeometryNode();
-        
-        // CORREZIONE QUI: Chiamata corretta al costruttore QSGGeometry
-        // particleAttributes() ora ritorna AttributeSet&, quindi funziona.
         QSGGeometry *pGeo = new QSGGeometry(particleAttributes(), 0, 0, QSGGeometry::UnsignedIntType);
-        
         pGeo->setDrawingMode(QSGGeometry::DrawTriangles);
         pGeo->setIndexDataPattern(QSGGeometry::StaticPattern); 
-        pGeo->setVertexDataPattern(QSGGeometry::StreamPattern); // Stream per aggiornamenti frequenti
-        
+        pGeo->setVertexDataPattern(QSGGeometry::StreamPattern);
         pNode->setGeometry(pGeo);
         pNode->setFlag(QSGNode::OwnsGeometry);
-
-        ParticleMaterial *pMat = new ParticleMaterial();
-        pNode->setMaterial(pMat);
+        pNode->setMaterial(new ParticleMaterial());
         pNode->setFlag(QSGNode::OwnsMaterial);
-        
         root->appendChildNode(pNode);
 
-        // Nodo Tao e Sfondo
+        // 1. Nodo Sistema (Centrato)
+        QSGTransformNode *systemNode = new QSGTransformNode();
+        root->appendChildNode(systemNode);
+
+        //   1a. Nodo Tao (Ruotante)
         QSGTransformNode *tNode = new QSGTransformNode();
-        
+        systemNode->appendChildNode(tNode);
+
         QSGSimpleTextureNode *gNode1 = new QSGSimpleTextureNode();
         gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1)));
         gNode1->setOwnsTexture(true);
         gNode1->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode1);
-        m_lastGlowColor1 = m_glowColor1;
 
         QSGSimpleTextureNode *gNode2 = new QSGSimpleTextureNode();
         gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2)));
         gNode2->setOwnsTexture(true);
         gNode2->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode2);
-        m_lastGlowColor2 = m_glowColor2;
 
         QSGSimpleTextureNode *sNode = new QSGSimpleTextureNode();
-        QSGTexture *tTao = window()->createTextureFromImage(generateTaoTexture(256)); 
-        tTao->setFiltering(QSGTexture::Linear);
-        sNode->setTexture(tTao);
+        sNode->setTexture(window()->createTextureFromImage(generateTaoTexture(256)));
         sNode->setOwnsTexture(true);
+        sNode->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(sNode);
 
-        // Nodo Orologio (Spostato fuori da tNode per non ruotare col Tao)
-        QSGTransformNode *cTransNode = new QSGTransformNode();
-        
+        //   1b. Nodo Orologio (Fisso rispetto al Tao, ma centrato col sistema)
+        QSGNode *cGroupNode = new QSGNode(); // Gruppo per le lancette
+        systemNode->appendChildNode(cGroupNode);
+
         auto createHand = [&](float width, QColor col) {
             QSGGeometryNode *hn = new QSGGeometryNode();
             QSGGeometry *hg = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
@@ -496,13 +491,9 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             return hn;
         };
 
-        cTransNode->appendChildNode(createHand(5, m_hourHandColor));   // Ore
-        cTransNode->appendChildNode(createHand(3, m_minuteHandColor)); // Minuti
-        cTransNode->appendChildNode(createHand(1.5f, m_secondHandColor)); // Secondi
-        
-        root->appendChildNode(cTransNode);
-
-        root->appendChildNode(tNode);
+        cGroupNode->appendChildNode(createHand(5, m_hourHandColor));
+        cGroupNode->appendChildNode(createHand(3, m_minuteHandColor));
+        cGroupNode->appendChildNode(createHand(1.5f, m_secondHandColor));
     }
 
     qint64 current = m_timeTracker.elapsed();
@@ -516,11 +507,17 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     m_rotation += (m_rotationSpeed * speedFactor * dir * dt);
 
     QSGGeometryNode *pNode = static_cast<QSGGeometryNode*>(root->childAtIndex(0));
-    QSGTransformNode *cTransNode = static_cast<QSGTransformNode*>(root->childAtIndex(1));
-    QSGTransformNode *tNode = static_cast<QSGTransformNode*>(root->childAtIndex(2));
+    QSGTransformNode *systemNode = static_cast<QSGTransformNode*>(root->childAtIndex(1));
+    QSGTransformNode *tNode = static_cast<QSGTransformNode*>(systemNode->childAtIndex(0));
+    QSGNode *cGroupNode = systemNode->childAtIndex(1);
     
     float w = width(), h = height();
     float r = qMin(w, h) / 4.5f;
+
+    // Centriamo il sistema globale
+    QMatrix4x4 sysM;
+    sysM.translate(w/2.0f, h/2.0f);
+    systemNode->setMatrix(sysM);
     
     QSGSimpleTextureNode *gNode1 = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(0));
     QSGSimpleTextureNode *gNode2 = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(1));
@@ -560,7 +557,7 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         float h = (now.hour() % 12 + m / 360.0f) * 30.0f;
 
         auto updateHand = [&](int idx, float angle, float len, QColor col) {
-            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cTransNode->childAtIndex(idx));
+            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cGroupNode->childAtIndex(idx));
             QSGGeometry *geo = hn->geometry();
             if (geo->vertexCount() != 2) geo->allocate(2);
             QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
@@ -576,13 +573,9 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         updateHand(0, h, r * 0.5f, m_hourHandColor);
         updateHand(1, m, r * 0.8f, m_minuteHandColor);
         updateHand(2, s, r * 0.9f, m_secondHandColor);
-
-        QMatrix4x4 cm;
-        cm.translate(w/2.0f, h/2.0f);
-        cTransNode->setMatrix(cm);
     } else {
         for (int i = 0; i < 3; ++i) {
-            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cTransNode->childAtIndex(i));
+            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cGroupNode->childAtIndex(i));
             if (hn->geometry()->vertexCount() > 0) {
                 hn->geometry()->allocate(0);
                 hn->markDirty(QSGNode::DirtyGeometry);
@@ -590,10 +583,9 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         }
     }
 
-    QMatrix4x4 m;
-    m.translate(w/2.0f, h/2.0f);
-    m.rotate(qRadiansToDegrees(m_rotation), 0, 0, 1);
-    tNode->setMatrix(m);
+    QMatrix4x4 tM;
+    tM.rotate(qRadiansToDegrees(m_rotation), 0, 0, 1);
+    tNode->setMatrix(tM);
 
     // Update Particelle (Render Loop Ottimizzato)
     if (!m_lowCpuMode) {
