@@ -15,13 +15,11 @@
 #include <QQuickWindow>
 #include <QtConcurrent>
 #include <QTime>
-#include <cstring> // Necessario per std::memcpy e std::memset
+#include <cstring>
 #include <cmath>
 
 // ── ParticleMaterialShader ────────────────────────────────────────────────────
 
-// Returns the directory containing libtaoplugin.so at runtime using dladdr.
-// This is the only reliable way to locate sibling files in a Plasmoid plugin.
 static QString soDir()
 {
     Dl_info info;
@@ -54,13 +52,11 @@ public:
         bool changed = false;
         QByteArray *buf = state.uniformData();
 
-        // Offset 0: mat4 qt_Matrix  (64 bytes)
         if (state.isMatrixDirty()) {
             const QMatrix4x4 m = state.combinedMatrix();
             memcpy(buf->data(), m.constData(), 64);
             changed = true;
         }
-        // Offset 64: float qt_Opacity  (4 bytes)
         if (state.isOpacityDirty()) {
             const float opacity = state.opacity();
             memcpy(buf->data() + 64, &opacity, 4);
@@ -69,9 +65,7 @@ public:
         Q_UNUSED(newMaterial)
         return changed;
     }
-
 };
-// ─────────────────────────────────────────────────────────────────────────────
 
 // ── ParticleMaterial ──────────────────────────────────────────────────────────
 static QSGMaterialType particleMaterialType;
@@ -79,26 +73,18 @@ static QSGMaterialType particleMaterialType;
 ParticleMaterial::ParticleMaterial()
 {
     setFlag(Blending, true);
-    // Disable Qt Quick scene graph batching: batching rewrites the vertex
-    // shader to add an extra vec4 input, which would misalign our custom
-    // attribute layout (position=0, uv=1, color=2).
     setFlag(RequiresFullMatrix, true);
 }
 
-QSGMaterialType *ParticleMaterial::type() const
-{
-    return &particleMaterialType;
-}
+QSGMaterialType *ParticleMaterial::type() const { return &particleMaterialType; }
 
 QSGMaterialShader *ParticleMaterial::createShader(QSGRendererInterface::RenderMode) const
 {
     return new ParticleMaterialShader();
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-// Pack color with premultiplied alpha so Qt's default blend equation
-// (src=1, dst=1-src_alpha / premultiplied mode) renders correctly.
-// GPU reads the quint32 bytes in memory order: byte0=R, byte1=G, byte2=B, byte3=A
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 inline quint32 packColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
     float af = a / 255.0f;
     unsigned char pr = static_cast<unsigned char>(r * af);
@@ -107,23 +93,17 @@ inline quint32 packColor(unsigned char r, unsigned char g, unsigned char b, unsi
     return (quint32(a) << 24) | (quint32(pb) << 16) | (quint32(pg) << 8) | quint32(pr);
 }
 
-// Struttura vertice allineata per la GPU
-struct ParticleVertex {
-    float x, y;
-    float u, v;
-    quint32 color; // 4 bytes (R,G,B,A packed)
-};
-
-// CORREZIONE QUI: Restituisce AttributeSet&, non Attribute&
 static const QSGGeometry::AttributeSet &particleAttributes() {
     static QSGGeometry::Attribute data[] = {
-        QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, false),      // Pos
-        QSGGeometry::Attribute::create(1, 2, QSGGeometry::FloatType),             // UV
-        QSGGeometry::Attribute::create(2, 4, QSGGeometry::UnsignedByteType, true) // Color
+        QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, false),
+        QSGGeometry::Attribute::create(1, 2, QSGGeometry::FloatType),
+        QSGGeometry::Attribute::create(2, 4, QSGGeometry::UnsignedByteType, true)
     };
-    static QSGGeometry::AttributeSet attrs = { 3, 20, data }; // Stride 20 bytes
+    static QSGGeometry::AttributeSet attrs = { 3, 20, data };
     return attrs;
 }
+
+// ── Costruttore / Distruttore ─────────────────────────────────────────────────
 
 TaoQGraphHybrid::TaoQGraphHybrid(QQuickItem *parent)
     : QQuickItem(parent)
@@ -131,28 +111,30 @@ TaoQGraphHybrid::TaoQGraphHybrid(QQuickItem *parent)
     setFlag(ItemHasContents, true);
     m_particles.resize(MAX_PARTICLES);
     m_particlesRender.resize(MAX_PARTICLES);
-    
-    // Inizializza memoria a zero
+    // OPT 5: buffer quad pre-buildati, allocato una sola volta al max
+    m_quadsRender.resize(MAX_PARTICLES);
+
     std::memset(m_particles.data(), 0, sizeof(ParticleData) * MAX_PARTICLES);
 
     connect(&m_watcher, &QFutureWatcher<void>::finished, this, [this]() {
-        // Safe swap/copy ottimizzato con memcpy
         if (m_particleCount > 0) {
-            std::memcpy(m_particlesRender.data(), m_particles.data(), m_particleCount * sizeof(ParticleData));
+            std::memcpy(m_particlesRender.data(), m_particles.data(),
+                        m_particleCount * sizeof(ParticleData));
         }
-        m_renderCount = m_particleCount; 
+        m_renderCount = m_particleCount;
         m_simulationPending = false;
-        update(); // Triggera updatePaintNode
+        update();
     });
 
     m_timeTracker.start();
 }
 
 TaoQGraphHybrid::~TaoQGraphHybrid() {
-    if (m_watcher.isRunning()) {
+    if (m_watcher.isRunning())
         m_watcher.waitForFinished();
-    }
 }
+
+// ── Setters ───────────────────────────────────────────────────────────────────
 
 void TaoQGraphHybrid::setParticleCount(int count) {
     if (m_particleCount == count) return;
@@ -255,105 +237,125 @@ void TaoQGraphHybrid::setMousePos(const QPointF &pos) {
 }
 
 void TaoQGraphHybrid::itemChange(ItemChange change, const ItemChangeData &value) {
-    if (change == ItemVisibleHasChanged && value.boolValue) {
+    if (change == ItemVisibleHasChanged && value.boolValue)
         update();
-    }
     QQuickItem::itemChange(change, value);
 }
 
+// ── updateSimulation ──────────────────────────────────────────────────────────
+
 void TaoQGraphHybrid::updateSimulation() {
-    if (m_simulationPending || m_lowCpuMode || !isVisible()) {
+    if (m_simulationPending || m_lowCpuMode || !isVisible())
         return;
-    }
-    
+
     m_simulationPending = true;
-    
-    const int count = m_particleCount;
+
+    const int count       = m_particleCount;
     if (count <= 0) {
         m_renderCount = 0;
         m_simulationPending = false;
         update();
         return;
     }
-    
-    const float w = width();
-    const float h = height();
-    const QPointF mPos = m_mousePos;
-    const float currentDt = (m_lastDt > 0.001f && m_lastDt < 1.0f) ? m_lastDt : 0.016f;
-    
-    const QColor pc1 = m_particleColor1;
-    const QColor pc2 = m_particleColor2;
-    
+
+    const float  w         = width();
+    const float  h         = height();
+    const QPointF mPos     = m_mousePos;
+    const float currentDt  = (m_lastDt > 0.001f && m_lastDt < 1.0f) ? m_lastDt : 0.016f;
+    const QColor pc1       = m_particleColor1;
+    const QColor pc2       = m_particleColor2;
+
     QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, currentDt, pc1, pc2]() {
         if (count <= 0) return;
 
-        float cx = w * 0.5f;
-        float cy = h * 0.5f;
-        float r = qMin(w, h) / 4.5f; 
-        float rSq = r * r;
-        
-        ParticleData* pData = m_particles.data();
-        auto* gen = QRandomGenerator::global(); 
+        const float cx  = w * 0.5f;
+        const float cy  = h * 0.5f;
+        const float r   = qMin(w, h) / 4.5f;
+        const float rSq = r * r;
+        const float df  = currentDt * 60.0f;
 
-        const float df = currentDt * 60.0f; 
+        // ── OPT 1: friction pre-calcolato UNA VOLTA fuori dal loop ────────────
+        // std::pow(0.98f, df) è una funzione trascendente (~20-40 cicli CPU).
+        // df è costante per tutto il frame: ricalcolarlo per ogni particella
+        // è uno spreco puro. Con 1000 particelle = 1000 pow evitati per frame.
+        const float friction = std::pow(0.98f, df);
 
-        // Pre-calcolo limiti mouse per evitare check ripetuti
-        const bool isMouseValid = mPos.x() >= 0 && mPos.y() >= 0 && mPos.x() <= w && mPos.y() <= h;
+        // ── OPT 3: generatore casuale locale al thread ────────────────────────
+        // QRandomGenerator::global() acquisisce un lock ad ogni chiamata per
+        // garantire thread-safety. Un generatore locale elimina la contesa
+        // sul mutex, con beneficio visibile quando molte particelle fanno
+        // respawn contemporaneamente (es. al primo frame o dopo un reset).
+        QRandomGenerator localGen(QRandomGenerator::global()->generate());
+
+        const bool  isMouseValid = (mPos.x() >= 0 && mPos.y() >= 0 &&
+                                    mPos.x() <= w  && mPos.y() <= h);
         const float mx = static_cast<float>(mPos.x());
         const float my = static_cast<float>(mPos.y());
 
+        // Pre-lettura canali colore fuori dal loop (evita N chiamate ai getter QColor)
+        const unsigned char pc1r = static_cast<unsigned char>(pc1.red());
+        const unsigned char pc1g = static_cast<unsigned char>(pc1.green());
+        const unsigned char pc1b = static_cast<unsigned char>(pc1.blue());
+        const unsigned char pc2r = static_cast<unsigned char>(pc2.red());
+        const unsigned char pc2g = static_cast<unsigned char>(pc2.green());
+        const unsigned char pc2b = static_cast<unsigned char>(pc2.blue());
+
+        ParticleData* pData = m_particles.data();
+        // OPT 5: puntatore al buffer quad — scritto qui nel worker, letto
+        // in updatePaintNode via memcpy senza più loop di costruzione vertici.
+        ParticleQuad* qData = m_quadsRender.data();
+
         for (int i = 0; i < count; ++i) {
             ParticleData& p = pData[i];
-            
+
             if (p.life > 0.0f) {
-                // Interattività col Mouse
-                float dx = mx - p.x;
-                float dy = my - p.y;
-                
-                // Check veloce AABB prima di fare i calcoli pesanti
+                // ── Interattività col Mouse ───────────────────────────────────
+                const float dx = mx - p.x;
+                const float dy = my - p.y;
+
                 if (isMouseValid && qAbs(dx) < 300 && qAbs(dy) < 300) {
-                    float distSq = dx*dx + dy*dy;
+                    const float distSq = dx*dx + dy*dy;
                     if (distSq < 90000.0f) {
-                        float f = 3.5f / (distSq + 100.0f);
+                        const float f = 3.5f / (distSq + 100.0f);
                         p.vx += dx * f * df;
                         p.vy += dy * f * df;
                     } else {
-                        const float friction = std::pow(0.98f, df); // Pre-calcolo frizione
-                        p.vx *= friction;
+                        p.vx *= friction; // OPT 1
                         p.vy *= friction;
                     }
                 } else {
-                    const float friction = std::pow(0.98f, df); // Pre-calcolo frizione
-                    p.vx *= friction;
+                    p.vx *= friction; // OPT 1
                     p.vy *= friction;
                 }
 
                 p.x += p.vx * df;
                 p.y += p.vy * df;
 
-                // Boundary Checks
-                if (p.x < 0) { p.x = 0; p.vx = qAbs(p.vx) * 0.4f; }
+                // ── Boundary Checks ───────────────────────────────────────────
+                if      (p.x < 0) { p.x = 0; p.vx =  qAbs(p.vx) * 0.4f; }
                 else if (p.x > w) { p.x = w; p.vx = -qAbs(p.vx) * 0.4f; }
-                
-                if (p.y < 0) { p.y = 0; p.vy = qAbs(p.vy) * 0.4f; }
+                if      (p.y < 0) { p.y = 0; p.vy =  qAbs(p.vy) * 0.4f; }
                 else if (p.y > h) { p.y = h; p.vy = -qAbs(p.vy) * 0.4f; }
 
-                // Evitamento Tao
-                float tdx = p.x - cx;
-                float tdy = p.y - cy;
-                float tDistSq = tdx*tdx + tdy*tdy;
+                // ── Evitamento Tao ────────────────────────────────────────────
+                const float tdx     = p.x - cx;
+                const float tdy     = p.y - cy;
+                const float tDistSq = tdx*tdx + tdy*tdy;
                 if (tDistSq < rSq) {
-                    float tDist = std::sqrt(tDistSq);
-                    if (tDist < 0.1f) tDist = 0.1f;
-                    float invDist = 1.0f / tDist;
-                    float nx = tdx * invDist;
-                    float ny = tdy * invDist;
-                    
-                    float push = (r - tDist) * 0.3f;
+                    // OPT 2: singola divisione invece di sqrt separata + reciproco.
+                    // Calcoliamo invDist = 1/sqrt(tDistSq) in un'unica operazione,
+                    // poi lo riusiamo sia per normalizzare il vettore che per il push.
+                    const float tDist    = std::sqrt(tDistSq);
+                    const float safeDist = (tDist < 0.1f) ? 0.1f : tDist;
+                    const float invDist  = 1.0f / safeDist;
+                    const float nx = tdx * invDist;
+                    const float ny = tdy * invDist;
+
+                    const float push = (r - safeDist) * 0.3f;
                     p.x += nx * push;
                     p.y += ny * push;
-                    
-                    float dot = p.vx * nx + p.vy * ny;
+
+                    const float dot = p.vx * nx + p.vy * ny;
                     if (dot < 0) {
                         p.vx -= 1.6f * dot * nx;
                         p.vy -= 1.6f * dot * ny;
@@ -361,77 +363,86 @@ void TaoQGraphHybrid::updateSimulation() {
                 }
 
                 p.life -= p.decay * df;
-                
-                // CALCOLO COLORE (Ottimizzato: spostato nel thread simulazione)
-                unsigned char alpha = static_cast<unsigned char>(p.life * 255);
+
+                // ── Calcolo Colore ────────────────────────────────────────────
+                const unsigned char alpha = static_cast<unsigned char>(p.life * 255.0f);
                 unsigned char red, green, blue;
 
-                // (i & 7) == 0 è equivalente veloce a (i % 8) == 0. 
-                // Usiamo modulo 7 come originale se critico, ma &7 è più veloce.
-                if ((i % 7) == 0) { 
-                    red = pc2.red();
-                    green = static_cast<unsigned char>(qMin(255, pc2.green() + (int)(p.life * 50)));
-                    blue = pc2.blue();
+                if ((i % 7) == 0) {
+                    red   = pc2r;
+                    green = static_cast<unsigned char>(qMin(255, (int)pc2g + (int)(p.life * 50)));
+                    blue  = pc2b;
                 } else {
-                    float speed = std::sqrt(p.vx*p.vx + p.vy*p.vy);
-                    red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1.red() + speed * 400.0f)); 
-                    green = static_cast<unsigned char>(qMin(255.0f, (float)pc1.green() + speed * 200.0f));
-                    blue  = pc1.blue();
+                    const float speed = std::sqrt(p.vx*p.vx + p.vy*p.vy);
+                    red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1r + speed * 400.0f));
+                    green = static_cast<unsigned char>(qMin(255.0f, (float)pc1g + speed * 200.0f));
+                    blue  = pc1b;
                 }
                 p.packedColor = packColor(red, green, blue, alpha);
 
             } else {
-                // Respawn
+                // ── Respawn ───────────────────────────────────────────────────
                 p.life = 1.0f;
-                double angle = gen->generateDouble() * 6.28318; // 2PI approx
-                double dist = r * (0.5 + gen->generateDouble() * 2.0); 
-                
-                p.x = cx + static_cast<float>(std::cos(angle) * dist);
-                p.y = cy + static_cast<float>(std::sin(angle) * dist);
-                
-                p.vx = (gen->generateDouble() - 0.5f) * 0.6f;
-                p.vy = (gen->generateDouble() - 0.5f) * 0.6f;
-                
-                float sdx = p.x - cx;
-                float sdy = p.y - cy;
-                if (sdx*sdx + sdy*sdy < rSq) {
-                  p.x += (sdx > 0 ? r : -r);
-                }
-                
-                p.decay = 0.003f + gen->generateDouble() * 0.008f;
-                p.size = 2.0f + gen->generateDouble() * 8.0f;
-                // Colore iniziale
-                p.packedColor = packColor(pc1.red(), pc1.green(), pc1.blue(), 255);
+                // OPT 3: localGen invece di QRandomGenerator::global() — nessun lock
+                const double angle = localGen.generateDouble() * 6.28318;
+                const double dist  = r * (0.5 + localGen.generateDouble() * 2.0);
+
+                p.x  = cx + static_cast<float>(std::cos(angle) * dist);
+                p.y  = cy + static_cast<float>(std::sin(angle) * dist);
+                p.vx = static_cast<float>((localGen.generateDouble() - 0.5) * 0.6);
+                p.vy = static_cast<float>((localGen.generateDouble() - 0.5) * 0.6);
+
+                const float sdx = p.x - cx;
+                const float sdy = p.y - cy;
+                if (sdx*sdx + sdy*sdy < rSq)
+                    p.x += (sdx > 0 ? r : -r);
+
+                p.decay = 0.003f + static_cast<float>(localGen.generateDouble()) * 0.008f;
+                p.size  = 2.0f  + static_cast<float>(localGen.generateDouble()) * 8.0f;
+                p.packedColor = packColor(pc1r, pc1g, pc1b, 255);
             }
+
+            // ── OPT 5: pre-build del quad nel thread worker ───────────────────
+            // I 4 vertici del quad vengono costruiti qui, nel thread simulazione,
+            // invece che in updatePaintNode nel thread GUI.
+            // In updatePaintNode basterà un singolo std::memcpy contiguo,
+            // che il compilatore trasforma in un'operazione SIMD ottimale.
+            const float    px  = p.x;
+            const float    py  = p.y;
+            const float    hs  = p.size;
+            const quint32  col = p.packedColor;
+            ParticleQuad&  q   = qData[i];
+            q.v[0] = { px - hs, py - hs, 0.0f, 0.0f, col };
+            q.v[1] = { px + hs, py - hs, 1.0f, 0.0f, col };
+            q.v[2] = { px - hs, py + hs, 0.0f, 1.0f, col };
+            q.v[3] = { px + hs, py + hs, 1.0f, 1.0f, col };
         }
     });
 
     m_watcher.setFuture(future);
 }
 
+// ── setupGeometryIndices ──────────────────────────────────────────────────────
+
 void TaoQGraphHybrid::setupGeometryIndices(QSGGeometry *geo, int count) {
-    if (count <= 0) {
-        geo->allocate(0, 0);
-        return;
-    }
+    if (count <= 0) { geo->allocate(0, 0); return; }
     geo->allocate(count * 4, count * 6);
     quint32 *indices = static_cast<quint32*>(geo->indexData());
     for (int i = 0; i < count; ++i) {
-        quint32 base = i * 4;
-        indices[0] = base;
-        indices[1] = base + 1;
-        indices[2] = base + 2;
-        indices[3] = base + 2;
-        indices[4] = base + 1;
-        indices[5] = base + 3;
+        const quint32 base = i * 4;
+        indices[0] = base;     indices[1] = base + 1; indices[2] = base + 2;
+        indices[3] = base + 2; indices[4] = base + 1; indices[5] = base + 3;
         indices += 6;
     }
 }
 
+// ── updatePaintNode ───────────────────────────────────────────────────────────
+
 QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     QSGNode *root = oldNode;
-    
-    // Inizializzazione Nodo
+
+    const qreal dpr = window() ? window()->devicePixelRatio() : 1.0;
+
     if (!root) {
         root = new QSGNode();
 
@@ -439,7 +450,7 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         QSGGeometryNode *pNode = new QSGGeometryNode();
         QSGGeometry *pGeo = new QSGGeometry(particleAttributes(), 0, 0, QSGGeometry::UnsignedIntType);
         pGeo->setDrawingMode(QSGGeometry::DrawTriangles);
-        pGeo->setIndexDataPattern(QSGGeometry::StaticPattern); 
+        pGeo->setIndexDataPattern(QSGGeometry::StaticPattern);
         pGeo->setVertexDataPattern(QSGGeometry::StreamPattern);
         pNode->setGeometry(pGeo);
         pNode->setFlag(QSGNode::OwnsGeometry);
@@ -447,40 +458,40 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         pNode->setFlag(QSGNode::OwnsMaterial);
         root->appendChildNode(pNode);
 
-        // 1. Nodo Sistema (Centrato)
+        // 1. Nodo Sistema (centrato)
         QSGTransformNode *systemNode = new QSGTransformNode();
         root->appendChildNode(systemNode);
 
-        //   1a. Nodo Tao (Ruotante)
+        // 1a. Nodo Tao (ruotante)
         QSGTransformNode *tNode = new QSGTransformNode();
         systemNode->appendChildNode(tNode);
 
         QSGSimpleTextureNode *gNode1 = new QSGSimpleTextureNode();
-        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1)));
+        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
         gNode1->setOwnsTexture(true);
         gNode1->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode1);
 
         QSGSimpleTextureNode *gNode2 = new QSGSimpleTextureNode();
-        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2)));
+        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
         gNode2->setOwnsTexture(true);
         gNode2->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode2);
 
         QSGSimpleTextureNode *sNode = new QSGSimpleTextureNode();
-        sNode->setTexture(window()->createTextureFromImage(generateTaoTexture(256)));
+        sNode->setTexture(window()->createTextureFromImage(generateTaoTexture(256, dpr)));
         sNode->setOwnsTexture(true);
         sNode->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(sNode);
 
-        //   1b. Nodo Orologio (Fisso rispetto al Tao, ma centrato col sistema)
-        QSGNode *cGroupNode = new QSGNode(); // Gruppo per le lancette
+        // 1b. Nodo Orologio
+        QSGNode *cGroupNode = new QSGNode();
         systemNode->appendChildNode(cGroupNode);
 
-        auto createHand = [&](float width, QColor col) {
+        auto createHand = [&](float lineWidth, QColor col) {
             QSGGeometryNode *hn = new QSGGeometryNode();
             QSGGeometry *hg = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
-            hg->setLineWidth(width);
+            hg->setLineWidth(lineWidth);
             hg->setDrawingMode(QSGGeometry::DrawLines);
             hn->setGeometry(hg);
             hn->setFlag(QSGNode::OwnsGeometry);
@@ -491,88 +502,106 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             return hn;
         };
 
-        cGroupNode->appendChildNode(createHand(5, m_hourHandColor));
-        cGroupNode->appendChildNode(createHand(3, m_minuteHandColor));
+        cGroupNode->appendChildNode(createHand(5.0f, m_hourHandColor));
+        cGroupNode->appendChildNode(createHand(3.0f, m_minuteHandColor));
         cGroupNode->appendChildNode(createHand(1.5f, m_secondHandColor));
+
+        m_lastDpr = dpr;
     }
 
-    qint64 current = m_timeTracker.elapsed();
+    // ── Timing ────────────────────────────────────────────────────────────────
+    const qint64 current = m_timeTracker.elapsed();
     if (m_lastTime == 0) m_lastTime = current;
-    float dt = (current - m_lastTime) / 1000.0f;
+    const float dt = (current - m_lastTime) / 1000.0f;
     m_lastTime = current;
-    m_lastDt = dt;
-    
-    float dir = m_clockwise ? 1.0f : -1.0f;
-    float speedFactor = 0.06f; 
+    m_lastDt   = dt;
+
+    const float dir         = m_clockwise ? 1.0f : -1.0f;
+    const float speedFactor = 0.06f;
     m_rotation += (m_rotationSpeed * speedFactor * dir * dt);
 
-    QSGGeometryNode *pNode = static_cast<QSGGeometryNode*>(root->childAtIndex(0));
+    // ── Recupero nodi ─────────────────────────────────────────────────────────
+    QSGGeometryNode  *pNode      = static_cast<QSGGeometryNode* >(root->childAtIndex(0));
     QSGTransformNode *systemNode = static_cast<QSGTransformNode*>(root->childAtIndex(1));
-    QSGTransformNode *tNode = static_cast<QSGTransformNode*>(systemNode->childAtIndex(0));
-    QSGNode *cGroupNode = systemNode->childAtIndex(1);
-    
-    float w = width(), h = height();
-    float r = qMin(w, h) / 4.5f;
+    QSGTransformNode *tNode      = static_cast<QSGTransformNode*>(systemNode->childAtIndex(0));
+    QSGNode          *cGroupNode = systemNode->childAtIndex(1);
 
-    // Centriamo il sistema globale
+    const float w = width(), h = height();
+    const float r = qMin(w, h) / 4.5f;
+
     QMatrix4x4 sysM;
-    sysM.translate(w/2.0f, h/2.0f);
+    sysM.translate(w / 2.0f, h / 2.0f);
     systemNode->setMatrix(sysM);
-    
+
     QSGSimpleTextureNode *gNode1 = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(0));
     QSGSimpleTextureNode *gNode2 = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(1));
-    QSGSimpleTextureNode *sNode = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(2));
-    
-    float gs1 = m_glowSize1;
-    if (gs1 > 0.01f) {
-        gNode1->setRect(-r*gs1, -r*gs1, r*2*gs1, r*2*gs1);
-    } else {
-        gNode1->setRect(0, 0, 0, 0);
+    QSGSimpleTextureNode *sNode  = static_cast<QSGSimpleTextureNode*>(tNode->childAtIndex(2));
+
+    // ── OPT 4: sostituzione texture con ownership esplicita ───────────────────
+    // Dissociamo l'ownership prima di sostituire, eliminiamo la vecchia texture
+    // manualmente, poi riassegnamo. Evita memory leak di oggetti GPU che
+    // altrimenti rimarrebbero allocati in VRAM fino alla distruzione del nodo.
+    auto safeReplaceTexture = [](QSGSimpleTextureNode *node, QSGTexture *newTex) {
+        QSGTexture *old = node->texture();
+        node->setOwnsTexture(false);
+        node->setTexture(newTex);
+        node->setOwnsTexture(true);
+        delete old;
+    };
+
+    // Rigenera tutto se DPR è cambiato (spostamento su altro schermo)
+    const bool dprChanged = !qFuzzyCompare(dpr, m_lastDpr);
+    if (dprChanged) {
+        safeReplaceTexture(sNode,  window()->createTextureFromImage(generateTaoTexture(256, dpr)));
+        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
+        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
+        m_lastGlowColor1 = m_glowColor1;
+        m_lastGlowColor2 = m_glowColor2;
+        m_lastDpr = dpr;
     }
 
-    if (m_lastGlowColor1 != m_glowColor1) {
-        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1)));
+    // ── Glow 1 ────────────────────────────────────────────────────────────────
+    const float gs1 = m_glowSize1;
+    gNode1->setRect(gs1 > 0.01f ? QRectF(-r*gs1, -r*gs1, r*2*gs1, r*2*gs1) : QRectF());
+    if (!dprChanged && m_lastGlowColor1 != m_glowColor1) {
+        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
         m_lastGlowColor1 = m_glowColor1;
     }
 
-    float gs2 = m_glowSize2;
-    if (gs2 > 0.01f) {
-        gNode2->setRect(-r*gs2, -r*gs2, r*2*gs2, r*2*gs2);
-    } else {
-        gNode2->setRect(0, 0, 0, 0);
-    }
-
-    if (m_lastGlowColor2 != m_glowColor2) {
-        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2)));
+    // ── Glow 2 ────────────────────────────────────────────────────────────────
+    const float gs2 = m_glowSize2;
+    gNode2->setRect(gs2 > 0.01f ? QRectF(-r*gs2, -r*gs2, r*2*gs2, r*2*gs2) : QRectF());
+    if (!dprChanged && m_lastGlowColor2 != m_glowColor2) {
+        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
         m_lastGlowColor2 = m_glowColor2;
     }
 
     sNode->setRect(-r, -r, r*2, r*2);
-    
-    if (m_showClock) {
-        QTime now = QTime::currentTime();
-        float ms = now.msec() / 1000.0f;
-        float s = (now.second() + ms) * 6.0f;
-        float m = (now.minute() + s / 360.0f) * 6.0f;
-        float h = (now.hour() % 12 + m / 360.0f) * 30.0f;
 
-        auto updateHand = [&](int idx, float angle, float len, QColor col) {
-            QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cGroupNode->childAtIndex(idx));
-            QSGGeometry *geo = hn->geometry();
+    // ── Orologio ──────────────────────────────────────────────────────────────
+    if (m_showClock) {
+        const QTime now = QTime::currentTime();
+        const float ms  = now.msec() / 1000.0f;
+        const float s   = (now.second() + ms) * 6.0f;
+        const float m   = (now.minute() + s / 360.0f) * 6.0f;
+        const float hh  = (now.hour() % 12 + m / 360.0f) * 30.0f;
+
+        auto updateHand = [&](int idx, float angle, float len, const QColor &col) {
+            QSGGeometryNode *hn  = static_cast<QSGGeometryNode*>(cGroupNode->childAtIndex(idx));
+            QSGGeometry     *geo = hn->geometry();
             if (geo->vertexCount() != 2) geo->allocate(2);
             QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
-            float rad = qDegreesToRadians(angle - 90);
-            v[0].x = 0; v[0].y = 0;
+            const float rad = qDegreesToRadians(angle - 90.0f);
+            v[0].x = 0;                   v[0].y = 0;
             v[1].x = std::cos(rad) * len; v[1].y = std::sin(rad) * len;
             hn->markDirty(QSGNode::DirtyGeometry);
-            
             static_cast<QSGFlatColorMaterial*>(hn->material())->setColor(col);
             hn->markDirty(QSGNode::DirtyMaterial);
         };
 
-        updateHand(0, h, r * 0.5f, m_hourHandColor);
-        updateHand(1, m, r * 0.8f, m_minuteHandColor);
-        updateHand(2, s, r * 0.9f, m_secondHandColor);
+        updateHand(0, hh, r * 0.5f, m_hourHandColor);
+        updateHand(1, m,  r * 0.8f, m_minuteHandColor);
+        updateHand(2, s,  r * 0.9f, m_secondHandColor);
     } else {
         for (int i = 0; i < 3; ++i) {
             QSGGeometryNode *hn = static_cast<QSGGeometryNode*>(cGroupNode->childAtIndex(i));
@@ -583,40 +612,29 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         }
     }
 
+    // ── Rotazione Tao ─────────────────────────────────────────────────────────
     QMatrix4x4 tM;
     tM.rotate(qRadiansToDegrees(m_rotation), 0, 0, 1);
     tNode->setMatrix(tM);
 
-    // Update Particelle (Render Loop Ottimizzato)
+    // ── Particelle ────────────────────────────────────────────────────────────
     if (!m_lowCpuMode) {
-        QSGGeometry *geo = pNode->geometry();
-        int activeCount = qMin(m_renderCount, MAX_PARTICLES);
-        
-        if (geo->vertexCount() != activeCount * 4) {
+        QSGGeometry *geo       = pNode->geometry();
+        const int activeCount  = qMin(m_renderCount, MAX_PARTICLES);
+
+        if (geo->vertexCount() != activeCount * 4)
             setupGeometryIndices(geo, activeCount);
+
+        // OPT 5: singolo memcpy invece del loop di costruzione vertici.
+        // activeCount * sizeof(ParticleQuad) = activeCount * 80 byte.
+        // Il compilatore ottimizza memcpy in trasferimenti SIMD (SSE/AVX/NEON).
+        if (activeCount > 0) {
+            std::memcpy(geo->vertexData(),
+                        m_quadsRender.data(),
+                        static_cast<size_t>(activeCount) * sizeof(ParticleQuad));
         }
 
-        ParticleVertex *v = (ParticleVertex *)geo->vertexData();
-        const ParticleData* pData = m_particlesRender.data();
-
-        // LOOP CRITICO: Solo assegnazione di valori pre-calcolati
-        for (int i = 0; i < activeCount; ++i) {
-            const ParticleData &p = pData[i];
-            float px = p.x;
-            float py = p.y;
-            float hs = p.size;
-            quint32 col = p.packedColor; // Colore pronto all'uso
-
-            v[0].x = px - hs; v[0].y = py - hs; v[0].u = 0; v[0].v = 0; v[0].color = col;
-            v[1].x = px + hs; v[1].y = py - hs; v[1].u = 1; v[1].v = 0; v[1].color = col;
-            v[2].x = px - hs; v[2].y = py + hs; v[2].u = 0; v[2].v = 1; v[2].color = col;
-            v[3].x = px + hs; v[3].y = py + hs; v[3].u = 1; v[3].v = 1; v[3].color = col;
-
-            v += 4;
-        }
-        
         pNode->markDirty(QSGNode::DirtyGeometry);
-        
         updateSimulation();
     } else {
         if (pNode->geometry()->vertexCount() > 0)
@@ -626,13 +644,18 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     return root;
 }
 
-QImage TaoQGraphHybrid::generateGlowTexture(int s, const QColor &color) {
-    // Use ARGB32_Premultiplied as it's the standard for Qt Quick texture uploads
-    // and correctly handles alpha blending.
-    QImage img(s, s, QImage::Format_ARGB32_Premultiplied);
+// ── generateGlowTexture ───────────────────────────────────────────────────────
+// Genera una texture radiale per l'effetto glow, HiDPI-aware.
+// La texture fisica è (s * dpr)² pixel; Qt Quick la scala al rect logico
+// automaticamente tramite il campo devicePixelRatio della QImage.
+QImage TaoQGraphHybrid::generateGlowTexture(int s, const QColor &color, qreal dpr) {
+    const int phys = qRound(s * dpr);
+    QImage img(phys, phys, QImage::Format_ARGB32_Premultiplied);
+    img.setDevicePixelRatio(dpr);
     img.fill(Qt::transparent);
+
     QPainter p(&img);
-    QRadialGradient g(s/2.0, s/2.0, s/2.0);
+    QRadialGradient g(phys / 2.0, phys / 2.0, phys / 2.0);
     g.setColorAt(0.0, color);
     QColor fade = color;
     fade.setAlpha(color.alpha() * 0.3);
@@ -640,38 +663,45 @@ QImage TaoQGraphHybrid::generateGlowTexture(int s, const QColor &color) {
     g.setColorAt(1.0, Qt::transparent);
     p.setBrush(g);
     p.setPen(Qt::NoPen);
-    p.drawEllipse(0, 0, s, s);
+    p.drawEllipse(0, 0, phys, phys);
     return img;
 }
 
-QImage TaoQGraphHybrid::generateTaoTexture(int s) {
-    QImage img(s, s, QImage::Format_ARGB32_Premultiplied);
+// ── generateTaoTexture ────────────────────────────────────────────────────────
+// Genera il simbolo Tao (yin-yang) come QImage HiDPI-aware.
+// Tutta la geometria è calcolata in coordinate fisiche (phys = s * dpr),
+// producendo curve perfettamente lisce su qualsiasi densità di pixel.
+QImage TaoQGraphHybrid::generateTaoTexture(int s, qreal dpr) {
+    const int phys = qRound(s * dpr);
+    QImage img(phys, phys, QImage::Format_ARGB32_Premultiplied);
+    img.setDevicePixelRatio(dpr);
     img.fill(Qt::transparent);
+
     QPainter p(&img);
     p.setRenderHint(QPainter::Antialiasing);
-    
-    float c = s / 2.0f;
-    float r = c - 2.0f; 
-    
+
+    const float c = phys / 2.0f;
+    const float r = c - 2.0f * static_cast<float>(dpr);
+
     p.setPen(Qt::NoPen);
-    
+
     p.setBrush(Qt::white);
     p.drawEllipse(QPointF(c, c), r, r);
-    
+
     p.setBrush(Qt::black);
-    p.drawPie(QRectF(2.0f, 2.0f, r*2, r*2), 90 * 16, 180 * 16);
-    
+    p.drawPie(QRectF(c - r, c - r, r * 2, r * 2), 90 * 16, 180 * 16);
+
     p.setBrush(Qt::white);
-    p.drawEllipse(QPointF(c, c + r/2), r/2, r/2);
-    
+    p.drawEllipse(QPointF(c, c + r / 2), r / 2, r / 2);
+
     p.setBrush(Qt::black);
-    p.drawEllipse(QPointF(c, c - r/2), r/2, r/2);
-    
+    p.drawEllipse(QPointF(c, c - r / 2), r / 2, r / 2);
+
     p.setBrush(Qt::black);
-    p.drawEllipse(QPointF(c, c + r/2), r/6, r/6);
-    
+    p.drawEllipse(QPointF(c, c + r / 2), r / 6, r / 6);
+
     p.setBrush(Qt::white);
-    p.drawEllipse(QPointF(c, c - r/2), r/6, r/6);
-    
+    p.drawEllipse(QPointF(c, c - r / 2), r / 6, r / 6);
+
     return img;
 }

@@ -40,20 +40,27 @@
         const Config = {
             particles: 80,
             speed: 0.005,
-            direction: 1,   // 1 or -1
+            direction: 1,
             showClock: false,
             lowCpu: false,
             rotation: 0,
             maxParticles: 3000,
-            // Colori come nel C++ (particleColor1 = ciano, particleColor2 = fuoco)
-            particleColor1: { r: 128, g: 204, b: 255 },   // pc1 – base (tipo normale)
-            particleColor2: { r: 255, g: 100, b: 25 }    // pc2 – fuoco (1 su 7)
+            particleColor1: { r: 128, g: 204, b: 255 },
+            particleColor2: { r: 255, g: 100, b: 25 },
+            glowColor1: 'rgba(100,200,255,0.8)',
+            glowSize1: 1.3,
+            glowColor2: 'rgba(100,200,255,0)',
+            glowSize2: 0.0,
+            hourHandColor: 'rgba(255,255,255,1)',
+            minuteHandColor: 'rgba(136,204,255,1)',
+            secondHandColor: 'rgba(255,170,136,1)',
         };
 
         const Mouse = { x: -1000, y: -1000, inside: false };
 
         // --- SHADERS ---
-        // Usa vertex color packed per replicare il comportamento C++ (colore varia con speed)
+        // OPT 1: il vertex shader ora riceve dati da un singolo buffer interleaved.
+        // stride = 7 float = 28 byte per particella: [x, y, r, g, b, a, size]
         const SHADERS = {
             vs: `
                 attribute vec2 a_position;
@@ -74,41 +81,158 @@
                 void main() {
                     float d = distance(gl_PointCoord, vec2(0.5));
                     if (d > 0.5) discard;
-                    // Glow radiale esattamente come la glow texture del C++
                     float alpha = smoothstep(0.5, 0.0, d);
                     gl_FragColor = vec4(v_color.rgb, v_color.a * alpha);
                 }
             `
         };
 
-        // Helper per convertire colori QML/Qt (#AARRGGBB) in CSS (rgba)
+        // --- HELPERS COLORE ---
+
+        // Converte colori QML/Qt (#AARRGGBB) o CSS (#RRGGBB, #RGB, rgba) in rgba().
+        // Bug originale: #RRGGBB passava direttamente senza conversione causando
+        // fallback a nero in alcuni contesti del browser.
         function toCssColor(c) {
-            if (!c || typeof c !== 'string') return c;
-            let s = String(c).trim();
-            // Qt style: #AARRGGBB (9 chars)
+            if (!c) return 'rgba(128,128,128,1)';
+            if (typeof c !== 'string') return 'rgba(128,128,128,1)';
+            const s = c.trim();
+
+            // Qt style: #AARRGGBB (9 caratteri)
             if (s.startsWith('#') && s.length === 9) {
                 const a = parseInt(s.substr(1, 2), 16) / 255;
                 const r = parseInt(s.substr(3, 2), 16);
                 const g = parseInt(s.substr(5, 2), 16);
                 const b = parseInt(s.substr(7, 2), 16);
-                return `rgba(${r}, ${g}, ${b}, ${a})`;
+                return `rgba(${r},${g},${b},${a.toFixed(4)})`;
             }
-            // CSS style mapping standard
+            // CSS standard: #RRGGBB (7 caratteri)
+            if (s.startsWith('#') && s.length === 7) {
+                const r = parseInt(s.substr(1, 2), 16);
+                const g = parseInt(s.substr(3, 2), 16);
+                const b = parseInt(s.substr(5, 2), 16);
+                return `rgba(${r},${g},${b},1)`;
+            }
+            // CSS short: #RGB (4 caratteri)
+            if (s.startsWith('#') && s.length === 4) {
+                const r = parseInt(s[1] + s[1], 16);
+                const g = parseInt(s[2] + s[2], 16);
+                const b = parseInt(s[3] + s[3], 16);
+                return `rgba(${r},${g},${b},1)`;
+            }
+            // Già in formato rgba/rgb
+            if (s.startsWith('rgba') || s.startsWith('rgb')) return s;
+            // Named colors (white, black…)
             return s;
         }
 
-        // --- CLASSE: OVERLAY 2D (Tao e Orologio) ---
+        // Restituisce lo stesso colore con alpha=0, mantenendo RGB identici.
+        // Essenziale per i gradient stop finali: evita l'alone nero che si crea
+        // quando si interpola verso rgba(0,0,0,0) invece che verso il colore base
+        // trasparente (interpolazione cromatica Canvas2D).
+        function toCssColorTransparent(cssColor) {
+            if (!cssColor) return 'rgba(0,0,0,0)';
+            const m = cssColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (m) return `rgba(${m[1]},${m[2]},${m[3]},0)`;
+            return 'rgba(0,0,0,0)';
+        }
+
+        // --- CLASSE: OVERLAY 2D (Tao, Glow e Orologio) ---
         class TaoOverlay {
             constructor(canvasId) {
                 this.canvas = document.getElementById(canvasId);
-                this.ctx = this.canvas.getContext("2d");
+                this.ctx = this.canvas.getContext('2d');
                 this.width = 0;
                 this.height = 0;
+
+                // OPT 3: OffscreenCanvas per il glow — ridisegnato solo quando
+                // cambiano colore o dimensione, non ad ogni frame.
+                // Il Tao ruota ogni frame, ma il glow è statico: questo elimina
+                // la costosa creazione di RadialGradient + fillArc ad ogni frame.
+                this.glowCanvas = null;
+                this.glowCtx = null;
+                this.glowDirty = true;   // forza ridisegno al primo frame
+                this._lastGlowColor1 = null;
+                this._lastGlowSize1 = null;
+                this._lastGlowColor2 = null;
+                this._lastGlowSize2 = null;
             }
 
             resize(w, h) {
-                this.width = this.canvas.width = w;
-                this.height = this.canvas.height = h;
+                // FIX DPR: canvas fisico = w*dpr × h*dpr pixel, coordinate logiche invariate.
+                const dpr = window.devicePixelRatio || 1;
+                this.width = w;
+                this.height = h;
+                this.canvas.width = Math.round(w * dpr);
+                this.canvas.height = Math.round(h * dpr);
+                this.canvas.style.width = w + 'px';
+                this.canvas.style.height = h + 'px';
+                // setTransform scala il contesto: ctx.arc(cx,cy,r) funziona in px logici
+                this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                // OPT 3: ridimensiona anche il canvas offscreen del glow
+                if (typeof OffscreenCanvas !== 'undefined') {
+                    this.glowCanvas = new OffscreenCanvas(Math.round(w * dpr), Math.round(h * dpr));
+                    this.glowCtx = this.glowCanvas.getContext('2d');
+                    this.glowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                } else {
+                    // Fallback: usa un canvas DOM nascosto per browser senza OffscreenCanvas
+                    if (!this.glowCanvas) {
+                        this.glowCanvas = document.createElement('canvas');
+                        this.glowCtx = this.glowCanvas.getContext('2d');
+                    }
+                    this.glowCanvas.width = Math.round(w * dpr);
+                    this.glowCanvas.height = Math.round(h * dpr);
+                    this.glowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+                this.glowDirty = true; // resize → ridisegna il glow
+            }
+
+            // OPT 3: ridisegna il glow sull'offscreen SOLO se qualcosa è cambiato
+            _updateGlowCache() {
+                const c1 = Config.glowColor1;
+                const s1 = Config.glowSize1;
+                const c2 = Config.glowColor2;
+                const s2 = Config.glowSize2;
+
+                const dirty = this.glowDirty
+                    || c1 !== this._lastGlowColor1
+                    || s1 !== this._lastGlowSize1
+                    || c2 !== this._lastGlowColor2
+                    || s2 !== this._lastGlowSize2;
+
+                if (!dirty) return;
+
+                const gc = this.glowCtx;
+                const { width, height } = this;
+                const r = Math.min(width, height) / 4.5;
+                const cx = width / 2;
+                const cy = height / 2;
+
+                gc.clearRect(0, 0, width, height);
+
+                const drawGlow = (size, col) => {
+                    const radius = r * size;
+                    if (!isFinite(radius) || radius <= 0.01) return;
+                    const cssCol = toCssColor(col);
+                    const grad = gc.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                    grad.addColorStop(0, cssCol);
+                    // FIX alone nero: fade verso stesso colore con alpha=0, non verso nero
+                    grad.addColorStop(0.7, toCssColorTransparent(cssCol).replace(',0)', ',0.3)'));
+                    grad.addColorStop(1, toCssColorTransparent(cssCol));
+                    gc.fillStyle = grad;
+                    gc.beginPath();
+                    gc.arc(cx, cy, radius, 0, Math.PI * 2);
+                    gc.fill();
+                };
+
+                drawGlow(s1, c1);
+                drawGlow(s2, c2);
+
+                this._lastGlowColor1 = c1;
+                this._lastGlowSize1 = s1;
+                this._lastGlowColor2 = c2;
+                this._lastGlowSize2 = s2;
+                this.glowDirty = false;
             }
 
             draw() {
@@ -120,27 +244,20 @@
 
                 ctx.clearRect(0, 0, width, height);
 
-                // Disegna Glows (Sotto il Tao)
-                if (!Config.lowCpu) {
-                    const drawGlow = (size, col) => {
-                        const radius = r * size;
-                        if (!isFinite(radius) || radius <= 0.01) return;
-
-                        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-                        const c = toCssColor(col);
-                        grad.addColorStop(0, c);
-                        grad.addColorStop(1, "rgba(0,0,0,0)");
-                        ctx.fillStyle = grad;
-                        ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
-                    };
-                    drawGlow(Config.glowSize1, Config.glowColor1);
-                    drawGlow(Config.glowSize2, Config.glowColor2);
+                // OPT 3: blit del glow pre-renderizzato — costo = una drawImage invece
+                // di createRadialGradient + arc + fill ad ogni frame
+                if (!Config.lowCpu && this.glowCanvas) {
+                    this._updateGlowCache();
+                    // drawImage in coordinate fisiche (il canvas offscreen è già scalato DPR)
+                    const dpr = window.devicePixelRatio || 1;
+                    ctx.drawImage(this.glowCanvas,
+                        0, 0, this.glowCanvas.width, this.glowCanvas.height,
+                        0, 0, width, height);
                 }
 
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.rotate(Config.rotation);
-
                 this.drawTaoBody(ctx, r);
                 ctx.restore();
 
@@ -150,18 +267,20 @@
             }
 
             drawTaoBody(ctx, r) {
-                ctx.fillStyle = "#fff";
+                ctx.fillStyle = '#fff';
                 ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
 
-                ctx.fillStyle = "#000";
+                ctx.fillStyle = '#000';
                 ctx.beginPath();
                 ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
                 ctx.arc(0, r / 2, r / 2, Math.PI / 2, -Math.PI / 2, true);
                 ctx.arc(0, -r / 2, r / 2, Math.PI / 2, -Math.PI / 2, false);
                 ctx.fill();
 
-                ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
             }
 
             drawClock(ctx, cx, cy, r) {
@@ -172,13 +291,14 @@
 
                 ctx.save();
                 ctx.translate(cx, cy);
-                ctx.lineCap = "round";
+                ctx.lineCap = 'round';
 
                 const hand = (val, max, len, width, color) => {
                     const angle = (val / max) * Math.PI * 2 - Math.PI / 2;
                     ctx.strokeStyle = color;
                     ctx.lineWidth = width;
-                    ctx.beginPath(); ctx.moveTo(0, 0);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
                     ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
                     ctx.stroke();
                 };
@@ -191,21 +311,23 @@
             }
         }
 
-        // --- CLASSE: MOTORE PARTICELLE (fisica identica al C++) ---
+        // --- CLASSE: MOTORE PARTICELLE ---
         class ParticleEngine {
             constructor(canvasId) {
                 this.canvas = document.getElementById(canvasId);
-                this.gl = this.canvas.getContext("webgl", { alpha: true, antialias: true });
+                this.gl = this.canvas.getContext('webgl', { alpha: true, antialias: true });
 
                 this.count = Config.maxParticles;
                 this.particles = [];
                 this.width = 1;
                 this.height = 1;
 
-                // Typed arrays: posizione, colore (rgba float), size
-                this.dataPos = new Float32Array(this.count * 2);
-                this.dataColor = new Float32Array(this.count * 4);
-                this.dataSize = new Float32Array(this.count);
+                // OPT 1: buffer interleaved unico invece di 3 buffer separati.
+                // Layout per particella: [x, y, r, g, b, a, size] = 7 float = 28 byte
+                // Vantaggi: 1 bindBuffer + 1 bufferData invece di 3, migliore cache GPU.
+                this.STRIDE = 7;                                    // float per particella
+                this.STRIDE_BYTES = this.STRIDE * 4;                      // byte per particella
+                this.dataInterleaved = new Float32Array(this.count * this.STRIDE);
 
                 this.initGL();
                 this.initParticles();
@@ -213,6 +335,7 @@
 
             initGL() {
                 const gl = this.gl;
+
                 const createShader = (type, src) => {
                     const s = gl.createShader(type);
                     gl.shaderSource(s, src);
@@ -227,74 +350,74 @@
                 gl.useProgram(prog);
                 this.program = prog;
 
-                this.bufPos = gl.createBuffer();
-                this.bufColor = gl.createBuffer();
-                this.bufSize = gl.createBuffer();
+                // OPT 1: un solo buffer interleaved
+                this.bufInterleaved = gl.createBuffer();
+
+                // OPT 4: cache dei attribute location — getAttribLocation è costoso,
+                // chiamarlo una sola volta in init invece che ad ogni frame elimina
+                // N query al driver per frame (N = numero di attributi attivi).
+                this.loc = {
+                    pos: gl.getAttribLocation(prog, 'a_position'),
+                    color: gl.getAttribLocation(prog, 'a_color'),
+                    size: gl.getAttribLocation(prog, 'a_size'),
+                };
 
                 gl.enable(gl.BLEND);
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // additive come il C++
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // additive blending come C++
             }
 
             resize(w, h) {
-                this.canvas.width = w;
-                this.canvas.height = h;
+                // FIX DPR: canvas WebGL fisicamente più grande su HiDPI.
+                // La fisica rimane in pixel logici — solo il viewport cambia.
+                const dpr = window.devicePixelRatio || 1;
+                const pw = Math.round(w * dpr);
+                const ph = Math.round(h * dpr);
+                this.canvas.width = pw;
+                this.canvas.height = ph;
+                this.canvas.style.width = w + 'px';
+                this.canvas.style.height = h + 'px';
                 this.width = w;
                 this.height = h;
-                this.gl.viewport(0, 0, w, h);
+                this.gl.viewport(0, 0, pw, ph);
             }
 
             initParticles() {
                 for (let i = 0; i < this.count; i++) {
                     this.particles.push({
                         x: 0, y: 0, vx: 0, vy: 0,
-                        life: 0,          // start dead → respawn subito
+                        life: 0,
                         decay: 0.003 + Math.random() * 0.008,
-                        // size in pixel come C++: 2..10
                         size: 2.0 + Math.random() * 8.0,
-                        isFire: (i % 7 === 0)   // 1 su 7 è fuoco, come C++ (i % 7)
+                        isFire: (i % 7 === 0)
                     });
                 }
             }
 
-            // --- RESPAWN: identico al C++ ---
             respawn(p, cx, cy, r) {
                 p.life = 1.0;
-
                 const angle = Math.random() * Math.PI * 2;
-                // dist = r * (0.5 + rnd * 2.0)  → da 0.5r a 2.5r dal centro
                 const dist = r * (0.5 + Math.random() * 2.0);
-
                 p.x = cx + Math.cos(angle) * dist;
                 p.y = cy + Math.sin(angle) * dist;
-
-                // Velocità iniziale come C++: ±0.3 px/frame (prima dello scaling df)
                 p.vx = (Math.random() - 0.5) * 0.6;
                 p.vy = (Math.random() - 0.5) * 0.6;
-
-                // Se spawna dentro il Tao, spingila fuori (come il C++)
                 const sdx = p.x - cx;
                 const sdy = p.y - cy;
-                if (sdx * sdx + sdy * sdy < r * r) {
-                    p.x += sdx > 0 ? r : -r;
-                }
-
+                if (sdx * sdx + sdy * sdy < r * r) p.x += sdx > 0 ? r : -r;
                 p.decay = 0.003 + Math.random() * 0.008;
                 p.size = 2.0 + Math.random() * 8.0;
             }
 
-            // --- FISICA: porta identicamente dal C++ ---
             updatePhysics(dt) {
-                const df = dt * 60.0;   // delta factor (come C++)
+                const df = dt * 60.0;
                 const activeCount = Math.min(Config.particles, Config.maxParticles);
-
                 const w = this.width;
                 const h = this.height;
                 const cx = w * 0.5;
                 const cy = h * 0.5;
-                const r = Math.min(w, h) / 4.5;   // stesso calcolo C++
+                const r = Math.min(w, h) / 4.5;
                 const rSq = r * r;
 
-                // Mouse in pixel (come C++, usa coordinate pixel dirette)
                 const mx = Mouse.x;
                 const my = Mouse.y;
                 const isMouseValid = Mouse.inside && mx >= 0 && my >= 0 && mx <= w && my <= h;
@@ -302,21 +425,31 @@
                 const pc1 = Config.particleColor1;
                 const pc2 = Config.particleColor2;
 
-                const friction = Math.pow(0.98, df);   // pre-calcolo come C++
+                // OPT 1: pre-calcolo costanti colore fuori dal loop
+                const pc1r = pc1.r / 255;
+                const pc1g = pc1.g / 255;
+                const pc1b = pc1.b / 255;
+                const pc2r = pc2.r / 255;
+                const pc2b = pc2.b / 255;
+
+                // OPT 1 (friction): già presente, confermato
+                const friction = Math.pow(0.98, df);
+
+                const data = this.dataInterleaved;
+                const stride = this.STRIDE;
 
                 for (let i = 0; i < activeCount; i++) {
                     const p = this.particles[i];
+                    const bi = i * stride; // base index nel buffer interleaved
 
                     if (p.life > 0.0) {
-
-                        // --- MOUSE (identico C++) ---
+                        // --- MOUSE ---
                         const dx = mx - p.x;
                         const dy = my - p.y;
 
                         if (isMouseValid && Math.abs(dx) < 300 && Math.abs(dy) < 300) {
                             const distSq = dx * dx + dy * dy;
                             if (distSq < 90000.0) {
-                                // Attrazione forte: f = 3.5 / (distSq + 100)
                                 const f = 3.5 / (distSq + 100.0);
                                 p.vx += dx * f * df;
                                 p.vy += dy * f * df;
@@ -333,30 +466,25 @@
                         p.x += p.vx * df;
                         p.y += p.vy * df;
 
-                        // --- BOUNDARY (rimbalzo con smorzamento 0.4) ---
+                        // --- BOUNDARY ---
                         if (p.x < 0) { p.x = 0; p.vx = Math.abs(p.vx) * 0.4; }
                         else if (p.x > w) { p.x = w; p.vx = -Math.abs(p.vx) * 0.4; }
                         if (p.y < 0) { p.y = 0; p.vy = Math.abs(p.vy) * 0.4; }
                         else if (p.y > h) { p.y = h; p.vy = -Math.abs(p.vy) * 0.4; }
 
-                        // --- COLLISIONE TAO (identico C++) ---
+                        // --- COLLISIONE TAO ---
                         const tdx = p.x - cx;
                         const tdy = p.y - cy;
                         const tDistSq = tdx * tdx + tdy * tdy;
-
                         if (tDistSq < rSq) {
                             let tDist = Math.sqrt(tDistSq);
                             if (tDist < 0.1) tDist = 0.1;
                             const invDist = 1.0 / tDist;
                             const nx = tdx * invDist;
                             const ny = tdy * invDist;
-
-                            // Spinta graduale fuori (come C++: push = (r - tDist) * 0.3)
                             const push = (r - tDist) * 0.3;
                             p.x += nx * push;
                             p.y += ny * push;
-
-                            // Rimbalzo con coefficiente 1.6 (come C++)
                             const dot = p.vx * nx + p.vy * ny;
                             if (dot < 0) {
                                 p.vx -= 1.6 * dot * nx;
@@ -366,69 +494,83 @@
 
                         p.life -= p.decay * df;
 
-                        // --- COLORE (dinamico per speed, come C++) ---
+                        // --- COLORE ---
                         const alpha = Math.max(0, p.life);
                         let red, green, blue;
 
                         if (p.isFire) {
-                            // pc2 con verde modulato dalla vita
-                            red = pc2.r / 255;
+                            red = pc2r;
                             green = Math.min(1.0, pc2.g / 255 + p.life * 50 / 255);
-                            blue = pc2.b / 255;
+                            blue = pc2b;
                         } else {
-                            // pc1 con sovra-saturazione per velocità
-                            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-                            red = Math.min(1.0, pc1.r / 255 + speed * 400 / 255);
-                            green = Math.min(1.0, pc1.g / 255 + speed * 200 / 255);
-                            blue = pc1.b / 255;
+                            // OPT 5: speedSq con guard — sqrt solo se la velocità è
+                            // abbastanza alta da influenzare il colore in modo percettibile
+                            const speedSq = p.vx * p.vx + p.vy * p.vy;
+                            const speed = speedSq > 0.0001 ? Math.sqrt(speedSq) : 0.0;
+                            red = Math.min(1.0, pc1r + speed * 400 / 255);
+                            green = Math.min(1.0, pc1g + speed * 200 / 255);
+                            blue = pc1b;
                         }
 
-                        const ci = i * 4;
-                        this.dataColor[ci] = red;
-                        this.dataColor[ci + 1] = green;
-                        this.dataColor[ci + 2] = blue;
-                        this.dataColor[ci + 3] = alpha * 0.85; // leggermente trasparente
+                        // OPT 1: scrivi direttamente nel buffer interleaved
+                        // Evita di scrivere su 3 array separati con 3 indici diversi
+                        data[bi] = (p.x / w) * 2 - 1;          // NDC x
+                        data[bi + 1] = -((p.y / h) * 2 - 1);       // NDC y (Y invertita)
+                        data[bi + 2] = red;
+                        data[bi + 3] = green;
+                        data[bi + 4] = blue;
+                        data[bi + 5] = alpha * 0.85;
+                        data[bi + 6] = p.size;
 
                     } else {
                         // --- RESPAWN ---
                         this.respawn(p, cx, cy, r);
+
+                        // Particella appena respawnata: invisibile finché non aggiornata
+                        data[bi + 5] = 0; // alpha = 0
                     }
-
-                    // Converti pixel → NDC per il rendering WebGL
-                    this.dataPos[i * 2] = (p.x / w) * 2 - 1;
-                    this.dataPos[i * 2 + 1] = -((p.y / h) * 2 - 1); // Y invertita
-
-                    // Size in pixel passata direttamente come gl_PointSize
-                    this.dataSize[i] = p.size;
                 }
             }
 
             render() {
                 const gl = this.gl;
                 const activeCount = Math.min(Config.particles, Config.maxParticles);
+                const stride = this.STRIDE_BYTES; // 28 byte
 
                 gl.clearColor(0, 0, 0, 0);
                 gl.clear(gl.COLOR_BUFFER_BIT);
 
-                const bindAttrib = (name, buffer, data, size) => {
-                    const loc = gl.getAttribLocation(this.program, name);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
-                    gl.enableVertexAttribArray(loc);
-                    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
-                };
+                // OPT 1: un solo bindBuffer + bufferData invece di 3
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.bufInterleaved);
 
-                bindAttrib("a_position", this.bufPos, this.dataPos.subarray(0, activeCount * 2), 2);
-                bindAttrib("a_color", this.bufColor, this.dataColor.subarray(0, activeCount * 4), 4);
-                bindAttrib("a_size", this.bufSize, this.dataSize.subarray(0, activeCount), 1);
+                // OPT 6: bufferData con srcOffset + length invece di subarray().
+                // subarray() crea una TypedArray view temporanea ad ogni frame;
+                // l'overload a 5 argomenti evita l'allocazione e copia solo i dati attivi.
+                // OPT 2: STREAM_DRAW comunica al driver che il buffer viene riscritto
+                // interamente ogni frame senza riuso — permette ottimizzazioni di allocazione.
+                gl.bufferData(gl.ARRAY_BUFFER, this.dataInterleaved, gl.STREAM_DRAW,
+                    0, activeCount * this.STRIDE);
+
+                // OPT 4: usa location in cache invece di chiamare getAttribLocation
+                const { pos, color, size } = this.loc;
+
+                // OPT 1: tre vertexAttribPointer sullo stesso buffer con offset diversi
+                gl.enableVertexAttribArray(pos);
+                gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, stride, 0);  // offset 0: x,y
+
+                gl.enableVertexAttribArray(color);
+                gl.vertexAttribPointer(color, 4, gl.FLOAT, false, stride, 8);  // offset 8: r,g,b,a
+
+                gl.enableVertexAttribArray(size);
+                gl.vertexAttribPointer(size, 1, gl.FLOAT, false, stride, 24); // offset 24: size
 
                 gl.drawArrays(gl.POINTS, 0, activeCount);
             }
         }
 
         // --- MAIN APP ---
-        const overlay = new TaoOverlay("uiCanvas");
-        const engine = new ParticleEngine("glCanvas");
+        const overlay = new TaoOverlay('uiCanvas');
+        const engine = new ParticleEngine('glCanvas');
 
         function resize() {
             const w = window.innerWidth;
@@ -436,17 +578,28 @@
             overlay.resize(w, h);
             engine.resize(w, h);
         }
+
         window.addEventListener('resize', resize);
+
+        // Rileva cambio DPR (spostamento su schermo con densità diversa)
+        let dprMq = null;
+        function watchDpr() {
+            if (dprMq) dprMq.removeEventListener('change', onDprChange);
+            const dpr = window.devicePixelRatio || 1;
+            dprMq = window.matchMedia(`(resolution: ${dpr}dppx)`);
+            dprMq.addEventListener('change', onDprChange);
+        }
+        function onDprChange() { resize(); watchDpr(); }
+        watchDpr();
         resize();
 
         let lastTime = 0;
         function loop(timestamp) {
             if (!lastTime) lastTime = timestamp;
             let dt = (timestamp - lastTime) / 1000;
-            if (dt > 0.1) dt = 0.1;   // cap per lag spike (come C++)
+            if (dt > 0.1) dt = 0.1;
             lastTime = timestamp;
 
-            // Allinea logica rotazione al C++: rotationSpeed * 0.06 * direction * dt
             Config.rotation += Config.speed * Config.direction * dt;
 
             if (!Config.lowCpu) {
@@ -471,7 +624,6 @@
             const data = (typeof s === 'object') ? s : {};
 
             if (data.particleCount !== undefined) Config.particles = Number(data.particleCount);
-            // MATCH C++ logic: rotationSpeed * 0.06
             if (data.rotationSpeed !== undefined) Config.speed = Number(data.rotationSpeed) * 0.06;
             if (data.clockwise !== undefined) Config.direction = data.clockwise ? 1 : -1;
             if (data.showClock !== undefined) Config.showClock = data.showClock;
@@ -481,22 +633,33 @@
             if (data.minuteHandColor) Config.minuteHandColor = toCssColor(data.minuteHandColor);
             if (data.secondHandColor) Config.secondHandColor = toCssColor(data.secondHandColor);
 
-            Config.glowColor1 = toCssColor(data.glowColor1 || Config.glowColor1);
-            Config.glowSize1 = data.glowSize1 !== undefined ? Number(data.glowSize1) : Config.glowSize1;
-            Config.glowColor2 = toCssColor(data.glowColor2 || Config.glowColor2);
-            Config.glowSize2 = data.glowSize2 !== undefined ? Number(data.glowSize2) : Config.glowSize2;
+            if (data.glowColor1 !== undefined) {
+                Config.glowColor1 = toCssColor(data.glowColor1);
+                overlay.glowDirty = true;
+            }
+            if (data.glowSize1 !== undefined) {
+                Config.glowSize1 = Number(data.glowSize1);
+                overlay.glowDirty = true;
+            }
+            if (data.glowColor2 !== undefined) {
+                Config.glowColor2 = toCssColor(data.glowColor2);
+                overlay.glowDirty = true;
+            }
+            if (data.glowSize2 !== undefined) {
+                Config.glowSize2 = Number(data.glowSize2);
+                overlay.glowDirty = true;
+            }
 
-            // Parser per particelle (necessitano di componenti numeriche)
+            // Parser RGB per le particelle (necessitano di componenti numeriche)
             const parseToRGB = (c) => {
-                let css = toCssColor(c);
-                const temp = document.createElement("canvas").getContext("2d");
-                temp.fillStyle = "black"; // fallback
+                const css = toCssColor(c);
+                const temp = document.createElement('canvas').getContext('2d');
+                temp.fillStyle = 'black';
                 temp.fillStyle = css;
-                const computed = temp.fillStyle; // Chrome lo normalizza a #RRGGBB o rgba
-
-                if (computed.startsWith('rgba')) {
+                const computed = temp.fillStyle;
+                if (computed.startsWith('rgba') || computed.startsWith('rgb')) {
                     const m = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-                    return m ? { r: parseInt(m[1]), g: parseInt(m[2]), b: parseInt(m[3]) } : { r: 128, g: 128, b: 128 };
+                    return m ? { r: +m[1], g: +m[2], b: +m[3] } : { r: 128, g: 128, b: 128 };
                 }
                 if (computed.startsWith('#')) {
                     return {
@@ -512,7 +675,6 @@
             if (data.particleColor2) Config.particleColor2 = parseToRGB(data.particleColor2);
         };
 
-        // Imposta colori particelle (equivalente setParticleColor1/2 del C++)
         window.setParticleColors = (r1, g1, b1, r2, g2, b2) => {
             Config.particleColor1 = { r: r1, g: g1, b: b1 };
             Config.particleColor2 = { r: r2, g: g2, b: b2 };
