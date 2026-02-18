@@ -59,13 +59,13 @@
       <default>#64c8ff</default>
     </entry>
     <entry name="glowSize1" type="Double">
-      <default>1.3</default>
+      <default>1.5</default>
     </entry>
     <entry name="glowColor2" type="Color">
-      <default>#64c8ff</default>
+      <default>#ffaa00</default>
     </entry>
     <entry name="glowSize2" type="Double">
-      <default>0.0</default>
+      <default>1.5</default>
     </entry>
   </group>
 

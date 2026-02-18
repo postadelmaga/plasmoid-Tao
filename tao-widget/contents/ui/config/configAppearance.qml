@@ -37,8 +37,8 @@ KCM.SimpleKCM {
                 id: glowSize1Slider
 
                 Layout.fillWidth: true
-                from: 0
-                to: 4
+                from: 1
+                to: 2
                 stepSize: 0.1
             }
 
@@ -67,8 +67,8 @@ KCM.SimpleKCM {
                 id: glowSize2Slider
 
                 Layout.fillWidth: true
-                from: 0
-                to: 4
+                from: 1
+                to: 2
                 stepSize: 0.1
             }
 
