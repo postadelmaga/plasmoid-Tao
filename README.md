@@ -3,12 +3,12 @@
 A beautiful and meditative Yin Yang (Tao) animation for your KDE Plasma 6 desktop. This widget combines ancient symbolism with modern aesthetics, featuring a dynamic particle system and an optional mystical clock.
 
 ### Preview
-![Mystical Tao Preview](example/main.png)
+![Mystical Tao Preview](screenshots/main.png)
 
 ### Clock Mode & Configuration
 | Clock Enabled | Configuration Menu |
 |:---:|:---:|
-| ![Clock Mode](example/main_clock.png) | ![Configuration](example/config.png) |
+| ![Clock Mode](screenshots/main_clock.png) | ![Configuration](screenshots/config.png) |
 
 
 ## Features
