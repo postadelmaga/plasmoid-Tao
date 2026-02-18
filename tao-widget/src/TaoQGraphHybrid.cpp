@@ -524,9 +524,7 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     if (m_lastGlowColor1 != m_glowColor1) {
-        QSGTexture *old = gNode1->texture();
         gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1)));
-        delete old;
         m_lastGlowColor1 = m_glowColor1;
     }
 
@@ -538,9 +536,7 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     if (m_lastGlowColor2 != m_glowColor2) {
-        QSGTexture *old = gNode2->texture();
         gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2)));
-        delete old;
         m_lastGlowColor2 = m_glowColor2;
     }
 
@@ -629,9 +625,9 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 }
 
 QImage TaoQGraphHybrid::generateGlowTexture(int s, const QColor &color) {
-    // Use RGBA8888 so the GPU always sees R,G,B,A in that order regardless
-    // of RHI backend — ARGB32 gets byte-swapped on some backends.
-    QImage img(s, s, QImage::Format_RGBA8888);
+    // Use ARGB32_Premultiplied as it's the standard for Qt Quick texture uploads
+    // and correctly handles alpha blending.
+    QImage img(s, s, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
     QPainter p(&img);
     QRadialGradient g(s/2.0, s/2.0, s/2.0);
