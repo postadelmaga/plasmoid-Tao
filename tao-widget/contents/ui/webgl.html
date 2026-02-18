@@ -438,12 +438,36 @@
             Mouse.inside = inside;
         };
 
-        window.updateSettings = (count, speed, dir, clock, lowcpu) => {
-            Config.particles = count;
-            Config.speed = speed;
-            Config.direction = dir ? 1 : -1; // 1 or -1
-            Config.showClock = clock;
-            Config.lowCpu = lowcpu;
+        window.updateSettings = (
+            particleCount,
+            rotationSpeed,
+            clockwise,
+            showClock,
+            lowCpuMode,
+            hourHandColor,
+            minuteHandColor,
+            secondHandColor,
+            glowColor1,
+            glowSize1,
+            glowColor2,
+            glowSize2,
+            particleColor1,
+            particleColor2
+        ) => {
+            Config.particles = particleCount;
+            Config.speed = rotationSpeed;
+            Config.direction = clockwise ? 1 : -1; // 1 or -1
+            Config.showClock = showClock;
+            Config.lowCpu = lowCpuMode;
+            Config.hourHandColor = hourHandColor;
+            Config.minuteHandColor = minuteHandColor;
+            Config.secondHandColor = secondHandColor;
+            Config.glowColor1 = glowColor1;
+            Config.glowSize1 = glowSize1;
+            Config.glowColor2 = glowColor2;
+            Config.glowSize2 = glowSize2;
+            Config.particleColor1 = particleColor1;
+            Config.particleColor2 = particleColor2;
         };
 
         // Imposta colori particelle (equivalente setParticleColor1/2 del C++)
