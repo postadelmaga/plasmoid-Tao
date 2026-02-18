@@ -18,6 +18,34 @@ KCM.SimpleKCM {
             model: [i18n("WebGL (Browser)"), i18n("Zen (Native C++)")]
         }
 
+        // Zen Engine Status Message
+        Kirigami.InlineMessage {
+            id: zenStatusMessage
+
+            property bool nativeAvailable: false
+
+            Layout.fillWidth: true
+            type: nativeTestLoader.status === Loader.Ready ? Kirigami.MessageType.Information : Kirigami.MessageType.Warning
+            text: nativeTestLoader.status === Loader.Ready ? i18n("Zen engine is available.") : i18n("Zen engine is NOT available (using WebGL fallback).")
+            visible: nativeTestLoader.status !== Loader.Ready
+
+            // In configGeneral.qml
+            Loader {
+                id: nativeTestLoader
+
+                active: true
+                source: "ZenCheck.qml"
+                // Distruggi l'istanza appena abbiamo il risultato
+                onStatusChanged: {
+                    if (status === Loader.Ready || status === Loader.Error) {
+                        nativeAvailable = (status === Loader.Ready);
+                        active = false; // distrugge l'istanza immediatamente
+                    }
+                }
+            }
+
+        }
+
         QQC2.CheckBox {
             id: transparentBgCheckBox
 

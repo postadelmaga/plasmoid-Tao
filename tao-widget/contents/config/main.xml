@@ -8,7 +8,7 @@
   <!-- Corresponds to configGeneral.qml -->
   <group name="General">
     <entry name="renderEngine" type="Int">
-      <default>0</default>
+      <default>1</default>
     </entry>
     <entry name="transparentBackground" type="Bool">
       <default>true</default>
