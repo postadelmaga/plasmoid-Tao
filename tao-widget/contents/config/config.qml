@@ -9,9 +9,9 @@ ConfigModel {
     }
 
     ConfigCategory {
-        name: i18n("Appearance")
+        name: i18n("Glow")
         icon: "preferences-desktop-color"
-        source: "config/configAppearance.qml"
+        source: "config/configGlow.qml"
     }
 
     ConfigCategory {

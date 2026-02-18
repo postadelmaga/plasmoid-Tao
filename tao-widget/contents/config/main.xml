@@ -50,10 +50,10 @@
     </entry>
   </group>
 
-  <!-- Corresponds to configAppearance.qml -->
-  <group name="Appearance">
+  <!-- Corresponds to configGlow.qml -->
+  <group name="Glow">
     <entry name="glowColor1" type="Color">
-      <default>#64c8ff</default>
+      <default>#000000</default>
     </entry>
     <entry name="glowSize1" type="Double">
       <default>1.2</default>

@@ -17,25 +17,7 @@ KCM.SimpleKCM {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Particle Physics")
-        }
-
-        RowLayout {
-            Kirigami.FormData.label: i18n("Amount:")
-
-            QQC2.Slider {
-                id: particleCountSlider
-
-                Layout.fillWidth: true
-                from: 0
-                to: 3000
-                stepSize: 10
-            }
-
-            QQC2.Label {
-                text: Math.round(particleCountSlider.value)
-            }
-
+            Kirigami.FormData.label: i18n("Tao Rotation)")
         }
 
         RowLayout {
@@ -65,7 +47,25 @@ KCM.SimpleKCM {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Particle Aesthetics")
+            Kirigami.FormData.label: i18n("Particles")
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Amount:")
+
+            QQC2.Slider {
+                id: particleCountSlider
+
+                Layout.fillWidth: true
+                from: 0
+                to: 3000
+                stepSize: 10
+            }
+
+            QQC2.Label {
+                text: Math.round(particleCountSlider.value)
+            }
+
         }
 
         RowLayout {
