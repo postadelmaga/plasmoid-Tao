@@ -14,6 +14,15 @@ die()   { echo -e "\n${RED}✗ ERROR:${NC} $*\n" >&2; show_help; exit 1; }
 
 TOTAL_STEPS=5
 
+# ── Parse arguments ───────────────────────────────────────────────────────────
+SKIP_NATIVE=false
+for arg in "$@"; do
+    case "$arg" in
+        --skip-native) SKIP_NATIVE=true ;;
+        *) die "Unknown argument: ${arg}\nUsage: $0 [--skip-native]" ;;
+    esac
+done
+
 # ── Dependency hints ──────────────────────────────────────────────────────────
 show_help() {
     echo -e "${BOLD}Missing dependencies? Install them with:${NC}"
@@ -43,6 +52,10 @@ echo "    Tao Widget — Build & Packaging      "
 echo "========================================"
 echo -e "${NC}"
 
+if [ "${SKIP_NATIVE}" = true ]; then
+    warn "Skipping native C++ plugin compilation (--skip-native)"
+fi
+
 # ── Paths ─────────────────────────────────────────────────────────────────────
 PROJECT_DIR=$(pwd)
 BUILD_DIR="${PROJECT_DIR}/build_cpp"
@@ -62,7 +75,9 @@ fi
 # ── Step 1: Cleanup ───────────────────────────────────────────────────────────
 info 1 "Cleaning old artifacts..."
 rm -f tao-widget.plasmoid
-rm -f "${NATIVE_DIR}/libtaoplugin.so"
+if [ "${SKIP_NATIVE}" = false ]; then
+    rm -f "${NATIVE_DIR}/libtaoplugin.so"
+fi
 # build_cpp/ is kept intentionally to speed up incremental rebuilds
 
 # ── Step 2: Compile shaders ───────────────────────────────────────────────────
@@ -84,40 +99,49 @@ done
 ok "Shaders compiled."
 
 # ── Step 3: Compile native C++ plugin ─────────────────────────────────────────
-info 3 "Compiling native C++ plugin..."
+if [ "${SKIP_NATIVE}" = true ]; then
+    info 3 "Skipping native C++ plugin compilation..."
+    [ -f "${NATIVE_DIR}/libtaoplugin.so" ] \
+        || die "libtaoplugin.so not found in ${NATIVE_DIR}/\n\
+       With --skip-native the .so must already be present in the package.\n\
+       Compile it locally first with: ./build.sh"
+    ok "Using existing libtaoplugin.so."
+else
+    info 3 "Compiling native C++ plugin..."
 
-command -v cmake &>/dev/null \
-    || die "cmake not found. See package hints above."
+    command -v cmake &>/dev/null \
+        || die "cmake not found. See package hints above."
 
-mkdir -p "${BUILD_DIR}"
-cd "${BUILD_DIR}"
+    mkdir -p "${BUILD_DIR}"
+    cd "${BUILD_DIR}"
 
-cmake "${PROJECT_DIR}/tao-widget" \
-    -DCMAKE_BUILD_TYPE=Release \
-    || die "CMake configuration failed.\n\
+    cmake "${PROJECT_DIR}/tao-widget" \
+        -DCMAKE_BUILD_TYPE=Release \
+        || die "CMake configuration failed.\n\
        Check that all KDE/Qt6 development packages are installed.\n\
        Run this script again after installing missing dependencies."
 
-make clean
-make -j"$(nproc)" \
-    || die "Compilation failed.\n\
+    make clean
+    make -j"$(nproc)" \
+        || die "Compilation failed.\n\
        Check the error output above for missing headers or libraries."
 
-echo
-ok "Native plugin compiled successfully."
-echo
+    echo
+    ok "Native plugin compiled successfully."
+    echo
 
-# ── Step 4: Package plugin ────────────────────────────────────────────────────
-info 4 "Integrating plugin into package..."
-mkdir -p "${NATIVE_DIR}"
+    # ── Step 4: Package plugin ────────────────────────────────────────────────
+    info 4 "Integrating plugin into package..."
+    mkdir -p "${NATIVE_DIR}"
 
-[ -f "${BUILD_DIR}/bin/libtaoplugin.so" ] \
-    || die "libtaoplugin.so not found in ${BUILD_DIR}/bin/\n\
+    [ -f "${BUILD_DIR}/bin/libtaoplugin.so" ] \
+        || die "libtaoplugin.so not found in ${BUILD_DIR}/bin/\n\
        The build may have succeeded but placed the .so in an unexpected location.\n\
        Check CMakeLists.txt LIBRARY_OUTPUT_DIRECTORY setting."
 
-cp "${BUILD_DIR}/bin/libtaoplugin.so" "${NATIVE_DIR}/"
-ok "Plugin copied to ${NATIVE_DIR}/"
+    cp "${BUILD_DIR}/bin/libtaoplugin.so" "${NATIVE_DIR}/"
+    ok "Plugin copied to ${NATIVE_DIR}/"
+fi
 
 # ── Step 5: Create .plasmoid package ─────────────────────────────────────────
 cd "${PROJECT_DIR}"
