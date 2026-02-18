@@ -53,7 +53,7 @@ echo "========================================"
 echo -e "${NC}"
 
 if [ "${SKIP_NATIVE}" = true ]; then
-    warn "Skipping native C++ plugin compilation (--skip-native)"
+    warn "Skipping shader and native C++ plugin compilation (--skip-native)"
 fi
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -63,40 +63,51 @@ NATIVE_DIR="${PROJECT_DIR}/tao-widget/contents/ui/native"
 SHADER_SRC_DIR="${PROJECT_DIR}/tao-widget/src/shaders"
 SHADER_OUT_DIR="${NATIVE_DIR}/shaders"
 
-# Locate qsb — name varies by distro
-if   command -v qsb   &>/dev/null; then QSB=$(command -v qsb)
-elif command -v qsb6  &>/dev/null; then QSB=$(command -v qsb6)
-elif [ -x "/usr/lib/qt6/bin/qsb" ]; then QSB="/usr/lib/qt6/bin/qsb"
-else
-    die "qsb (Qt Shader Baker) not found.\n\
-       Make sure qt6-shader-baker (Arch) or qt6-tools-dev (Ubuntu) is installed."
-fi
-
 # ── Step 1: Cleanup ───────────────────────────────────────────────────────────
 info 1 "Cleaning old artifacts..."
 rm -f tao-widget.plasmoid
 if [ "${SKIP_NATIVE}" = false ]; then
     rm -f "${NATIVE_DIR}/libtaoplugin.so"
+    rm -f "${SHADER_OUT_DIR}/"*.qsb
 fi
-# build_cpp/ is kept intentionally to speed up incremental rebuilds
 
 # ── Step 2: Compile shaders ───────────────────────────────────────────────────
-info 2 "Compiling GLSL shaders → QSB..."
-mkdir -p "${SHADER_OUT_DIR}"
+if [ "${SKIP_NATIVE}" = true ]; then
+    info 2 "Skipping shader compilation..."
+    for shader_type in vert frag; do
+        qsb="${SHADER_OUT_DIR}/particle.${shader_type}.qsb"
+        [ -f "${qsb}" ] \
+            || die "Compiled shader not found: ${qsb}\n\
+       With --skip-native the .qsb files must already be present.\n\
+       Compile them locally first with: ./build.sh"
+    done
+    ok "Using existing .qsb shaders."
+else
+    # Locate qsb — name varies by distro
+    if   command -v qsb   &>/dev/null; then QSB=$(command -v qsb)
+    elif command -v qsb6  &>/dev/null; then QSB=$(command -v qsb6)
+    elif [ -x "/usr/lib/qt6/bin/qsb" ]; then QSB="/usr/lib/qt6/bin/qsb"
+    else
+        die "qsb (Qt Shader Baker) not found.\n\
+       Make sure qt6-shader-baker (Arch) or qt6-tools-dev (Ubuntu) is installed."
+    fi
 
-for shader_type in vert frag; do
-    src="${SHADER_SRC_DIR}/particle.${shader_type}"
-    out="${SHADER_OUT_DIR}/particle.${shader_type}.qsb"
+    info 2 "Compiling GLSL shaders → QSB..."
+    mkdir -p "${SHADER_OUT_DIR}"
 
-    [ -f "${src}" ] || die "Shader source not found: ${src}"
+    for shader_type in vert frag; do
+        src="${SHADER_SRC_DIR}/particle.${shader_type}"
+        out="${SHADER_OUT_DIR}/particle.${shader_type}.qsb"
 
-    "${QSB}" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
-        -o "${out}" "${src}" \
-        || die "Shader compilation failed for: ${src}\n\
+        [ -f "${src}" ] || die "Shader source not found: ${src}"
+
+        "${QSB}" --glsl "100 es,120,150" --hlsl 50 --msl 12 \
+            -o "${out}" "${src}" \
+            || die "Shader compilation failed for: ${src}\n\
        Check that '${QSB}' supports the requested targets."
-done
-
-ok "Shaders compiled."
+    done
+    ok "Shaders compiled."
+fi
 
 # ── Step 3: Compile native C++ plugin ─────────────────────────────────────────
 if [ "${SKIP_NATIVE}" = true ]; then
