@@ -27,7 +27,6 @@ Item {
         rotationSpeed: renderer.objsettings ? renderer.objsettings.rotationSpeed : 0
         clockwise: renderer.objsettings ? renderer.objsettings.clockwise : false
         showClock: renderer.objsettings ? renderer.objsettings.showClock : false
-        lowCpuMode: renderer.objsettings ? renderer.objsettings.lowCpuMode : false
         // Clock Colors
         hourHandColor: renderer.objsettings ? renderer.objsettings.hourHandColor : "white"
         minuteHandColor: renderer.objsettings ? renderer.objsettings.minuteHandColor : "blue"

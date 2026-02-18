@@ -23,7 +23,6 @@ WebEngineView {
             rotationSpeed: ${objsettings.rotationSpeed},
             clockwise: ${objsettings.clockwise},
             showClock: ${objsettings.showClock},
-            lowCpuMode: ${objsettings.lowCpuMode},
             hourHandColor: "${objsettings.hourHandColor}",
             minuteHandColor: "${objsettings.minuteHandColor}",
             secondHandColor: "${objsettings.secondHandColor}",
@@ -60,10 +59,6 @@ WebEngineView {
         }
 
         function onShowClockChanged() {
-            updateHtml();
-        }
-
-        function onLowCpuModeChanged() {
             updateHtml();
         }
 

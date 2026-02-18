@@ -59,7 +59,6 @@ class TaoQGraphHybrid : public QQuickItem
     Q_PROPERTY(float rotationSpeed READ rotationSpeed WRITE setRotationSpeed NOTIFY rotationSpeedChanged)
     Q_PROPERTY(bool clockwise READ clockwise WRITE setClockwise NOTIFY clockwiseChanged)
     Q_PROPERTY(bool showClock READ showClock WRITE setShowClock NOTIFY showClockChanged)
-    Q_PROPERTY(bool lowCpuMode READ lowCpuMode WRITE setLowCpuMode NOTIFY lowCpuModeChanged)
     Q_PROPERTY(QPointF mousePos READ mousePos WRITE setMousePos NOTIFY mousePosChanged)
     Q_PROPERTY(QColor hourHandColor READ hourHandColor WRITE setHourHandColor NOTIFY hourHandColorChanged)
     Q_PROPERTY(QColor minuteHandColor READ minuteHandColor WRITE setMinuteHandColor NOTIFY minuteHandColorChanged)
@@ -83,7 +82,6 @@ public:
     float   rotationSpeed()  const { return m_rotationSpeed; }
     bool    clockwise()      const { return m_clockwise; }
     bool    showClock()      const { return m_showClock; }
-    bool    lowCpuMode()     const { return m_lowCpuMode; }
     QPointF mousePos()       const { return m_mousePos; }
     QColor  hourHandColor()  const { return m_hourHandColor; }
     QColor  minuteHandColor()const { return m_minuteHandColor; }
@@ -99,7 +97,6 @@ public:
     void setRotationSpeed(float speed);
     void setClockwise(bool clockwise);
     void setShowClock(bool show);
-    void setLowCpuMode(bool lowCpu);
     void setMousePos(const QPointF &pos);
     void setHourHandColor(const QColor &c);
     void setMinuteHandColor(const QColor &c);
@@ -116,7 +113,6 @@ Q_SIGNALS:
     void rotationSpeedChanged();
     void clockwiseChanged();
     void showClockChanged();
-    void lowCpuModeChanged();
     void mousePosChanged();
     void hourHandColorChanged();
     void minuteHandColorChanged();
@@ -142,7 +138,6 @@ private:
     float   m_rotationSpeed   = 5.0f;
     bool    m_clockwise       = true;
     bool    m_showClock       = false;
-    bool    m_lowCpuMode      = false;
     QPointF m_mousePos;
     QColor  m_hourHandColor   = Qt::white;
     QColor  m_minuteHandColor = QColor("#88ccff");

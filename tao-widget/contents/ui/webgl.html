@@ -42,7 +42,6 @@
             speed: 0.005,
             direction: 1,
             showClock: false,
-            lowCpu: false,
             rotation: 0,
             maxParticles: 3000,
             particleColor1: { r: 128, g: 204, b: 255 },
@@ -246,7 +245,7 @@
 
                 // OPT 3: blit del glow pre-renderizzato — costo = una drawImage invece
                 // di createRadialGradient + arc + fill ad ogni frame
-                if (!Config.lowCpu && this.glowCanvas) {
+                if (this.glowCanvas) {
                     this._updateGlowCache();
                     // drawImage in coordinate fisiche (il canvas offscreen è già scalato DPR)
                     const dpr = window.devicePixelRatio || 1;
@@ -602,10 +601,8 @@
 
             Config.rotation += Config.speed * Config.direction * dt;
 
-            if (!Config.lowCpu) {
-                engine.updatePhysics(dt);
-                engine.render();
-            }
+            engine.updatePhysics(dt);
+            engine.render();
             overlay.draw();
 
             requestAnimationFrame(loop);
@@ -627,7 +624,6 @@
             if (data.rotationSpeed !== undefined) Config.speed = Number(data.rotationSpeed) * 0.06;
             if (data.clockwise !== undefined) Config.direction = data.clockwise ? 1 : -1;
             if (data.showClock !== undefined) Config.showClock = data.showClock;
-            if (data.lowCpuMode !== undefined) Config.lowCpu = data.lowCpuMode;
 
             if (data.hourHandColor) Config.hourHandColor = toCssColor(data.hourHandColor);
             if (data.minuteHandColor) Config.minuteHandColor = toCssColor(data.minuteHandColor);

@@ -12,7 +12,6 @@ PlasmoidItem {
     property int rotationSpeed: plasmoid.configuration.rotationSpeed
     property bool clockwise: plasmoid.configuration.clockwise
     property bool showClock: plasmoid.configuration.showClock
-    property bool lowCpuMode: plasmoid.configuration.lowCpuMode
     property bool transparentBackground: plasmoid.configuration.transparentBackground
     property int renderEngine: plasmoid.configuration.renderEngine // 0: WebGL, 1: Native
     // Clock Colors
@@ -50,7 +49,6 @@ PlasmoidItem {
             readonly property int rotationSpeed: root.rotationSpeed
             readonly property bool clockwise: root.clockwise
             readonly property bool showClock: root.showClock
-            readonly property bool lowCpuMode: root.lowCpuMode
             // Clock
             readonly property color hourHandColor: root.hourHandColor
             readonly property color minuteHandColor: root.minuteHandColor

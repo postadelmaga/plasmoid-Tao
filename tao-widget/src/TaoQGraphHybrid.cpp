@@ -224,12 +224,6 @@ void TaoQGraphHybrid::setParticleColor2(const QColor &c) {
     update();
 }
 
-void TaoQGraphHybrid::setLowCpuMode(bool lowCpu) {
-    if (m_lowCpuMode == lowCpu) return;
-    m_lowCpuMode = lowCpu;
-    Q_EMIT lowCpuModeChanged();
-}
-
 void TaoQGraphHybrid::setMousePos(const QPointF &pos) {
     if (m_mousePos == pos) return;
     m_mousePos = pos;
@@ -245,7 +239,7 @@ void TaoQGraphHybrid::itemChange(ItemChange change, const ItemChangeData &value)
 // ── updateSimulation ──────────────────────────────────────────────────────────
 
 void TaoQGraphHybrid::updateSimulation() {
-    if (m_simulationPending || m_lowCpuMode || !isVisible())
+    if (m_simulationPending)
         return;
 
     m_simulationPending = true;
@@ -622,7 +616,6 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     tNode->setMatrix(tM);
 
     // ── Particelle ────────────────────────────────────────────────────────────
-    if (!m_lowCpuMode) {
         QSGGeometry *geo       = pNode->geometry();
         const int activeCount  = qMin(m_renderCount, MAX_PARTICLES);
 
@@ -640,10 +633,6 @@ QSGNode *TaoQGraphHybrid::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         pNode->markDirty(QSGNode::DirtyGeometry);
         updateSimulation();
-    } else {
-        if (pNode->geometry()->vertexCount() > 0)
-            pNode->geometry()->allocate(0, 0);
-    }
 
     return root;
 }
