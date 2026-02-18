@@ -269,6 +269,13 @@ void TaoQGraphHybrid::updateSimulation() {
     m_simulationPending = true;
     
     const int count = m_particleCount;
+    if (count <= 0) {
+        m_renderCount = 0;
+        m_simulationPending = false;
+        update();
+        return;
+    }
+    
     const float w = width();
     const float h = height();
     const QPointF mPos = m_mousePos;
@@ -403,7 +410,10 @@ void TaoQGraphHybrid::updateSimulation() {
 }
 
 void TaoQGraphHybrid::setupGeometryIndices(QSGGeometry *geo, int count) {
-    if (count <= 0) return;
+    if (count <= 0) {
+        geo->allocate(0, 0);
+        return;
+    }
     geo->allocate(count * 4, count * 6);
     quint32 *indices = static_cast<quint32*>(geo->indexData());
     for (int i = 0; i < count; ++i) {

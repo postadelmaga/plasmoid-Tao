@@ -145,11 +145,12 @@
 
                         const c = parseColor(colStr);
                         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-                        grad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a * 0.8})`);
-                        grad.addColorStop(0.7, `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a * 0.2})`);
+                        // Allinea stops e alpha al backend C++ (1.0 center, 0.3 mid, 0.0 edge)
+                        grad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`);
+                        grad.addColorStop(0.7, `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a * 0.3})`);
                         grad.addColorStop(1, "rgba(0,0,0,0)");
                         ctx.fillStyle = grad;
-                        ctx.beginPath(); ctx.arc(cx, cy, r * size, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
                     };
                     drawGlow(Config.glowSize1, Config.glowColor1);
                     drawGlow(Config.glowSize2, Config.glowColor2);
@@ -464,9 +465,9 @@
             if (dt > 0.1) dt = 0.1;   // cap per lag spike (come C++)
             lastTime = timestamp;
 
-            // speedFactor 0.06 come nel C++
-            const df = dt * 60;
-            Config.rotation += Config.speed * Config.direction * df * 0.06;
+            // Allinea logica rotazione al C++: speed * speedFactor(0.06) * dt
+            // Rimosso df (60) perché il backend C++ usa dt assoluto
+            Config.rotation += Config.speed * Config.direction * dt * 0.06;
 
             if (!Config.lowCpu) {
                 engine.updatePhysics(dt);
