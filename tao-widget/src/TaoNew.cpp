@@ -89,11 +89,11 @@ inline quint32 packColorNew(unsigned char r, unsigned char g, unsigned char b, u
 
 static const QSGGeometry::AttributeSet &particleAttributesNew() {
     static QSGGeometry::Attribute data[] = {
-        QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, false),
-        QSGGeometry::Attribute::create(1, 2, QSGGeometry::FloatType),
-        QSGGeometry::Attribute::create(2, 4, QSGGeometry::UnsignedByteType, true)
+        QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, false), // pos
+        QSGGeometry::Attribute::create(1, 1, QSGGeometry::FloatType),        // size
+        QSGGeometry::Attribute::create(2, 4, QSGGeometry::UnsignedByteType, true) // color
     };
-    static QSGGeometry::AttributeSet attrs = { 3, 20, data };
+    static QSGGeometry::AttributeSet attrs = { 3, 16, data };
     return attrs;
 }
 
@@ -104,16 +104,11 @@ TaoNew::TaoNew(QQuickItem *parent)
 {
     setFlag(ItemHasContents, true);
     m_particles.resize(MAX_PARTICLES);
-    m_particlesRender.resize(MAX_PARTICLES);
-    m_quadsRender.resize(MAX_PARTICLES);
+    m_verticesRender.resize(MAX_PARTICLES);
 
     std::memset(m_particles.data(), 0, sizeof(ParticleData) * MAX_PARTICLES);
 
     connect(&m_watcher, &QFutureWatcher<void>::finished, this, [this]() {
-        if (m_particleCount > 0) {
-            std::memcpy(m_particlesRender.data(), m_particles.data(),
-                        m_particleCount * sizeof(ParticleData));
-        }
         // OPT 6: copia il contatore attivi prodotto dal worker
         m_renderActiveCount = m_pendingActiveCount.load();
         m_simulationPending = false;
@@ -252,7 +247,10 @@ void TaoNew::updateSimulation() {
     const QColor  pc1      = m_particleColor1;
     const QColor  pc2      = m_particleColor2;
 
-    QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, currentDt, pc1, pc2]() {
+    // NUOVO: Ottieni DPR per fix Retina
+    const float dpr = window() ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
+
+    QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, currentDt, pc1, pc2, dpr]() {
         if (count <= 0) return;
 
         const float cx  = w * 0.5f;
@@ -280,13 +278,14 @@ void TaoNew::updateSimulation() {
         const unsigned char pc2b = static_cast<unsigned char>(pc2.blue());
 
         ParticleData* pData = m_particles.data();
-        ParticleQuad* qData = m_quadsRender.data();
+        ParticleVertex* vData = m_verticesRender.data();
 
-        // OPT 6: indice compatto nel buffer quad — solo particelle vive
-        int activeCount = 0;
-
+        // BUFFER FISSO: ogni particella occupa sempre l'indice [i].
+        // Le particelle "morte" ricevono size=0 così la GPU le scarta
+        // senza alcuna riallocazione del buffer driver ad ogni frame.
         for (int i = 0; i < count; ++i) {
             ParticleData& p = pData[i];
+            ParticleVertex& v = vData[i]; // indice fisso, sempre uguale
 
             if (p.life > 0.0f) {
                 const float dx = mx - p.x;
@@ -353,6 +352,12 @@ void TaoNew::updateSimulation() {
                 }
                 p.packedColor = packColorNew(red, green, blue, alpha);
 
+                // Particella viva: scrivi il vertice con dimensione reale
+                v.x     = p.x;
+                v.y     = p.y;
+                v.size  = p.size * dpr; // FIX: scala per DPR (Retina/HiDPI)
+                v.color = p.packedColor;
+
             } else {
                 // Respawn
                 p.life = 1.0f;
@@ -369,40 +374,27 @@ void TaoNew::updateSimulation() {
                 p.decay = 0.003f + static_cast<float>(localGen.generateDouble()) * 0.008f;
                 p.size  = 2.0f  + static_cast<float>(localGen.generateDouble()) * 8.0f;
                 p.packedColor = packColorNew(pc1r, pc1g, pc1b, 255);
-            }
 
-            // OPT 5+6: quad scritto in posizione compatta [activeCount]
-            const float   px  = p.x;
-            const float   py  = p.y;
-            const float   hs  = p.size * 0.5f;
-            const quint32 col = p.packedColor;
-            ParticleQuad& q   = qData[activeCount];
-            q.v[0] = { px - hs, py - hs, 0.0f, 0.0f, col };
-            q.v[1] = { px + hs, py - hs, 1.0f, 0.0f, col };
-            q.v[2] = { px - hs, py + hs, 0.0f, 1.0f, col };
-            q.v[3] = { px + hs, py + hs, 1.0f, 1.0f, col };
-            ++activeCount;
+                // Particella appena respawnata: size=0, invisibile per questo frame
+                v.x     = p.x;
+                v.y     = p.y;
+                v.size  = 0.0f;
+                v.color = p.packedColor;
+            }
         }
 
-        m_pendingActiveCount.store(activeCount);
+        // Buffer fisso: il count è sempre pari a count (MAX_PARTICLES allocati una volta)
+        m_pendingActiveCount.store(count);
     });
 
     m_watcher.setFuture(future);
 }
 
 // ── setupGeometryIndices ──────────────────────────────────────────────────────
-// OPT 1: chiamata UNA sola volta alla creazione del nodo con MAX_PARTICLES.
-// Gli indici non cambiano mai → StaticPattern, nessun re-upload GPU.
+// OPT 1: Point sprites do not need indices.
 void TaoNew::setupGeometryIndices(QSGGeometry *geo, int count) {
-    if (count <= 0) { geo->allocate(0, 0); return; }
-    geo->allocate(count * 4, count * 6);
-    quint32 *indices = static_cast<quint32*>(geo->indexData());
-    for (int i = 0; i < count; ++i) {
-        const quint32 base = i * 4;
-        indices[0] = base;     indices[1] = base + 1; indices[2] = base + 2;
-        indices[3] = base + 2; indices[4] = base + 1; indices[5] = base + 3;
-        indices += 6;
-    }
+    Q_UNUSED(geo)
+    Q_UNUSED(count)
 }
 
 // ── updatePaintNode ───────────────────────────────────────────────────────────
@@ -416,19 +408,15 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
 
         // Nodo Particelle
         QSGGeometryNode *pNode = new QSGGeometryNode();
-        QSGGeometry *pGeo = new QSGGeometry(particleAttributesNew(), 0, 0, QSGGeometry::UnsignedIntType);
-        pGeo->setDrawingMode(QSGGeometry::DrawTriangles);
-        // OPT 1: indici statici, vertici dinamici
-        pGeo->setIndexDataPattern(QSGGeometry::StaticPattern);
-        pGeo->setVertexDataPattern(QSGGeometry::DynamicPattern);
+        QSGGeometry *pGeo = new QSGGeometry(particleAttributesNew(), 0, 0);
+        pGeo->setDrawingMode(QSGGeometry::DrawPoints);
+        // MIGLIORIA: StreamPattern per buffer ad aggiornamento frequente
+        pGeo->setVertexDataPattern(QSGGeometry::StreamPattern);
         pNode->setGeometry(pGeo);
         pNode->setFlag(QSGNode::OwnsGeometry);
         pNode->setMaterial(new ParticleMaterialNew());
         pNode->setFlag(QSGNode::OwnsMaterial);
         root->appendChildNode(pNode);
-
-        // OPT 1: alloca indici al massimo UNA SOLA VOLTA
-        setupGeometryIndices(pGeo, MAX_PARTICLES);
 
         QSGTransformNode *systemNode = new QSGTransformNode();
         root->appendChildNode(systemNode);
@@ -586,14 +574,16 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     // ── Particelle ────────────────────────────────────────────────────────────
     QSGGeometry *geo = pNode->geometry();
 
-    // OPT 3+6: markDirty solo se ci sono dati nuovi e la simulazione è completata.
-    // Usa m_renderActiveCount (solo particelle vive) per il memcpy — buffer compatto.
-    const int activeCount = qMin(m_renderActiveCount, MAX_PARTICLES);
+    // BUFFER FISSO: alloca MAX_PARTICLES una volta sola.
+    // Le particelle "morte" hanno size=0 e la GPU le scarta automaticamente.
+    // Zero riallocazioni driver anche su GPU mobili.
+    if (geo->vertexCount() != MAX_PARTICLES)
+        geo->allocate(MAX_PARTICLES);
 
-    if (activeCount > 0 && !m_simulationPending) {
+    if (!m_simulationPending) {
         std::memcpy(geo->vertexData(),
-                    m_quadsRender.data(),
-                    static_cast<size_t>(activeCount) * sizeof(ParticleQuad));
+                    m_verticesRender.data(),
+                    static_cast<size_t>(MAX_PARTICLES) * sizeof(ParticleVertex));
         pNode->markDirty(QSGNode::DirtyGeometry);
     }
 

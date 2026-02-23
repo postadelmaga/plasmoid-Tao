@@ -1,0 +1,22 @@
+The following performance enhancements have been implemented:
+
+
+  1. C++ Native Renderer (Zen Engine)
+   * Point Sprite Rendering: Refactored the particle system to use Point Sprites (QSGGeometry::DrawPoints) instead of quads. This reduces
+     the vertex data sent to the GPU by 75% (1 vertex per particle vs. 4) and completely eliminates the need for an index buffer.
+   * Memory Optimization: Removed the redundant m_particlesRender buffer and its associated memcpy operations, reducing CPU overhead and
+     memory footprint.
+   * Shader Modernization: Updated particle.vert and particle.frag to utilize gl_PointSize and gl_PointCoord, implementing procedural radial
+     glow directly in the fragment shader for maximum efficiency.
+   * Compact Vertex Layout: Optimized the ParticleVertex structure to 16 bytes (Position, Size, Packed Color), ensuring better cache
+     locality and lower bus bandwidth.
+
+
+  2. Web Renderer (WebGL Engine)
+   * Update Throttling: Implemented a timer-based update mechanism in WebRenderer.qml. This prevents the QML-to-JavaScript bridge from being
+     flooded with runJavaScript calls during rapid configuration changes, significantly improving UI responsiveness and reducing Chromium
+     process overhead.
+
+
+  The project has been successfully rebuilt and packaged into tao-widget.plasmoid. These changes ensure that the widget remains fluid even
+  at its maximum capacity of 20,000 particles.

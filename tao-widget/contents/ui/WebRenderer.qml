@@ -35,6 +35,20 @@ WebEngineView {
         });`);
     }
 
+    Timer {
+        id: updateTimer
+
+        interval: 32 // ~30fps max for bridge updates (don't flood the process)
+        repeat: false
+        onTriggered: updateHtml()
+    }
+
+    function requestUpdate() {
+        if (!updateTimer.running)
+            updateTimer.start();
+
+    }
+
     anchors.fill: parent
     backgroundColor: "transparent"
     url: Qt.resolvedUrl("webgl.html")
@@ -47,55 +61,55 @@ WebEngineView {
     // Usiamo Connections per ascoltare i cambiamenti DENTRO l'oggetto settings
     Connections {
         function onParticleCountChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onRotationSpeedChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onClockwiseChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onShowClockChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onHourHandColorChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onMinuteHandColorChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onSecondHandColorChanged() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onGlowColor1Changed() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onGlowSize1Changed() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onGlowColor2Changed() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onGlowSize2Changed() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onParticleColor1Changed() {
-            updateHtml();
+            requestUpdate();
         }
 
         function onParticleColor2Changed() {
-            updateHtml();
+            requestUpdate();
         }
 
         target: objsettings

@@ -28,12 +28,12 @@ struct ParticleData {
 
 struct ParticleVertex {
     float x, y;
-    float u, v;
+    float size;
     quint32 color;
 };
 
-struct ParticleQuad {
-    ParticleVertex v[4];
+struct ParticleRenderData {
+    std::vector<ParticleVertex> vertices;
 };
 
 #endif // PARTICLE_STRUCTS_DEFINED
@@ -143,9 +143,8 @@ private:
     QColor  m_particleColor2  = QColor("#ffaa00");
 
     // ── Stato simulazione ─────────────────────────────────────────────────────
-    std::vector<ParticleData>  m_particles;
-    std::vector<ParticleData>  m_particlesRender;
-    std::vector<ParticleQuad>  m_quadsRender;
+    std::vector<ParticleData>   m_particles;
+    std::vector<ParticleVertex> m_verticesRender;
 
     float   m_rotation  = 0.0f;
     QElapsedTimer m_timeTracker;
