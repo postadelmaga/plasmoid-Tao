@@ -131,8 +131,8 @@ plasmoid-Tao/
 │   │               ├── particle.vert.qsb
 │   │               └── particle.frag.qsb
 │   ├── src/
-│   │   ├── TaoQGraphHybrid.cpp        # Qt Scene Graph particle engine
-│   │   ├── TaoQGraphHybrid.h
+│   │   ├── TaoNew.cpp                 # Qt Scene Graph particle engine
+│   │   ├── TaoNew.h
 │   │   ├── TaoPlugin.cpp              # QML plugin registration
 │   │   └── shaders/                   # GLSL shader sources
 │   │       ├── particle.vert

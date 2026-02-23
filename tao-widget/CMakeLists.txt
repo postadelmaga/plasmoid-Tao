@@ -28,7 +28,7 @@ endif()
 # Component Plugin
 add_library(taoplugin SHARED
     src/TaoPlugin.cpp
-    src/TaoQGraphHybrid.cpp
+    src/TaoNew.cpp
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

@@ -1,5 +1,5 @@
-#ifndef TAOQGRAPHYBRID_H
-#define TAOQGRAPHYBRID_H
+#ifndef TAONEW_H
+#define TAONEW_H
 
 #include <QQuickItem>
 #include <QFuture>
@@ -11,48 +11,44 @@
 #include <QSGMaterial>
 #include <QSGMaterialShader>
 #include <QSGTexture>
+#include <atomic>
 
-// ── ParticleData ──────────────────────────────────────────────────────────────
-// Struttura ottimizzata per la simulazione (back/front buffer).
+// ── ParticleData / ParticleVertex / ParticleQuad ──────────────────────────────
+#ifndef PARTICLE_STRUCTS_DEFINED
+#define PARTICLE_STRUCTS_DEFINED
+
 struct ParticleData {
     float x, y;
     float vx, vy;
     float life;
     float decay;
     float size;
-    quint32 packedColor; // Colore pre-calcolato con alpha premoltiplicato
+    quint32 packedColor;
 };
 
-// ── ParticleVertex ────────────────────────────────────────────────────────────
-// Singolo vertice nel vertex buffer GPU.
-// Stride = 20 byte: 2×float pos + 2×float uv + 4×byte color.
 struct ParticleVertex {
     float x, y;
     float u, v;
     quint32 color;
 };
 
-// ── ParticleQuad ──────────────────────────────────────────────────────────────
-// I 4 vertici di una particella, pre-buildati nel thread simulazione (OPT 5).
-// In updatePaintNode vengono copiati nel vertex buffer con un singolo memcpy,
-// eliminando il loop di costruzione vertici dal thread GUI.
 struct ParticleQuad {
     ParticleVertex v[4];
 };
 
+#endif // PARTICLE_STRUCTS_DEFINED
+
 // ── ParticleMaterial ──────────────────────────────────────────────────────────
-// Custom material con tre input vertice: position(0), uv(1), color(2).
-// QSGTextureMaterial conosce solo 0 e 1, quindi usiamo la nostra implementazione.
-class ParticleMaterial : public QSGMaterial
+class ParticleMaterialNew : public QSGMaterial
 {
 public:
-    ParticleMaterial();
+    ParticleMaterialNew();
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override;
 };
 
-// ── TaoQGraphHybrid ───────────────────────────────────────────────────────────
-class TaoQGraphHybrid : public QQuickItem
+// ── TaoNew ────────────────────────────────────────────────────────────────────
+class TaoNew : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(int particleCount READ particleCount WRITE setParticleCount NOTIFY particleCountChanged)
@@ -72,8 +68,8 @@ class TaoQGraphHybrid : public QQuickItem
     QML_ELEMENT
 
 public:
-    explicit TaoQGraphHybrid(QQuickItem *parent = nullptr);
-    ~TaoQGraphHybrid() override;
+    explicit TaoNew(QQuickItem *parent = nullptr);
+    ~TaoNew() override;
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
@@ -127,9 +123,6 @@ Q_SIGNALS:
 private:
     void updateSimulation();
     void setupGeometryIndices(QSGGeometry *geo, int count);
-
-    // OPT DPR: dpr aggiunto come parametro per texture HiDPI-aware.
-    // Valore di default = 1.0 per compatibilità con display normali.
     QImage generateGlowTexture(int s, const QColor &color, qreal dpr = 1.0);
     QImage generateTaoTexture(int s, qreal dpr = 1.0);
 
@@ -150,26 +143,23 @@ private:
     QColor  m_particleColor2  = QColor("#ffaa00");
 
     // ── Stato simulazione ─────────────────────────────────────────────────────
-    std::vector<ParticleData>  m_particles;       // Back buffer (thread simulazione)
-    std::vector<ParticleData>  m_particlesRender; // Front buffer (thread render)
-
-    // OPT 5: buffer quad pre-buildati nel thread simulazione.
-    // Ogni elemento contiene i 4 vertici pronti per il memcpy diretto in GPU.
+    std::vector<ParticleData>  m_particles;
+    std::vector<ParticleData>  m_particlesRender;
     std::vector<ParticleQuad>  m_quadsRender;
 
     float   m_rotation  = 0.0f;
     QElapsedTimer m_timeTracker;
     qint64  m_lastTime  = 0;
     float   m_lastDt    = 0.016f;
-    int     m_renderCount = 0;
 
-    // Tracking colori glow per rigenerazione texture solo su cambio effettivo
+    // OPT 6: contatori separati per particelle totali vs attive
+    // m_renderActiveCount  → letto da updatePaintNode (main thread)
+    // m_pendingActiveCount → scritto dal worker, copiato in finished()
+    int              m_renderActiveCount  = 0;
+    std::atomic<int> m_pendingActiveCount { 0 };
+
     QColor  m_lastGlowColor1;
     QColor  m_lastGlowColor2;
-
-    // OPT DPR: device pixel ratio dell'ultimo frame — rileva cambio schermo.
-    // Inizializzato a 0 così al primo frame dprChanged è sempre true
-    // e le texture vengono generate con il DPR corretto fin dall'inizio.
     qreal   m_lastDpr = 0.0;
 
     // ── Async ─────────────────────────────────────────────────────────────────
@@ -179,4 +169,4 @@ private:
     const int MAX_PARTICLES = 20000;
 };
 
-#endif
+#endif // TAONEW_H

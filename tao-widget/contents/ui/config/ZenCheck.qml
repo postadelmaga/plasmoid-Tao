@@ -4,7 +4,7 @@ import QtQuick
 Item {
     id: root
 
-    TaoNative.TaoAnimationHybrid {
+    TaoNative.TaoNew {
         visible: false
     }
 

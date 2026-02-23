@@ -17,7 +17,7 @@ Item {
     anchors.fill: parent
 
     // Backend Nativo/Ibrido
-    TaoNative.TaoAnimationHybrid {
+    TaoNative.TaoNew {
         // 4. Colleghiamo le proprietà del componente ai valori dentro 'settings'.
         // Il controllo (renderer.settings ? ... : default) serve per evitare errori
         // nel millisecondo in cui il Loader crea l'oggetto ma il binding non è ancora arrivato.
