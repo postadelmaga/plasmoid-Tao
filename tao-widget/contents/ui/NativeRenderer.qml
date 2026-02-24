@@ -39,6 +39,8 @@ Item {
         // Particle Colors
         particleColor1: renderer.objsettings ? renderer.objsettings.particleColor1 : "white"
         particleColor2: renderer.objsettings ? renderer.objsettings.particleColor2 : "white"
+        particleSize: renderer.objsettings ? renderer.objsettings.particleSize : 2.0
+        particleSizeRandom: renderer.objsettings ? renderer.objsettings.particleSizeRandom : 8.0
         // Il mouse usa la proprietà locale aggiornata dalla funzione sopra
         mousePos: renderer.mousePos
     }

@@ -31,7 +31,9 @@ WebEngineView {
             glowColor2: "${objsettings.glowColor2}",
             glowSize2: ${objsettings.glowSize2},
             particleColor1: "${objsettings.particleColor1}",
-            particleColor2: "${objsettings.particleColor2}"
+            particleColor2: "${objsettings.particleColor2}",
+            particleSize: ${objsettings.particleSize},
+            particleSizeRandom: ${objsettings.particleSizeRandom}
         });`);
     }
 
@@ -109,6 +111,14 @@ WebEngineView {
         }
 
         function onParticleColor2Changed() {
+            requestUpdate();
+        }
+
+        function onParticleSizeChanged() {
+            requestUpdate();
+        }
+
+        function onParticleSizeRandomChanged() {
             requestUpdate();
         }
 

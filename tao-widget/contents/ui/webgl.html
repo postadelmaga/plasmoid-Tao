@@ -53,6 +53,8 @@
             hourHandColor: 'rgba(255,255,255,1)',
             minuteHandColor: 'rgba(136,204,255,1)',
             secondHandColor: 'rgba(255,170,136,1)',
+            particleSize: 2.0,
+            particleSizeRandom: 8.0
         };
 
         const Mouse = { x: -1000, y: -1000, inside: false };
@@ -78,9 +80,10 @@
                 varying vec4 v_color;
 
                 void main() {
-                    float d = distance(gl_PointCoord, vec2(0.5));
-                    if (d > 0.5) discard;
-                    float alpha = smoothstep(0.5, 0.0, d);
+                    vec2 pc = gl_PointCoord - vec2(0.5);
+                    float d2 = dot(pc, pc);           // = distanza² dal centro, range 0..0.25
+                    if (d2 > 0.25) discard;
+                    float alpha = smoothstep(0.25, 0.0, d2);
                     gl_FragColor = vec4(v_color.rgb, v_color.a * alpha);
                 }
             `
@@ -431,7 +434,7 @@
                         x: 0, y: 0, vx: 0, vy: 0,
                         life: 0,
                         decay: 0.003 + Math.random() * 0.008,
-                        size: 2.0 + Math.random() * 8.0,
+                        size: Config.particleSize + Math.random() * Config.particleSizeRandom,
                         isFire: (i % 7 === 0)
                     });
                 }
@@ -449,7 +452,7 @@
                 const sdy = p.y - cy;
                 if (sdx * sdx + sdy * sdy < r * r) p.x += sdx > 0 ? r : -r;
                 p.decay = 0.003 + Math.random() * 0.008;
-                p.size = 2.0 + Math.random() * 8.0;
+                p.size = Config.particleSize + Math.random() * Config.particleSizeRandom;
             }
 
             updatePhysics(dt) {
@@ -547,12 +550,10 @@
                             green = Math.min(1.0, pc2.g / 255 + p.life * 50 / 255);
                             blue = pc2b;
                         } else {
-                            // OPT 5: speedSq con guard — sqrt solo se la velocità è
-                            // abbastanza alta da influenzare il colore in modo percettibile
+                            // speedSq diretto: evita Math.sqrt, visivamente equivalente con additive blending
                             const speedSq = p.vx * p.vx + p.vy * p.vy;
-                            const speed = speedSq > 0.0001 ? Math.sqrt(speedSq) : 0.0;
-                            red = Math.min(1.0, pc1r + speed * 400 / 255);
-                            green = Math.min(1.0, pc1g + speed * 200 / 255);
+                            red = Math.min(1.0, pc1r + speedSq * 8 / 255);
+                            green = Math.min(1.0, pc1g + speedSq * 4 / 255);
                             blue = pc1b;
                         }
 
@@ -714,6 +715,9 @@
 
             if (data.particleColor1) Config.particleColor1 = parseToRGB(data.particleColor1);
             if (data.particleColor2) Config.particleColor2 = parseToRGB(data.particleColor2);
+
+            if (data.particleSize !== undefined) Config.particleSize = Number(data.particleSize);
+            if (data.particleSizeRandom !== undefined) Config.particleSizeRandom = Number(data.particleSizeRandom);
         };
 
         window.setParticleColors = (r1, g1, b1, r2, g2, b2) => {

@@ -26,6 +26,8 @@ PlasmoidItem {
     // Particles
     property color particleColor1: plasmoid.configuration.particleColor1
     property color particleColor2: plasmoid.configuration.particleColor2
+    property double particleSize: plasmoid.configuration.particleSize
+    property double particleSizeRandom: plasmoid.configuration.particleSizeRandom
 
     Plasmoid.backgroundHints: root.transparentBackground ? PlasmaCore.Types.NoBackground : PlasmaCore.Types.DefaultBackground
     preferredRepresentation: fullRepresentation
@@ -61,6 +63,8 @@ PlasmoidItem {
             // Particles
             readonly property color particleColor1: root.particleColor1
             readonly property color particleColor2: root.particleColor2
+            readonly property double particleSize: root.particleSize
+            readonly property double particleSizeRandom: root.particleSizeRandom
         }
 
         Rectangle {

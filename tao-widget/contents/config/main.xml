@@ -15,22 +15,44 @@
     </entry>
   </group>
 
-  <!-- Corresponds to configParticles.qml -->
-  <group name="Particles">
-    <entry name="particleCount" type="Int">
-      <default>80</default>
-    </entry>
-    <entry name="rotationSpeed" type="Int">
+   <!-- Corresponds to configTao.qml -->
+  <group name="Tao">
+   <entry name="rotationSpeed" type="Int">
       <default>5</default>
     </entry>
     <entry name="clockwise" type="Bool">
       <default>true</default>
+    </entry>
+    <entry name="glowColor1" type="Color">
+      <default>#000000</default>
+    </entry>
+    <entry name="glowSize1" type="Double">
+      <default>1.2</default>
+    </entry>
+    <entry name="glowColor2" type="Color">
+      <default>#ffaa00</default>
+    </entry>
+    <entry name="glowSize2" type="Double">
+      <default>1.2</default>
+    </entry>
+  </group>
+
+  <!-- Corresponds to configParticles.qml -->
+  <group name="Particles">
+    <entry name="particleCount" type="Int">
+      <default>80</default>
     </entry>
     <entry name="particleColor1" type="Color">
       <default>#7fcdff</default>
     </entry>
     <entry name="particleColor2" type="Color">
       <default>#ffaa00</default>
+    </entry>
+    <entry name="particleSize" type="Double">
+      <default>2.0</default>
+    </entry>
+    <entry name="particleSizeRandom" type="Double">
+      <default>8.0</default>
     </entry>
   </group>
 
@@ -47,22 +69,6 @@
     </entry>
     <entry name="secondHandColor" type="Color">
       <default>#ffaa88</default>
-    </entry>
-  </group>
-
-  <!-- Corresponds to configGlow.qml -->
-  <group name="Glow">
-    <entry name="glowColor1" type="Color">
-      <default>#000000</default>
-    </entry>
-    <entry name="glowSize1" type="Double">
-      <default>1.2</default>
-    </entry>
-    <entry name="glowColor2" type="Color">
-      <default>#ffaa00</default>
-    </entry>
-    <entry name="glowSize2" type="Double">
-      <default>1.2</default>
     </entry>
   </group>
 
