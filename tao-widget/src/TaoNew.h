@@ -165,7 +165,7 @@ private:
     QFutureWatcher<void> m_watcher;
     bool m_simulationPending = false;
 
-    const int MAX_PARTICLES = 20000;
+    const int MAX_PARTICLES = 3000;
 };
 
 #endif // TAONEW_H

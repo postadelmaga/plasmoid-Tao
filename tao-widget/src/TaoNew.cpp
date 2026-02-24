@@ -40,6 +40,26 @@ public:
         setShaderFileName(FragmentStage, frag);
     }
 
+    // OTTIMIZZAZIONE 1: ADDITIVE BLENDING
+    // Istruisce la GPU a "sommare" i colori (luce pura) invece di calcolare le trasparenze 
+    // sovrapposte. Azzera l'Overdraw e rende le particelle molto più luminose.
+    bool updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
+                                 QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override
+    {
+        bool changed = QSGMaterialShader::updateGraphicsPipelineState(state, ps, newMaterial, oldMaterial);
+
+        ps->blendEnable = true;
+        ps->srcColor = GraphicsPipelineState::SrcAlpha;
+        ps->dstColor = GraphicsPipelineState::One; // <-- IL SEGRETO E' QUI
+
+        // Separate alpha blend factors require Qt 6.5+
+        ps->separateBlendFactors = true;
+        ps->srcAlpha = GraphicsPipelineState::One;
+        ps->dstAlpha = GraphicsPipelineState::One;
+
+        return true; // we always change something
+    }
+
     bool updateUniformData(RenderState &state,
                            QSGMaterial *newMaterial,
                            QSGMaterial * /*oldMaterial*/) override
@@ -231,12 +251,18 @@ void TaoNew::updateSimulation() {
     if (m_simulationPending) return;
     m_simulationPending = true;
 
-    const int count      = m_particleCount;
+    const int count = m_particleCount;
     if (count <= 0) {
+        // FIX: Azzera la dimensione nel buffer di render. 
+        // La GPU scarterà i vertici nascondendo l'effetto all'istante.
+        for (int i = 0; i < MAX_PARTICLES; ++i) {
+            m_verticesRender[i].size = 0.0f;
+        }
+
         m_renderActiveCount = 0;
         m_pendingActiveCount.store(0);
         m_simulationPending = false;
-        update();
+        update(); 
         return;
     }
 
@@ -246,9 +272,7 @@ void TaoNew::updateSimulation() {
     const float currentDt  = (m_lastDt > 0.001f && m_lastDt < 1.0f) ? m_lastDt : 0.016f;
     const QColor  pc1      = m_particleColor1;
     const QColor  pc2      = m_particleColor2;
-
-    // NUOVO: Ottieni DPR per fix Retina
-    const float dpr = window() ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
+    const float dpr        = window() ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
 
     QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, currentDt, pc1, pc2, dpr]() {
         if (count <= 0) return;
@@ -285,7 +309,7 @@ void TaoNew::updateSimulation() {
         // senza alcuna riallocazione del buffer driver ad ogni frame.
         for (int i = 0; i < count; ++i) {
             ParticleData& p = pData[i];
-            ParticleVertex& v = vData[i]; // indice fisso, sempre uguale
+            ParticleVertex& v = vData[i]; 
 
             if (p.life > 0.0f) {
                 const float dx = mx - p.x;
@@ -372,7 +396,12 @@ void TaoNew::updateSimulation() {
                 if (sdx*sdx + sdy*sdy < rSq)
                     p.x += (sdx > 0 ? r : -r);
                 p.decay = 0.003f + static_cast<float>(localGen.generateDouble()) * 0.008f;
-                p.size  = 2.0f  + static_cast<float>(localGen.generateDouble()) * 8.0f;
+                
+                // OTTIMIZZAZIONE 2: Riduzione del raggio base della particella.
+                // Accoppiato all'Additive Blending, abbatte enormemente il fill-rate 
+                // mantenendo l'effetto visivo corposo e luminoso.
+                p.size  = 1.5f + static_cast<float>(localGen.generateDouble()) * 4.5f;
+                
                 p.packedColor = packColorNew(pc1r, pc1g, pc1b, 255);
 
                 // Particella appena respawnata: size=0, invisibile per questo frame
@@ -381,6 +410,11 @@ void TaoNew::updateSimulation() {
                 v.size  = 0.0f;
                 v.color = p.packedColor;
             }
+        }
+
+        // FIX: Se il contatore è stato abbassato, nascondiamo le particelle in eccesso.
+        for (int i = count; i < MAX_PARTICLES; ++i) {
+            vData[i].size = 0.0f;
         }
 
         // Buffer fisso: il count è sempre pari a count (MAX_PARTICLES allocati una volta)
@@ -424,14 +458,15 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
         QSGTransformNode *tNode = new QSGTransformNode();
         systemNode->appendChildNode(tNode);
 
+        // OTTIMIZZAZIONE 3: Risoluzione Texture Glow a 256.
         QSGSimpleTextureNode *gNode1 = new QSGSimpleTextureNode();
-        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(512, m_glowColor1, dpr)));
+        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
         gNode1->setOwnsTexture(true);
         gNode1->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode1);
 
         QSGSimpleTextureNode *gNode2 = new QSGSimpleTextureNode();
-        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(512, m_glowColor2, dpr)));
+        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
         gNode2->setOwnsTexture(true);
         gNode2->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode2);
@@ -505,8 +540,8 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     const bool dprChanged = !qFuzzyCompare(dpr, m_lastDpr);
     if (dprChanged) {
         safeReplaceTexture(sNode,  window()->createTextureFromImage(generateTaoTexture(1024, dpr)));
-        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor1, dpr)));
-        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor2, dpr)));
+        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
+        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
         m_lastGlowColor1 = m_glowColor1;
         m_lastGlowColor2 = m_glowColor2;
         m_lastDpr = dpr;
@@ -515,14 +550,14 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     const float gs1 = m_glowSize1;
     gNode1->setRect(gs1 > 0.01f ? QRectF(-r*gs1, -r*gs1, r*2*gs1, r*2*gs1) : QRectF());
     if (!dprChanged && m_lastGlowColor1 != m_glowColor1) {
-        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor1, dpr)));
+        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
         m_lastGlowColor1 = m_glowColor1;
     }
 
     const float gs2 = m_glowSize2;
     gNode2->setRect(gs2 > 0.01f ? QRectF(-r*gs2, -r*gs2, r*2*gs2, r*2*gs2) : QRectF());
     if (!dprChanged && m_lastGlowColor2 != m_glowColor2) {
-        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor2, dpr)));
+        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
         m_lastGlowColor2 = m_glowColor2;
     }
 
@@ -574,12 +609,18 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     // ── Particelle ────────────────────────────────────────────────────────────
     QSGGeometry *geo = pNode->geometry();
 
-    // BUFFER FISSO: alloca MAX_PARTICLES una volta sola.
-    // Le particelle "morte" hanno size=0 e la GPU le scarta automaticamente.
-    // Zero riallocazioni driver anche su GPU mobili.
-    if (geo->vertexCount() != MAX_PARTICLES)
+    // ALLOCAZIONE FISSA e BUFFERING
+    // Questa tecnica previene l'allocazione/deallocazione del buffer sul driver video 
+    // mantenendo i FPS stabili. Le particelle extra vengono impostate a size=0.0 da 
+    // updateSimulation() e ignorate fisicamente dalla GPU.
+    if (geo->vertexCount() != MAX_PARTICLES) {
         geo->allocate(MAX_PARTICLES);
+    }
 
+    // 2. TRASFERIMENTO: 
+    // Copiamo sempre tutto il buffer. Se le particelle sono < MAX_PARTICLES, 
+    // updateSimulation() ha già messo 'size = 0.0f' a quelle morte/assenti.
+    // La GPU riceverà questi zero e le scarterà istantaneamente senza disegnarle.
     if (!m_simulationPending) {
         std::memcpy(geo->vertexData(),
                     m_verticesRender.data(),
