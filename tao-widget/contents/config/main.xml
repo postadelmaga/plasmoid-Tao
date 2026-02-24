@@ -40,16 +40,16 @@
   <!-- Corresponds to configParticles.qml -->
   <group name="Particles">
     <entry name="particleCount" type="Int">
-      <default>80</default>
+      <default>120</default>
     </entry>
     <entry name="particleColor1" type="Color">
-      <default>#7fcdff</default>
+      <default>#a1f2fc</default>
     </entry>
     <entry name="particleColor2" type="Color">
-      <default>#ffaa00</default>
+      <default>#ff7200</default>
     </entry>
     <entry name="particleSize" type="Double">
-      <default>2.0</default>
+      <default>4.0</default>
     </entry>
     <entry name="particleSizeRandom" type="Double">
       <default>8.0</default>

@@ -147,10 +147,10 @@ private:
     QImage generateTaoTexture (int size, qreal dpr = 1.0);
 
     // ── Proprietà configurabili ───────────────────────────────────────────────
-    int     m_particleCount   = 80;
-    QColor  m_particleColor1  = QColor("#7fcdff");
-    QColor  m_particleColor2  = QColor("#ffaa00");
-    double  m_particleSize     = 2.0;
+    int     m_particleCount   = 120;
+    QColor  m_particleColor1  = QColor("#a1f2fc");
+    QColor  m_particleColor2  = QColor("#ff7200");
+    double  m_particleSize     = 4.0;
     double  m_particleSizeRandom = 8.0;
 
     float   m_rotationSpeed   = 5.0f;

@@ -38,14 +38,14 @@
     <script>
         // --- CONFIGURAZIONE CENTRALE ---
         const Config = {
-            particles: 80,
+            particles: 120,
             speed: 0.005,
             direction: 1,
             showClock: false,
             rotation: 0,
             maxParticles: 3000,
-            particleColor1: { r: 128, g: 204, b: 255 },
-            particleColor2: { r: 255, g: 100, b: 25 },
+            particleColor1: { r: 161, g: 242, b: 252 },
+            particleColor2: { r: 255, g: 114, b: 0 },
             glowColor1: 'rgba(100,200,255,0.8)',
             glowSize1: 1.3,
             glowColor2: 'rgba(100,200,255,0)',
@@ -53,7 +53,7 @@
             hourHandColor: 'rgba(255,255,255,1)',
             minuteHandColor: 'rgba(136,204,255,1)',
             secondHandColor: 'rgba(255,170,136,1)',
-            particleSize: 2.0,
+            particleSize: 4.0,
             particleSizeRandom: 8.0
         };
 
@@ -80,11 +80,17 @@
                 varying vec4 v_color;
 
                 void main() {
-                    vec2 pc = gl_PointCoord - vec2(0.5);
-                    float d2 = dot(pc, pc);           // = distanza² dal centro, range 0..0.25
-                    if (d2 > 0.25) discard;
-                    float alpha = smoothstep(0.25, 0.0, d2);
-                    gl_FragColor = vec4(v_color.rgb, v_color.a * alpha);
+                    if (v_color.a < 0.01) discard;
+
+                    vec2 uv = gl_PointCoord - vec2(0.5);
+                    float distSq = dot(uv, uv) * 4.0;
+                    if (distSq > 1.0) discard;
+
+                    float t = 1.0 - distSq;
+                    float core = t * t * t * t * t * t;
+                    float intensity = core * 1.5;
+
+                    gl_FragColor = vec4(v_color.rgb * intensity, v_color.a * core);
                 }
             `
         };
