@@ -409,9 +409,8 @@ void TaoNew::updateSimulation()
                 } else {
                     // Colore primario: shift warm in base alla velocità
                     const float speedSq = p.vx*p.vx + p.vy*p.vy;
-                    const float speed   = (speedSq > 0.0001f) ? std::sqrt(speedSq) : 0.0f;
-                    red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1r + speed * 400.0f));
-                    green = static_cast<unsigned char>(qMin(255.0f, (float)pc1g + speed * 200.0f));
+                    red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1r + speedSq * 8.0f));
+                    green = static_cast<unsigned char>(qMin(255.0f, (float)pc1g + speedSq * 4.0f));
                     blue  = pc1b;
                 }
                 p.packedColor = packColor(red, green, blue, alpha);
