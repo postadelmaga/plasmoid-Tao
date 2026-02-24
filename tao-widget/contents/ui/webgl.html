@@ -154,6 +154,13 @@
                 this._lastGlowSize1 = null;
                 this._lastGlowColor2 = null;
                 this._lastGlowSize2 = null;
+
+                // NUOVO: Cache per il Tao (Alta risoluzione)
+                this.taoCanvas = document.createElement('canvas');
+                this.taoCanvas.width = 1024;
+                this.taoCanvas.height = 1024;
+                this.taoCtx = this.taoCanvas.getContext('2d');
+                this._renderTaoCache(); // Disegna il Tao gigante subito
             }
 
             resize(w, h) {
@@ -243,43 +250,81 @@
 
                 ctx.clearRect(0, 0, width, height);
 
-                // OPT 3: blit del glow pre-renderizzato — costo = una drawImage invece
-                // di createRadialGradient + arc + fill ad ogni frame
+                // Applica lo smoothing (funziona perfettamente sulle immagini)
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                // Disegna Glow
                 if (this.glowCanvas) {
                     this._updateGlowCache();
-                    // drawImage in coordinate fisiche (il canvas offscreen è già scalato DPR)
                     const dpr = window.devicePixelRatio || 1;
                     ctx.drawImage(this.glowCanvas,
                         0, 0, this.glowCanvas.width, this.glowCanvas.height,
                         0, 0, width, height);
                 }
 
+                // Disegna TAO (Usando la cache supersampled)
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.rotate(Config.rotation);
-                this.drawTaoBody(ctx, r);
+
+                // Disegna l'immagine centrata.
+                // Disegniamo da -r a r per centrarla sul punto di rotazione (0,0)
+                ctx.drawImage(this.taoCanvas, 0, 0, 1024, 1024, -r, -r, r * 2, r * 2);
+
                 ctx.restore();
 
+                // Disegna Orologio
                 if (Config.showClock) {
                     this.drawClock(ctx, cx, cy, r);
                 }
             }
 
-            drawTaoBody(ctx, r) {
-                ctx.fillStyle = '#fff';
+            // Genera il Tao a risoluzione fissa 1024x1024
+            _renderTaoCache() {
+                const ctx = this.taoCtx;
+                const size = 1024;
+                const r = (size / 2) - 4; // Raggio con un po' di margine per evitare tagli
+                const c = size / 2;
+
+                ctx.clearRect(0, 0, size, size);
+
+                // Opzionale: Aggiunge una microscopica sfocatura al bordo per renderlo morbidissimo
+                ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                ctx.shadowBlur = 4;
+
+                ctx.translate(c, c);
+
+                // 1. BASE NERA
+                ctx.fillStyle = '#000';
                 ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
 
-                ctx.fillStyle = '#000';
+                // Tolgo l'ombra per i dettagli interni per non sporcarli
+                ctx.shadowBlur = 0;
+
+                // 2. META' BIANCA
+                ctx.fillStyle = '#fff';
                 ctx.beginPath();
                 ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
-                ctx.arc(0, r / 2, r / 2, Math.PI / 2, -Math.PI / 2, true);
-                ctx.arc(0, -r / 2, r / 2, Math.PI / 2, -Math.PI / 2, false);
                 ctx.fill();
 
+                // 3. MEDIO BIANCO
                 ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.arc(0, -r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(0, r / 2, r / 2, 0, Math.PI * 2); ctx.fill();
+
+                // 4. MEDIO NERO
                 ctx.fillStyle = '#000';
-                ctx.beginPath(); ctx.arc(0, r / 2, r / 7, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(0, -r / 2, r / 2, 0, Math.PI * 2); ctx.fill();
+
+                // 5. PICCOLO NERO
+                ctx.fillStyle = '#000';
+                ctx.beginPath(); ctx.arc(0, r / 2, r / 6, 0, Math.PI * 2); ctx.fill();
+
+                // 6. PICCOLO BIANCO
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(0, -r / 2, r / 6, 0, Math.PI * 2); ctx.fill();
+
+                ctx.resetTransform();
             }
 
             drawClock(ctx, cx, cy, r) {

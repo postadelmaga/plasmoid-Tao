@@ -425,19 +425,19 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
         systemNode->appendChildNode(tNode);
 
         QSGSimpleTextureNode *gNode1 = new QSGSimpleTextureNode();
-        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
+        gNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(512, m_glowColor1, dpr)));
         gNode1->setOwnsTexture(true);
         gNode1->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode1);
 
         QSGSimpleTextureNode *gNode2 = new QSGSimpleTextureNode();
-        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
+        gNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(512, m_glowColor2, dpr)));
         gNode2->setOwnsTexture(true);
         gNode2->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(gNode2);
 
         QSGSimpleTextureNode *sNode = new QSGSimpleTextureNode();
-        sNode->setTexture(window()->createTextureFromImage(generateTaoTexture(256, dpr)));
+        sNode->setTexture(window()->createTextureFromImage(generateTaoTexture(1024, dpr)));
         sNode->setOwnsTexture(true);
         sNode->setFiltering(QSGTexture::Linear);
         tNode->appendChildNode(sNode);
@@ -504,9 +504,9 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
 
     const bool dprChanged = !qFuzzyCompare(dpr, m_lastDpr);
     if (dprChanged) {
-        safeReplaceTexture(sNode,  window()->createTextureFromImage(generateTaoTexture(256, dpr)));
-        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
-        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
+        safeReplaceTexture(sNode,  window()->createTextureFromImage(generateTaoTexture(1024, dpr)));
+        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor1, dpr)));
+        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor2, dpr)));
         m_lastGlowColor1 = m_glowColor1;
         m_lastGlowColor2 = m_glowColor2;
         m_lastDpr = dpr;
@@ -515,14 +515,14 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
     const float gs1 = m_glowSize1;
     gNode1->setRect(gs1 > 0.01f ? QRectF(-r*gs1, -r*gs1, r*2*gs1, r*2*gs1) : QRectF());
     if (!dprChanged && m_lastGlowColor1 != m_glowColor1) {
-        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
+        safeReplaceTexture(gNode1, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor1, dpr)));
         m_lastGlowColor1 = m_glowColor1;
     }
 
     const float gs2 = m_glowSize2;
     gNode2->setRect(gs2 > 0.01f ? QRectF(-r*gs2, -r*gs2, r*2*gs2, r*2*gs2) : QRectF());
     if (!dprChanged && m_lastGlowColor2 != m_glowColor2) {
-        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
+        safeReplaceTexture(gNode2, window()->createTextureFromImage(generateGlowTexture(512, m_glowColor2, dpr)));
         m_lastGlowColor2 = m_glowColor2;
     }
 
@@ -616,22 +616,42 @@ QImage TaoNew::generateTaoTexture(int s, qreal dpr) {
     QImage img(phys, phys, QImage::Format_ARGB32_Premultiplied);
     img.setDevicePixelRatio(dpr);
     img.fill(Qt::transparent);
+    
     QPainter p(&img);
-    p.setRenderHint(QPainter::Antialiasing);
+    // FORZA l'antialiasing sempre per la generazione della texture, 
+    // a prescindere dal parametro m_antiAliasing, perché questa è la "matrice"
+    p.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    
     const float c = phys / 2.0f;
     const float r = c - 2.0f * static_cast<float>(dpr);
+
     p.setPen(Qt::NoPen);
-    p.setBrush(Qt::white);
+
+    // 1. BASE: Disegna un cerchio intero NERO. 
+    // Questo risolve il problema del bordo, non ci sarà bianco sotto i bordi neri.
+    p.setBrush(Qt::black);
     p.drawEllipse(QPointF(c, c), r, r);
-    p.setBrush(Qt::black);
-    p.drawPie(QRectF(c - r, c - r, r * 2, r * 2), 90 * 16, 180 * 16);
+
+    // 2. META' BIANCA: Disegna la mezza luna destra bianca
     p.setBrush(Qt::white);
-    p.drawEllipse(QPointF(c, c + r / 2), r / 2, r / 2);
-    p.setBrush(Qt::black);
-    p.drawEllipse(QPointF(c, c - r / 2), r / 2, r / 2);
-    p.setBrush(Qt::black);
-    p.drawEllipse(QPointF(c, c + r / 2), r / 6, r / 6);
+    // drawPie: 90*16 = ore 12, -180*16 = mezzo giro in senso orario (metà destra)
+    p.drawPie(QRectF(c - r, c - r, r * 2.0f, r * 2.0f), 90 * 16, -180 * 16);
+
+    // 3. MEDIO BIANCO: Cerchio in basso
     p.setBrush(Qt::white);
-    p.drawEllipse(QPointF(c, c - r / 2), r / 6, r / 6);
+    p.drawEllipse(QPointF(c, c + r / 2.0f), r / 2.0f, r / 2.0f);
+
+    // 4. MEDIO NERO: Cerchio in alto
+    p.setBrush(Qt::black);
+    p.drawEllipse(QPointF(c, c - r / 2.0f), r / 2.0f, r / 2.0f);
+
+    // 5. PICCOLO NERO: Puntino in basso
+    p.setBrush(Qt::black);
+    p.drawEllipse(QPointF(c, c + r / 2.0f), r / 6.0f, r / 6.0f);
+
+    // 6. PICCOLO BIANCO: Puntino in alto
+    p.setBrush(Qt::white);
+    p.drawEllipse(QPointF(c, c - r / 2.0f), r / 6.0f, r / 6.0f);
+
     return img;
 }
