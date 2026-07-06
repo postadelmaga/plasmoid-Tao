@@ -20,3 +20,21 @@ The following performance enhancements have been implemented:
 
   The project has been successfully rebuilt and packaged into tao-widget.plasmoid. These changes ensure that the widget remains fluid even
   at its maximum capacity of 20,000 particles.
+
+
+v2.1 — Render pipeline overhaul
+  1. C++ Native Renderer
+   * Removed the per-frame QtConcurrent/QFutureWatcher dispatch: the particle simulation now runs inline during the scene-graph sync phase
+     and writes vertices directly into the geometry buffer, eliminating the intermediate buffer, its memcpy, and the Qt6::Concurrent
+     dependency.
+   * The particle geometry is now sized to the active particle count instead of a fixed MAX_PARTICLES buffer, cutting the per-frame GPU
+     upload from 48 KB to a few KB at default settings.
+   * The render loop now stops scheduling frames when nothing is animating (zero particles, no rotation, clock hidden), dropping CPU/GPU
+     usage to near zero for a static widget.
+   * Tao and glow textures are now generated at an adaptive, power-of-two resolution matched to their on-screen size (with hysteresis to
+     avoid regenerating on every resize) instead of a fixed 1024 px / 256 px, saving significant VRAM and texture-generation time on
+     panel-sized instances.
+   * Clock hands only re-upload their geometry when the angle actually changes; the particle color class is decided once at spawn instead
+     of being recomputed every frame.
+   * Fragment shader: reduced the radial falloff from 6 to 3 multiplications per fragment (t^2/t^4/t^6 via squaring instead of a naive
+     product chain).

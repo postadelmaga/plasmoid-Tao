@@ -11,9 +11,11 @@ void main()
     float distSq = dot(uv, uv) * 4.0;
     if (distSq > 1.0) discard;
 
-    float t = 1.0 - distSq;
-    float core = t * t * t * t * t * t;  // t^6: bordo molto netto
-    float halo = t * t;                   // t^2: alone contenuto
+    float t  = 1.0 - distSq;
+    float t2 = t * t;                     // t^2: alone contenuto (= halo)
+    float t4 = t2 * t2;                   // t^4
+    float core = t4 * t2;                 // t^6: bordo molto netto, 3 mul invece di 6
+    float halo = t2;
 
     float intensity = core * 1.2 + halo * 0.3;
 

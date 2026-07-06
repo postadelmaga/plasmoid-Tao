@@ -14,7 +14,7 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED NO_MODULE COMPONENTS Quick Gui Core Concurrent)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED NO_MODULE COMPONENTS Quick Gui Core)
 find_package(KF6Config ${KF_MIN_VERSION} REQUIRED)
 find_package(KF6CoreAddons ${KF_MIN_VERSION} REQUIRED)
 find_package(Plasma ${KF_MIN_VERSION} REQUIRED)
@@ -44,7 +44,6 @@ target_link_libraries(taoplugin
     Qt6::Quick
     Qt6::Gui
     Qt6::Core
-    Qt6::Concurrent
     KF6::ConfigCore
     Plasma::Plasma
     Plasma::PlasmaQuick

@@ -2,8 +2,8 @@
 #define TAONEW_H
 
 #include <QQuickItem>
-#include <QFutureWatcher>
 #include <QElapsedTimer>
+#include <QRandomGenerator>
 #include <QSGNode>
 #include <QSGGeometryNode>
 #include <QSGSimpleTextureNode>
@@ -12,7 +12,6 @@
 #include <QSGMaterial>
 #include <QSGMaterialShader>
 #include <QSGTexture>
-#include <atomic>
 #include <vector>
 
 // ── Strutture dati particelle ─────────────────────────────────────────────────
@@ -23,7 +22,7 @@ struct ParticleData {
     float   life;
     float   decay;
     float   size;
-    quint32 packedColor;
+    quint8  secondary;   // classe colore decisa allo spawn (evita i%7 per frame)
 };
 
 struct ParticleVertex {
@@ -142,9 +141,12 @@ private:
     static constexpr int MAX_PARTICLES = 3000;
 
     // ── Metodi privati ────────────────────────────────────────────────────────
-    void   updateSimulation();
-    QImage generateGlowTexture(int size, const QColor &color, qreal dpr = 1.0);
-    QImage generateTaoTexture (int size, qreal dpr = 1.0);
+    // Simula un passo e scrive i vertici direttamente nel buffer geometria.
+    void   simulate(ParticleVertex *vData, int count, float dt, float dpr);
+    // Vero se il prossimo frame va comunque ridisegnato (animazione attiva).
+    bool   needsAnimation() const;
+    QImage generateGlowTexture(int physSize, const QColor &color);
+    QImage generateTaoTexture (int physSize);
 
     // ── Proprietà configurabili ───────────────────────────────────────────────
     int     m_particleCount   = 120;
@@ -168,38 +170,32 @@ private:
 
     QPointF m_mousePos;
 
-    // ── Stato simulazione ─────────────────────────────────────────────────────
-    std::vector<ParticleData>   m_particles;
-    std::vector<ParticleVertex> m_verticesRender;
+    // ── Stato simulazione (toccato solo nella fase di sync: GUI bloccata) ────
+    std::vector<ParticleData> m_particles;
+    QRandomGenerator          m_rng { QRandomGenerator::global()->generate() };
 
     float         m_rotation = 0.0f;
     QElapsedTimer m_timeTracker;
     qint64        m_lastTime  = 0;
-    float         m_lastDt    = 0.016f;
 
     // ── Stato render ──────────────────────────────────────────────────────────
-    // Separazione netta: m_pendingActiveCount scritto dal worker thread,
-    // m_renderActiveCount letto solo dal render thread (copiato in finished()).
-    std::atomic<int>  m_pendingActiveCount { 0 };
-    int               m_renderActiveCount  = 0;
-
+    int    m_allocatedCount  = -1;   // vertici attualmente allocati nella geometria
     QColor m_lastGlowColor1;
     QColor m_lastGlowColor2;
-    qreal  m_lastDpr = 0.0;
+    int    m_taoTexPx   = 0;         // lato fisico (px) della texture Tao corrente
+    int    m_glowTexPx1 = 0;
+    int    m_glowTexPx2 = 0;
+    float  m_lastHandAngle[3] = { -1e9f, -1e9f, -1e9f };
+    float  m_lastHandLen [3]  = { -1.0f, -1.0f, -1.0f };
 
-    // ── Async ─────────────────────────────────────────────────────────────────
-    QFutureWatcher<void> m_watcher;
-    // Atomic: garantisce visibilità cross-thread senza mutex, overhead ~zero.
-    std::atomic<bool> m_simulationPending { false };
-
-    // ── Puntatori ai nodi SGG (evita childAtIndex() fragili) ─────────────────
-    QSGGeometryNode     *m_particleNode = nullptr;
-    QSGTransformNode    *m_systemNode   = nullptr;
-    QSGTransformNode    *m_taoRotNode   = nullptr;
-    QSGNode             *m_clockGroup   = nullptr;
-    QSGSimpleTextureNode *m_glowNode1   = nullptr;
-    QSGSimpleTextureNode *m_glowNode2   = nullptr;
-    QSGSimpleTextureNode *m_taoNode     = nullptr;
+    // ── Puntatori ai nodi SG (evita childAtIndex() fragili) ──────────────────
+    QSGGeometryNode      *m_particleNode = nullptr;
+    QSGTransformNode     *m_systemNode   = nullptr;
+    QSGTransformNode     *m_taoRotNode   = nullptr;
+    QSGNode              *m_clockGroup   = nullptr;
+    QSGSimpleTextureNode *m_glowNode1    = nullptr;
+    QSGSimpleTextureNode *m_glowNode2    = nullptr;
+    QSGSimpleTextureNode *m_taoNode      = nullptr;
 };
 
 #endif // TAONEW_H

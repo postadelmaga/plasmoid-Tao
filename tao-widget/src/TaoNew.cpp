@@ -8,8 +8,6 @@
 #include <QPainter>
 #include <QRadialGradient>
 #include <QFileInfo>
-#include <QRandomGenerator>
-#include <QtConcurrent>
 #include <QtMath>
 #include <QTime>
 #include <dlfcn.h>
@@ -49,6 +47,13 @@ static const QSGGeometry::AttributeSet &particleAttributes()
     };
     static QSGGeometry::AttributeSet attrs = { 3, 16, data };
     return attrs;
+}
+
+// Lato texture adattivo: potenza di due ≥ px, con clamp.
+static inline int adaptiveTexSize(float px, int minPx, int maxPx)
+{
+    const int need = qNextPowerOfTwo(qMax(1, qCeil(px)) - 1);
+    return qBound(minPx, need, maxPx);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -131,23 +136,12 @@ TaoNew::TaoNew(QQuickItem *parent)
     setFlag(ItemHasContents, true);
 
     m_particles.resize(MAX_PARTICLES);
-    m_verticesRender.resize(MAX_PARTICLES);
     std::memset(m_particles.data(), 0, sizeof(ParticleData) * MAX_PARTICLES);
-
-    connect(&m_watcher, &QFutureWatcher<void>::finished, this, [this]() {
-        m_renderActiveCount = m_pendingActiveCount.load();
-        m_simulationPending = false;
-        update();
-    });
 
     m_timeTracker.start();
 }
 
-TaoNew::~TaoNew()
-{
-    if (m_watcher.isRunning())
-        m_watcher.waitForFinished();
-}
+TaoNew::~TaoNew() = default;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Setters
@@ -158,6 +152,7 @@ void TaoNew::setParticleCount(int count) {
     if (m_particleCount == bounded) return;
     m_particleCount = bounded;
     Q_EMIT particleCountChanged();
+    update();
 }
 
 void TaoNew::setParticleColor1(const QColor &c) {
@@ -178,12 +173,14 @@ void TaoNew::setRotationSpeed(float speed) {
     if (qFuzzyCompare(m_rotationSpeed, speed)) return;
     m_rotationSpeed = speed;
     Q_EMIT rotationSpeedChanged();
+    update();
 }
 
 void TaoNew::setClockwise(bool clockwise) {
     if (m_clockwise == clockwise) return;
     m_clockwise = clockwise;
     Q_EMIT clockwiseChanged();
+    update();
 }
 
 void TaoNew::setGlowColor1(const QColor &c) {
@@ -263,7 +260,7 @@ void TaoNew::setMousePos(const QPointF &pos) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// itemChange
+// itemChange / needsAnimation
 // ═════════════════════════════════════════════════════════════════════════════
 
 void TaoNew::itemChange(ItemChange change, const ItemChangeData &value)
@@ -273,188 +270,156 @@ void TaoNew::itemChange(ItemChange change, const ItemChangeData &value)
     QQuickItem::itemChange(change, value);
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// updateSimulation  (asincrono, worker thread)
-// ═════════════════════════════════════════════════════════════════════════════
-
-void TaoNew::updateSimulation()
+bool TaoNew::needsAnimation() const
 {
-    if (m_simulationPending) return;
-    m_simulationPending = true;
+    return m_particleCount > 0 || !qFuzzyIsNull(m_rotationSpeed) || m_showClock;
+}
 
-    const int count = m_particleCount;
+// ═════════════════════════════════════════════════════════════════════════════
+// simulate — eseguita inline nella fase di sync (GUI thread bloccato: l'accesso
+// ai membri è sicuro). Costo per 3000 particelle: decine di µs, molto meno del
+// costo di dispatch/sincronizzazione di un worker thread per frame.
+// I vertici vengono scritti direttamente nel buffer della geometria: nessun
+// buffer intermedio, nessuna memcpy aggiuntiva.
+// ═════════════════════════════════════════════════════════════════════════════
 
-    if (count <= 0) {
-        for (int i = 0; i < MAX_PARTICLES; ++i)
-            m_verticesRender[i].size = 0.0f;
-        m_renderActiveCount = 0;
-        m_pendingActiveCount.store(0);
-        m_simulationPending = false;
-        update();
-        return;
-    }
+void TaoNew::simulate(ParticleVertex *vData, int count, float dt, float dpr)
+{
+    const float w   = width();
+    const float h   = height();
+    const float cx  = w * 0.5f;
+    const float cy  = h * 0.5f;
+    const float r   = qMin(w, h) / 4.5f;
+    const float rSq = r * r;
+    const float df  = dt * 60.0f;
 
-    // Snapshot dei parametri necessari al worker — nessun accesso a `this`
-    // dentro la lambda eccetto per i buffer che sono stabili per tutta la vita
-    // dell'oggetto e non vengono riallocati durante la simulazione.
-    const float   w          = width();
-    const float   h          = height();
-    const QPointF mPos       = m_mousePos;
-    const float   dt         = (m_lastDt > 0.001f && m_lastDt < 1.0f) ? m_lastDt : 0.016f;
-    const QColor  pc1        = m_particleColor1;
-    const QColor  pc2        = m_particleColor2;
-    const float   pSize      = static_cast<float>(m_particleSize);
-    const float   pSizeRand  = static_cast<float>(m_particleSizeRandom);
-    const float   dpr        = window() ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
+    // Friction pre-calcolata fuori dal loop
+    const float friction = std::pow(0.98f, df);
 
-    QFuture<void> future = QtConcurrent::run([this, count, w, h, mPos, dt, pc1, pc2, pSize, pSizeRand, dpr]()
+    const bool  mouseValid = (m_mousePos.x() >= 0 && m_mousePos.x() <= w &&
+                              m_mousePos.y() >= 0 && m_mousePos.y() <= h);
+    const float mx = static_cast<float>(m_mousePos.x());
+    const float my = static_cast<float>(m_mousePos.y());
+
+    // Canali colore estratti una volta per tutte
+    const auto pc1r = static_cast<unsigned char>(m_particleColor1.red());
+    const auto pc1g = static_cast<unsigned char>(m_particleColor1.green());
+    const auto pc1b = static_cast<unsigned char>(m_particleColor1.blue());
+    const auto pc2r = static_cast<unsigned char>(m_particleColor2.red());
+    const auto pc2g = static_cast<unsigned char>(m_particleColor2.green());
+    const auto pc2b = static_cast<unsigned char>(m_particleColor2.blue());
+
+    const float pSize     = static_cast<float>(m_particleSize);
+    const float pSizeRand = static_cast<float>(m_particleSizeRandom);
+
+    ParticleData *pData = m_particles.data();
+
+    for (int i = 0; i < count; ++i)
     {
-        const float cx  = w * 0.5f;
-        const float cy  = h * 0.5f;
-        const float r   = qMin(w, h) / 4.5f;
-        const float rSq = r * r;
-        const float df  = dt * 60.0f;
+        ParticleData   &p = pData[i];
+        ParticleVertex &v = vData[i];
 
-        // Friction pre-calcolata fuori dal loop
-        const float friction = std::pow(0.98f, df);
-
-        // Generatore casuale locale → nessun lock sul generatore globale
-        QRandomGenerator rng(QRandomGenerator::global()->generate());
-
-        const bool  mouseValid = (mPos.x() >= 0 && mPos.x() <= w &&
-                                  mPos.y() >= 0 && mPos.y() <= h);
-        const float mx = static_cast<float>(mPos.x());
-        const float my = static_cast<float>(mPos.y());
-
-        // Canali colore estratti una volta per tutte
-        const auto pc1r = static_cast<unsigned char>(pc1.red());
-        const auto pc1g = static_cast<unsigned char>(pc1.green());
-        const auto pc1b = static_cast<unsigned char>(pc1.blue());
-        const auto pc2r = static_cast<unsigned char>(pc2.red());
-        const auto pc2g = static_cast<unsigned char>(pc2.green());
-        const auto pc2b = static_cast<unsigned char>(pc2.blue());
-
-        ParticleData   *pData = m_particles.data();
-        ParticleVertex *vData = m_verticesRender.data();
-
-        // Buffer fisso: le particelle "morte" ricevono size=0 e vengono
-        // scartate dalla GPU senza alcuna riallocazione del buffer driver.
-        for (int i = 0; i < count; ++i)
+        if (p.life > 0.0f)
         {
-            ParticleData   &p = pData[i];
-            ParticleVertex &v = vData[i];
+            // ── Interazione mouse ──────────────────────────────────────
+            const float dx = mx - p.x;
+            const float dy = my - p.y;
 
-            if (p.life > 0.0f)
-            {
-                // ── Interazione mouse ──────────────────────────────────────
-                const float dx = mx - p.x;
-                const float dy = my - p.y;
-
-                if (mouseValid && qAbs(dx) < 300.0f && qAbs(dy) < 300.0f) {
-                    const float distSq = dx*dx + dy*dy;
-                    if (distSq < 90000.0f) {
-                        const float f = 3.5f / (distSq + 100.0f);
-                        p.vx += dx * f * df;
-                        p.vy += dy * f * df;
-                    } else {
-                        p.vx *= friction;
-                        p.vy *= friction;
-                    }
+            if (mouseValid && qAbs(dx) < 300.0f && qAbs(dy) < 300.0f) {
+                const float distSq = dx*dx + dy*dy;
+                if (distSq < 90000.0f) {
+                    const float f = 3.5f / (distSq + 100.0f);
+                    p.vx += dx * f * df;
+                    p.vy += dy * f * df;
                 } else {
                     p.vx *= friction;
                     p.vy *= friction;
                 }
-
-                // ── Integrazione posizione ─────────────────────────────────
-                p.x += p.vx * df;
-                p.y += p.vy * df;
-
-                // Rimbalzo sui bordi
-                if      (p.x < 0) { p.x = 0; p.vx =  qAbs(p.vx) * 0.4f; }
-                else if (p.x > w) { p.x = w; p.vx = -qAbs(p.vx) * 0.4f; }
-                if      (p.y < 0) { p.y = 0; p.vy =  qAbs(p.vy) * 0.4f; }
-                else if (p.y > h) { p.y = h; p.vy = -qAbs(p.vy) * 0.4f; }
-
-                // ── Collisione con il cerchio Tao ──────────────────────────
-                const float tdx     = p.x - cx;
-                const float tdy     = p.y - cy;
-                const float tDistSq = tdx*tdx + tdy*tdy;
-                if (tDistSq < rSq) {
-                    const float tDist   = std::sqrt(tDistSq);
-                    const float safeDist = (tDist < 0.1f) ? 0.1f : tDist;
-                    const float inv     = 1.0f / safeDist;
-                    const float nx      = tdx * inv;
-                    const float ny      = tdy * inv;
-                    const float push    = (r - safeDist) * 0.3f;
-                    p.x += nx * push;
-                    p.y += ny * push;
-                    const float dot = p.vx * nx + p.vy * ny;
-                    if (dot < 0) {
-                        p.vx -= 1.6f * dot * nx;
-                        p.vy -= 1.6f * dot * ny;
-                    }
-                }
-
-                // ── Aging e colore ─────────────────────────────────────────
-                p.life -= p.decay * df;
-
-                const auto alpha = static_cast<unsigned char>(p.life * 255.0f * 0.85f);
-                unsigned char red, green, blue;
-
-                if ((i % 7) == 0) {
-                    // Colore secondario: variazione in base alla vita residua
-                    red   = pc2r;
-                    green = static_cast<unsigned char>(qMin(255, (int)pc2g + (int)(p.life * 50)));
-                    blue  = pc2b;
-                } else {
-                    // Colore primario: shift warm in base alla velocità
-                    const float speedSq = p.vx*p.vx + p.vy*p.vy;
-                    red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1r + speedSq * 8.0f));
-                    green = static_cast<unsigned char>(qMin(255.0f, (float)pc1g + speedSq * 4.0f));
-                    blue  = pc1b;
-                }
-                p.packedColor = packColor(red, green, blue, alpha);
-
-                v.x     = p.x;
-                v.y     = p.y;
-                v.size  = p.size * dpr;   // scala per HiDPI/Retina
-                v.color = p.packedColor;
+            } else {
+                p.vx *= friction;
+                p.vy *= friction;
             }
-            else
-            {
-                // ── Respawn ────────────────────────────────────────────────
-                p.life = 1.0f;
-                const double angle = rng.generateDouble() * 6.28318;
-                const double dist  = r * (0.5 + rng.generateDouble() * 2.0);
-                p.x  = cx + static_cast<float>(std::cos(angle) * dist);
-                p.y  = cy + static_cast<float>(std::sin(angle) * dist);
-                p.vx = static_cast<float>((rng.generateDouble() - 0.5) * 0.6);
-                p.vy = static_cast<float>((rng.generateDouble() - 0.5) * 0.6);
 
-                // Sposta fuori dal cerchio se ci è finita dentro
-                const float sdx = p.x - cx;
-                const float sdy = p.y - cy;
-                if (sdx*sdx + sdy*sdy < rSq)
-                    p.x += (sdx > 0 ? r : -r);
+            // ── Integrazione posizione ─────────────────────────────────
+            p.x += p.vx * df;
+            p.y += p.vy * df;
 
-                p.decay = 0.003f + static_cast<float>(rng.generateDouble()) * 0.008f;
-                // Raggio personalizzabile
-                p.size  = pSize + static_cast<float>(rng.generateDouble()) * pSizeRand;
-                p.packedColor = packColor(pc1r, pc1g, pc1b, static_cast<unsigned char>(255 * 0.85f));
+            // Rimbalzo sui bordi
+            if      (p.x < 0) { p.x = 0; p.vx =  qAbs(p.vx) * 0.4f; }
+            else if (p.x > w) { p.x = w; p.vx = -qAbs(p.vx) * 0.4f; }
+            if      (p.y < 0) { p.y = 0; p.vy =  qAbs(p.vy) * 0.4f; }
+            else if (p.y > h) { p.y = h; p.vy = -qAbs(p.vy) * 0.4f; }
 
-                // Frame invisibile per il respawn: evita pop visivi
-                v.x = p.x; v.y = p.y; v.size = 0.0f; v.color = p.packedColor;
+            // ── Collisione con il cerchio Tao ──────────────────────────
+            const float tdx     = p.x - cx;
+            const float tdy     = p.y - cy;
+            const float tDistSq = tdx*tdx + tdy*tdy;
+            if (tDistSq < rSq) {
+                const float tDist    = std::sqrt(tDistSq);
+                const float safeDist = (tDist < 0.1f) ? 0.1f : tDist;
+                const float inv      = 1.0f / safeDist;
+                const float nx       = tdx * inv;
+                const float ny       = tdy * inv;
+                const float push     = (r - safeDist) * 0.3f;
+                p.x += nx * push;
+                p.y += ny * push;
+                const float dot = p.vx * nx + p.vy * ny;
+                if (dot < 0) {
+                    p.vx -= 1.6f * dot * nx;
+                    p.vy -= 1.6f * dot * ny;
+                }
             }
+
+            // ── Aging e colore ─────────────────────────────────────────
+            p.life -= p.decay * df;
+
+            const auto alpha = static_cast<unsigned char>(p.life * 255.0f * 0.85f);
+            unsigned char red, green, blue;
+
+            if (p.secondary) {
+                // Colore secondario: variazione in base alla vita residua
+                red   = pc2r;
+                green = static_cast<unsigned char>(qMin(255, (int)pc2g + (int)(p.life * 50)));
+                blue  = pc2b;
+            } else {
+                // Colore primario: shift warm in base alla velocità
+                const float speedSq = p.vx*p.vx + p.vy*p.vy;
+                red   = static_cast<unsigned char>(qMin(255.0f, (float)pc1r + speedSq * 8.0f));
+                green = static_cast<unsigned char>(qMin(255.0f, (float)pc1g + speedSq * 4.0f));
+                blue  = pc1b;
+            }
+
+            v.x     = p.x;
+            v.y     = p.y;
+            v.size  = p.size * dpr;   // scala per HiDPI/Retina
+            v.color = packColor(red, green, blue, alpha);
         }
+        else
+        {
+            // ── Respawn ────────────────────────────────────────────────
+            p.life = 1.0f;
+            p.secondary = (i % 7) == 0 ? 1 : 0;
+            const double angle = m_rng.generateDouble() * 6.28318;
+            const double dist  = r * (0.5 + m_rng.generateDouble() * 2.0);
+            p.x  = cx + static_cast<float>(std::cos(angle) * dist);
+            p.y  = cy + static_cast<float>(std::sin(angle) * dist);
+            p.vx = static_cast<float>((m_rng.generateDouble() - 0.5) * 0.6);
+            p.vy = static_cast<float>((m_rng.generateDouble() - 0.5) * 0.6);
 
-        // Nasconde le particelle oltre il contatore attivo corrente
-        for (int i = count; i < MAX_PARTICLES; ++i)
-            vData[i].size = 0.0f;
+            // Sposta fuori dal cerchio se ci è finita dentro
+            const float sdx = p.x - cx;
+            const float sdy = p.y - cy;
+            if (sdx*sdx + sdy*sdy < rSq)
+                p.x += (sdx > 0 ? r : -r);
 
-        m_pendingActiveCount.store(count);
-    });
+            p.decay = 0.003f + static_cast<float>(m_rng.generateDouble()) * 0.008f;
+            p.size  = pSize + static_cast<float>(m_rng.generateDouble()) * pSizeRand;
 
-    m_watcher.setFuture(future);
+            // Frame completamente trasparente per il respawn: evita pop visivi
+            // (size 0 non basta: alcuni driver rasterizzano comunque 1 px).
+            v.x = p.x; v.y = p.y; v.size = 0.0f; v.color = 0u;
+        }
+    }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -463,8 +428,8 @@ void TaoNew::updateSimulation()
 
 QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
-    QSGNode *root    = oldNode;
-    const qreal dpr  = window() ? window()->devicePixelRatio() : 1.0;
+    QSGNode *root   = oldNode;
+    const qreal dpr = window() ? window()->devicePixelRatio() : 1.0;
 
     // ── Creazione albero nodi (eseguita una sola volta) ────────────────────────
     if (!root) {
@@ -489,23 +454,19 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         m_taoRotNode = new QSGTransformNode();
         m_systemNode->appendChildNode(m_taoRotNode);
 
-        // Glow 1
+        // Glow 1 / Glow 2 / Tao — le texture vengono create (e ridimensionate)
+        // dal blocco adattivo più sotto, che al primo frame parte da texPx=0.
         m_glowNode1 = new QSGSimpleTextureNode();
-        m_glowNode1->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
         m_glowNode1->setOwnsTexture(true);
         m_glowNode1->setFiltering(QSGTexture::Linear);
         m_taoRotNode->appendChildNode(m_glowNode1);
 
-        // Glow 2
         m_glowNode2 = new QSGSimpleTextureNode();
-        m_glowNode2->setTexture(window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
         m_glowNode2->setOwnsTexture(true);
         m_glowNode2->setFiltering(QSGTexture::Linear);
         m_taoRotNode->appendChildNode(m_glowNode2);
 
-        // Tao
         m_taoNode = new QSGSimpleTextureNode();
-        m_taoNode->setTexture(window()->createTextureFromImage(generateTaoTexture(1024, dpr)));
         m_taoNode->setOwnsTexture(true);
         m_taoNode->setFiltering(QSGTexture::Linear);
         m_taoRotNode->appendChildNode(m_taoNode);
@@ -531,18 +492,21 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         m_clockGroup->appendChildNode(createHand(3.0f, m_minuteHandColor));
         m_clockGroup->appendChildNode(createHand(1.5f, m_secondHandColor));
 
-        m_lastDpr = dpr;
+        // Forza la (ri)generazione delle texture al primo frame
+        m_taoTexPx = m_glowTexPx1 = m_glowTexPx2 = 0;
+        m_allocatedCount = -1;
+        for (int i = 0; i < 3; ++i) {
+            m_lastHandAngle[i] = -1e9f;
+            m_lastHandLen[i]   = -1.0f;
+        }
     }
 
     // ── Timing ────────────────────────────────────────────────────────────────
     const qint64 now = m_timeTracker.elapsed();
     if (m_lastTime == 0) m_lastTime = now;
-    m_lastDt   = (now - m_lastTime) / 1000.0f;
+    float dt   = (now - m_lastTime) / 1000.0f;
     m_lastTime = now;
-
-    // ── Rotazione ─────────────────────────────────────────────────────────────
-    const float dir = m_clockwise ? 1.0f : -1.0f;
-    m_rotation += m_rotationSpeed * 0.06f * dir * m_lastDt;
+    if (dt <= 0.001f || dt >= 1.0f) dt = 0.016f;
 
     // ── Layout ────────────────────────────────────────────────────────────────
     const float w = width();
@@ -553,9 +517,9 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     sysM.translate(w * 0.5f, h * 0.5f);
     m_systemNode->setMatrix(sysM);
 
-    // ── Texture sostituzione sicura ───────────────────────────────────────────
-    // N.B.: la texture precedente viene eliminata qui, lato render thread,
-    // dove il driver ha già completato il frame che la usava.
+    // ── Texture: sostituzione sicura ──────────────────────────────────────────
+    // La texture precedente viene eliminata qui, lato render thread, dove il
+    // driver ha già completato il frame che la usava.
     auto replaceTexture = [this](QSGSimpleTextureNode *node, QSGTexture *newTex) {
         QSGTexture *old = node->texture();
         node->setOwnsTexture(false);
@@ -564,42 +528,49 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         delete old;
     };
 
-    const bool dprChanged = !qFuzzyCompare(dpr, m_lastDpr);
-    if (dprChanged) {
-        replaceTexture(m_taoNode,   window()->createTextureFromImage(generateTaoTexture(1024, dpr)));
-        replaceTexture(m_glowNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
-        replaceTexture(m_glowNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
-        m_lastGlowColor1 = m_glowColor1;
-        m_lastGlowColor2 = m_glowColor2;
-        m_lastDpr = dpr;
-    }
-
-    // Aggiorna glow 1
+    // ── Texture adattive ──────────────────────────────────────────────────────
+    // Risoluzione proporzionale alla dimensione a schermo (quantizzata a potenze
+    // di due con isteresi di uno step per evitare rigenerazioni durante i
+    // resize). Un widget da pannello usa così una texture Tao da 128–256 px
+    // invece dei 1024×dpr fissi (16–64× meno VRAM e generazione più rapida).
     {
-        const float gs = static_cast<float>(m_glowSize1);
-        m_glowNode1->setRect(gs > 0.01f ? QRectF(-r*gs, -r*gs, r*2*gs, r*2*gs) : QRectF());
-        if (!dprChanged && m_lastGlowColor1 != m_glowColor1) {
-            replaceTexture(m_glowNode1, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor1, dpr)));
+        const int taoNeed = adaptiveTexSize(2.0f * r * float(dpr), 128, 1024);
+        if (taoNeed > m_taoTexPx || taoNeed * 2 < m_taoTexPx) {
+            replaceTexture(m_taoNode, window()->createTextureFromImage(generateTaoTexture(taoNeed)));
+            m_taoTexPx = taoNeed;
+        }
+
+        const float gs1 = static_cast<float>(m_glowSize1);
+        const int glowNeed1 = adaptiveTexSize(r * gs1 * float(dpr), 64, 256);
+        if (glowNeed1 > m_glowTexPx1 || glowNeed1 * 2 < m_glowTexPx1 || m_lastGlowColor1 != m_glowColor1) {
+            replaceTexture(m_glowNode1, window()->createTextureFromImage(generateGlowTexture(glowNeed1, m_glowColor1)));
+            m_glowTexPx1     = glowNeed1;
             m_lastGlowColor1 = m_glowColor1;
         }
-    }
 
-    // Aggiorna glow 2
-    {
-        const float gs = static_cast<float>(m_glowSize2);
-        m_glowNode2->setRect(gs > 0.01f ? QRectF(-r*gs, -r*gs, r*2*gs, r*2*gs) : QRectF());
-        if (!dprChanged && m_lastGlowColor2 != m_glowColor2) {
-            replaceTexture(m_glowNode2, window()->createTextureFromImage(generateGlowTexture(256, m_glowColor2, dpr)));
+        const float gs2 = static_cast<float>(m_glowSize2);
+        const int glowNeed2 = adaptiveTexSize(r * gs2 * float(dpr), 64, 256);
+        if (glowNeed2 > m_glowTexPx2 || glowNeed2 * 2 < m_glowTexPx2 || m_lastGlowColor2 != m_glowColor2) {
+            replaceTexture(m_glowNode2, window()->createTextureFromImage(generateGlowTexture(glowNeed2, m_glowColor2)));
+            m_glowTexPx2     = glowNeed2;
             m_lastGlowColor2 = m_glowColor2;
         }
+
+        const float gs1r = r * gs1;
+        m_glowNode1->setRect(gs1 > 0.01f ? QRectF(-gs1r, -gs1r, gs1r * 2, gs1r * 2) : QRectF());
+        const float gs2r = r * gs2;
+        m_glowNode2->setRect(gs2 > 0.01f ? QRectF(-gs2r, -gs2r, gs2r * 2, gs2r * 2) : QRectF());
+        m_taoNode->setRect(-r, -r, r * 2, r * 2);
     }
 
-    m_taoNode->setRect(-r, -r, r*2, r*2);
-
     // ── Rotazione Tao ─────────────────────────────────────────────────────────
-    QMatrix4x4 tM;
-    tM.rotate(qRadiansToDegrees(m_rotation), 0, 0, 1);
-    m_taoRotNode->setMatrix(tM);
+    if (!qFuzzyIsNull(m_rotationSpeed)) {
+        const float dir = m_clockwise ? 1.0f : -1.0f;
+        m_rotation += m_rotationSpeed * 0.06f * dir * dt;
+        QMatrix4x4 tM;
+        tM.rotate(qRadiansToDegrees(m_rotation), 0, 0, 1);
+        m_taoRotNode->setMatrix(tM);
+    }
 
     // ── Orologio ──────────────────────────────────────────────────────────────
     if (m_showClock) {
@@ -612,12 +583,23 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         auto updateHand = [&](int idx, float angle, float len, const QColor &col) {
             auto *hn  = static_cast<QSGGeometryNode*>(m_clockGroup->childAtIndex(idx));
             auto *geo = hn->geometry();
-            if (geo->vertexCount() != 2) geo->allocate(2);
-            QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
-            const float rad = qDegreesToRadians(angle - 90.0f);
-            v[0].set(0, 0);
-            v[1].set(std::cos(rad) * len, std::sin(rad) * len);
-            hn->markDirty(QSGNode::DirtyGeometry);
+
+            // Riscrive (e ricarica sulla GPU) la geometria solo se cambiata:
+            // ora e minuti restano fermi per la quasi totalità dei frame.
+            const bool moved = qAbs(angle - m_lastHandAngle[idx]) > 0.0005f
+                            || !qFuzzyCompare(len, m_lastHandLen[idx])
+                            || geo->vertexCount() != 2;
+            if (moved) {
+                if (geo->vertexCount() != 2) geo->allocate(2);
+                QSGGeometry::Point2D *v = geo->vertexDataAsPoint2D();
+                const float rad = qDegreesToRadians(angle - 90.0f);
+                v[0].set(0, 0);
+                v[1].set(std::cos(rad) * len, std::sin(rad) * len);
+                hn->markDirty(QSGNode::DirtyGeometry);
+                m_lastHandAngle[idx] = angle;
+                m_lastHandLen[idx]   = len;
+            }
+
             auto *mat = static_cast<QSGFlatColorMaterial*>(hn->material());
             if (mat->color() != col) {
                 mat->setColor(col);
@@ -640,20 +622,28 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     }
 
     // ── Particelle ────────────────────────────────────────────────────────────
-    // Buffer fisso MAX_PARTICLES: nessuna riallocazione driver tra i frame.
-    // Le particelle inattive hanno size=0 e vengono scartate dalla GPU.
+    // La geometria è dimensionata sul numero di particelle attive: la GPU
+    // riceve solo count×16 byte per frame (non MAX_PARTICLES), e la
+    // riallocazione avviene solo quando l'utente cambia il numero.
+    const int count = m_particleCount;
     QSGGeometry *pGeo = m_particleNode->geometry();
-    if (pGeo->vertexCount() != MAX_PARTICLES)
-        pGeo->allocate(MAX_PARTICLES);
-
-    if (!m_simulationPending) {
-        std::memcpy(pGeo->vertexData(),
-                    m_verticesRender.data(),
-                    static_cast<size_t>(MAX_PARTICLES) * sizeof(ParticleVertex));
+    if (m_allocatedCount != count) {
+        pGeo->allocate(count);
+        m_allocatedCount = count;
         m_particleNode->markDirty(QSGNode::DirtyGeometry);
     }
 
-    updateSimulation();
+    if (count > 0) {
+        simulate(static_cast<ParticleVertex*>(pGeo->vertexData()), count, dt, float(dpr));
+        m_particleNode->markDirty(QSGNode::DirtyGeometry);
+    }
+
+    // ── Prossimo frame ────────────────────────────────────────────────────────
+    // Il loop continua solo finché c'è qualcosa da animare: con particelle a 0,
+    // rotazione ferma e orologio spento il widget smette di consumare CPU/GPU.
+    if (needsAnimation() && isVisible())
+        update();
+
     return root;
 }
 
@@ -661,14 +651,12 @@ QSGNode *TaoNew::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 // generateGlowTexture
 // ═════════════════════════════════════════════════════════════════════════════
 
-QImage TaoNew::generateGlowTexture(int size, const QColor &color, qreal dpr)
+QImage TaoNew::generateGlowTexture(int physSize, const QColor &color)
 {
-    const int phys = qRound(size * dpr);
-    QImage img(phys, phys, QImage::Format_ARGB32_Premultiplied);
-    img.setDevicePixelRatio(dpr);
+    QImage img(physSize, physSize, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
 
-    QRadialGradient g(phys * 0.5, phys * 0.5, phys * 0.5);
+    QRadialGradient g(physSize * 0.5, physSize * 0.5, physSize * 0.5);
     g.setColorAt(0.0, color);
     QColor fade = color;
     fade.setAlpha(static_cast<int>(color.alpha() * 0.3));
@@ -678,7 +666,7 @@ QImage TaoNew::generateGlowTexture(int size, const QColor &color, qreal dpr)
     QPainter p(&img);
     p.setPen(Qt::NoPen);
     p.setBrush(g);
-    p.drawEllipse(0, 0, phys, phys);
+    p.drawEllipse(0, 0, physSize, physSize);
     return img;
 }
 
@@ -686,14 +674,12 @@ QImage TaoNew::generateGlowTexture(int size, const QColor &color, qreal dpr)
 // generateTaoTexture
 // ═════════════════════════════════════════════════════════════════════════════
 
-QImage TaoNew::generateTaoTexture(int size, qreal dpr)
+QImage TaoNew::generateTaoTexture(int physSize)
 {
-    const int   phys = qRound(size * dpr);
-    const float c    = phys * 0.5f;
-    const float r    = c - 2.0f * static_cast<float>(dpr);
+    const float c = physSize * 0.5f;
+    const float r = c - qMax(1.0f, physSize / 512.0f);   // margine anti-clipping
 
-    QImage img(phys, phys, QImage::Format_ARGB32_Premultiplied);
-    img.setDevicePixelRatio(dpr);
+    QImage img(physSize, physSize, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
 
     QPainter p(&img);
